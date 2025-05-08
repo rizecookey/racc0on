@@ -8,10 +8,8 @@ import net.rizecookey.racc0on.backend.LivenessAnalysis;
 import net.rizecookey.racc0on.backend.NodeUtils;
 import net.rizecookey.racc0on.utils.Graph;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -52,12 +50,7 @@ public class x8664StorageAllocator implements RegisterAllocator {
     private Graph<Node> createInterferenceGraph(IrGraph program, Map<Node, Set<Node>> liveness) {
         Graph<Node> graph = new Graph<>();
 
-        Deque<Node> stack = new ArrayDeque<>();
-        stack.push(program.endBlock());
-        while (!stack.isEmpty()) {
-            Node node = stack.pop();
-            stack.addAll(node.predecessors());
-
+        for (Node node : NodeUtils.traverseBackwards(program)) {
             if (!NodeUtils.providesValue(node)) {
                 continue;
             }
