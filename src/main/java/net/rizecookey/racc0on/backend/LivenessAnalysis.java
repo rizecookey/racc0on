@@ -18,12 +18,8 @@ public final class LivenessAnalysis {
     public static Map<Node, SequencedSet<Node>> getLiveness(IrGraph program) {
         Map<Node, SequencedSet<Node>> liveNodes = new HashMap<>();
 
-        Deque<Node> nodeStack = new ArrayDeque<>();
-        nodeStack.add(program.endBlock());
-        while (!nodeStack.isEmpty()) {
-            Node node = nodeStack.pop();
+        for (Node node : NodeUtils.traverseBackwards(program)) {
             List<? extends Node> predecessors = node.predecessors();
-            nodeStack.addAll(predecessors);
 
             List<? extends Node> predsWithoutNoValueNodes = predecessors.stream()
                     .filter(NodeUtils::providesValue)
