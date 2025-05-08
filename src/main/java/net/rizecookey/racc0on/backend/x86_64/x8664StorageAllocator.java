@@ -11,10 +11,11 @@ import net.rizecookey.racc0on.utils.Graph;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.SequencedSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -24,7 +25,7 @@ public class x8664StorageAllocator implements RegisterAllocator {
 
     @Override
     public Map<Node, Register> allocateRegisters(IrGraph graph) {
-        Map<Node, Set<Node>> liveness = LivenessAnalysis.getLiveness(graph);
+        Map<Node, SequencedSet<Node>> liveness = LivenessAnalysis.getLiveness(graph);
         Graph<Node> interference = createInterferenceGraph(graph, liveness);
         Map<Node, Integer> coloring = getColoring(interference, getSimplicialEliminationOrdering(interference));
         int maxColor = coloring.values().stream().max(Integer::compareTo).orElseThrow();
@@ -47,7 +48,7 @@ public class x8664StorageAllocator implements RegisterAllocator {
 
     private record Weighted<T>(T value, int weight) {}
 
-    private Graph<Node> createInterferenceGraph(IrGraph program, Map<Node, Set<Node>> liveness) {
+    private static Graph<Node> createInterferenceGraph(IrGraph program, Map<Node, SequencedSet<Node>> liveness) {
         Graph<Node> graph = new Graph<>();
 
         for (Node node : NodeUtils.traverseBackwards(program)) {
@@ -55,7 +56,7 @@ public class x8664StorageAllocator implements RegisterAllocator {
                 continue;
             }
 
-            for (Node alive : liveness.getOrDefault(node, new HashSet<>())) {
+            for (Node alive : liveness.getOrDefault(node, new LinkedHashSet<>())) {
                 graph.addEdge(node, alive);
             }
         }
@@ -63,7 +64,7 @@ public class x8664StorageAllocator implements RegisterAllocator {
         return graph;
     }
 
-    private List<Node> getSimplicialEliminationOrdering(Graph<Node> interferenceGraph) {
+    private static List<Node> getSimplicialEliminationOrdering(Graph<Node> interferenceGraph) {
         PriorityQueue<Weighted<Node>> priorityQueue = new PriorityQueue<>(Comparator.<Weighted<Node>>comparingInt(Weighted::weight).reversed());
         interferenceGraph.getNodes().forEach(node -> priorityQueue.add(new Weighted<>(node, 0)));
 
@@ -85,7 +86,7 @@ public class x8664StorageAllocator implements RegisterAllocator {
         return ordering;
     }
 
-    private Map<Node, Integer> getColoring(Graph<Node> interferenceGraph, List<Node> simplicialEliminationOrdering) {
+    private static Map<Node, Integer> getColoring(Graph<Node> interferenceGraph, List<Node> simplicialEliminationOrdering) {
         Map<Node, Integer> coloring = new HashMap<>();
 
         for (Node node : simplicialEliminationOrdering) {

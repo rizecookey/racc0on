@@ -1,21 +1,23 @@
 package net.rizecookey.racc0on.utils;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.SequencedSet;
 import java.util.Set;
 
 public class Graph<T> {
-    private final Set<T> nodes;
-    private final Map<T, Set<T>> edges;
+    private final SequencedSet<T> nodes;
+    private final Map<T, SequencedSet<T>> edges;
 
     public Graph() {
         this(Map.of());
     }
 
     public Graph(Map<T, Collection<T>> nodeMapping) {
-        nodes = new HashSet<>();
+        nodes = new LinkedHashSet<>();
         edges = new HashMap<>();
         fillFromMap(nodeMapping);
     }
@@ -27,31 +29,31 @@ public class Graph<T> {
             for (T neighbor : nodeMapping.get(node)) {
                 nodes.add(neighbor);
 
-                edges.computeIfAbsent(node, _ -> new HashSet<>()).add(neighbor);
-                edges.computeIfAbsent(neighbor, _ -> new HashSet<>()).add(node);
+                edges.computeIfAbsent(node, _ -> new LinkedHashSet<>()).add(neighbor);
+                edges.computeIfAbsent(neighbor, _ -> new LinkedHashSet<>()).add(node);
             }
         }
     }
 
-    public Set<T> getNodes() {
-        return Set.copyOf(nodes);
+    public SequencedSet<T> getNodes() {
+        return Collections.unmodifiableSequencedSet(nodes);
     }
 
     public void addNode(T node) {
         nodes.add(node);
-        edges.putIfAbsent(node, new HashSet<>());
+        edges.putIfAbsent(node, new LinkedHashSet<>());
     }
 
     public void removeNode(T node) {
         nodes.remove(node);
 
-        Set<T> neighbors = edges.getOrDefault(node, Set.of());
+        Set<T> neighbors = edges.getOrDefault(node, new LinkedHashSet<>());
         neighbors.forEach(neighbor -> edges.get(neighbor).remove(node));
         edges.remove(node);
     }
 
     public Set<T> getNeighbors(T node) {
-        return Set.copyOf(edges.getOrDefault(node, Set.of()));
+        return Set.copyOf(edges.getOrDefault(node, new LinkedHashSet<>()));
     }
 
     public Map<T, Set<T>> getEdges() {
