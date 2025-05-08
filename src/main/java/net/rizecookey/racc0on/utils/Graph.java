@@ -11,7 +11,7 @@ public class Graph<T> {
     private final Map<T, Set<T>> edges;
 
     public Graph() {
-        this(new HashMap<>());
+        this(Map.of());
     }
 
     public Graph(Map<T, Collection<T>> nodeMapping) {
