@@ -1,7 +1,7 @@
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-module edu.kit.kastel.vads.compiler {
+module net.rizecookey.racc0on {
     requires org.jspecify;
     requires java.xml;
 }

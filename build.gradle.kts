@@ -3,11 +3,11 @@ plugins {
     application
 }
 
-group = "edu.kit.kastel.logic"
+group = "net.rizecookey.racc0on"
 version = "1.0-SNAPSHOT"
 
 application {
-    mainModule = "edu.kit.kastel.vads.compiler"
+    mainModule = "net.rizecookey.racc0on"
     mainClass = "edu.kit.kastel.vads.compiler.Main"
 }
 
