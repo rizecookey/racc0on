@@ -4,18 +4,16 @@ import edu.kit.kastel.vads.compiler.backend.regalloc.Register;
 import edu.kit.kastel.vads.compiler.backend.regalloc.RegisterAllocator;
 import edu.kit.kastel.vads.compiler.ir.IrGraph;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
-import net.rizecookey.racc0on.backend.LivenessAnalysis;
+import net.rizecookey.racc0on.backend.LivenessMap;
 import net.rizecookey.racc0on.backend.NodeUtils;
 import net.rizecookey.racc0on.utils.Graph;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
-import java.util.SequencedSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -25,7 +23,7 @@ public class x8664StorageAllocator implements RegisterAllocator {
 
     @Override
     public Map<Node, Register> allocateRegisters(IrGraph graph) {
-        Map<Node, SequencedSet<Node>> liveness = LivenessAnalysis.getLiveness(graph);
+        LivenessMap liveness = LivenessMap.calculateFor(graph);
         Graph<Node> interference = createInterferenceGraph(graph, liveness);
         Map<Node, Integer> coloring = getColoring(interference, getSimplicialEliminationOrdering(interference));
         int maxColor = coloring.values().stream().max(Integer::compareTo).orElseThrow();
@@ -48,7 +46,7 @@ public class x8664StorageAllocator implements RegisterAllocator {
 
     private record Weighted<T>(T value, int weight) {}
 
-    private static Graph<Node> createInterferenceGraph(IrGraph program, Map<Node, SequencedSet<Node>> liveness) {
+    private static Graph<Node> createInterferenceGraph(IrGraph program, LivenessMap liveness) {
         Graph<Node> graph = new Graph<>();
 
         for (Node node : NodeUtils.traverseBackwards(program)) {
@@ -56,7 +54,7 @@ public class x8664StorageAllocator implements RegisterAllocator {
                 continue;
             }
 
-            for (Node alive : liveness.getOrDefault(node, new LinkedHashSet<>())) {
+            for (Node alive : liveness.getLiveAt(node)) {
                 graph.addEdge(node, alive);
             }
         }
