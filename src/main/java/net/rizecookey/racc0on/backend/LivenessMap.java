@@ -1,6 +1,5 @@
 package net.rizecookey.racc0on.backend;
 
-import edu.kit.kastel.vads.compiler.ir.IrGraph;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
 
 import java.util.Collection;
@@ -45,6 +44,13 @@ public class LivenessMap {
         map.computeIfAbsent(at, _ -> new LinkedHashSet<>()).removeAll(others);
     }
 
+    /**
+     * Propagates all nodes that are live at from and are not to to being live
+     * at to as well.
+     *
+     * @param from the node from which to propagate the liveness
+     * @param to   the node whose liveness is to be set
+     */
     public void propagateLiveness(Node from, Node to) {
         for (Node liveInFrom : getLiveAt(from)) {
             if (liveInFrom.equals(to)) {
@@ -55,26 +61,27 @@ public class LivenessMap {
         }
     }
 
-    public void propagateLiveness(Node from, Collection<? extends Node> tos) {
-        for (Node to : tos) {
-            propagateLiveness(from, to);
-        }
+    /**
+     * Marks all inputs of a node as live.
+     *
+     * @param node the node for which to set all inputs as live
+     */
+    public void addInputs(Node node) {
+        addLiveAt(node, node.predecessors().stream()
+                .filter(NodeUtils::providesValue)
+                .toList());
     }
 
-    public static LivenessMap calculateFor(IrGraph program) {
+    public static LivenessMap calculateFor(List<Node> program) {
         LivenessMap liveness = new LivenessMap();
 
-        for (Node node : NodeUtils.traverseBackwards(program)) {
-            List<? extends Node> valueInputs = node.predecessors()
-                    .stream()
-                    .filter(NodeUtils::providesValue)
-                    .toList();
+        for (int i = program.size() - 1; i >= 0; i--) {
+            Node node = program.get(i);
 
-            if (NodeUtils.providesValue(node)) {
-                liveness.addLiveAt(node, valueInputs);
+            liveness.addInputs(node);
+            if (i > 0) {
+                liveness.propagateLiveness(node, program.get(i - 1));
             }
-
-            liveness.propagateLiveness(node, node.predecessors());
         }
 
         return liveness;
