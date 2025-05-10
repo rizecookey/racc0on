@@ -32,7 +32,7 @@ public class x8664OneOperandDoubleWidthRMInstr implements x8664Instr {
         x8664StorageLocation realRight = inRight;
         if (inLeft != inData) {
             if (inData == inRight) {
-                realRight = x8664Register.RBP;
+                realRight = x8664Register.MEMORY_ACCESS_RESERVE;
                 new x8664MovInstr(realRight, inRight).write(generator);
             }
 

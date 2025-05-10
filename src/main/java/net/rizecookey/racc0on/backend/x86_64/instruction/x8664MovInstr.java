@@ -18,8 +18,8 @@ public class x8664MovInstr implements x8664Instr {
     @Override
     public void write(x8664ProcedureGenerator generator) {
         if (to instanceof x8664StackLocation && from instanceof x8664StackLocation) {
-            new x8664MovInstr(x8664Register.RBP, from).write(generator);
-            new x8664MovInstr(to, x8664Register.RBP).write(generator);
+            new x8664MovInstr(x8664Register.MEMORY_ACCESS_RESERVE, from).write(generator);
+            new x8664MovInstr(to, x8664Register.MEMORY_ACCESS_RESERVE).write(generator);
             return;
         }
 

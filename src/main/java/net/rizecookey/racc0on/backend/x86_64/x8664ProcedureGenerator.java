@@ -33,15 +33,11 @@ public class x8664ProcedureGenerator {
     }
 
     public void prepareStack() {
-        if (allocation.stackSize() > 0) {
-            codeGenerator.append("sub rsp, ").appendLine(String.valueOf(allocation.stackSize()));
-        }
+        writeInstruction0("enter", String.valueOf(allocation.stackSize()), String.valueOf(0));
     }
 
     public void tearDownStack() {
-        if (allocation.stackSize() > 0) {
-            codeGenerator.append("add rsp, ").appendLine(String.valueOf(allocation.stackSize()));
-        }
+        writeInstruction0("leave");
     }
 
     public void writeInstruction(String name, x8664Operand.Size size, x8664Operand... locations) {

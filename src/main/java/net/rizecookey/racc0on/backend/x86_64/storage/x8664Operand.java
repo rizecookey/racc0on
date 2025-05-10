@@ -17,7 +17,8 @@ public interface x8664Operand {
         }
 
         public static OperandId stack(int offset) {
-            String common = "[" + x8664Register.RSP.getId().qwordName() + (offset != 0 ? "+" + offset : "") + "]";
+            int relativeToBasePointer = offset * 4 + 8;
+            String common = "[" + x8664Register.RBP.getId().qwordName() + "-" + relativeToBasePointer + "]";
             return new OperandId(common);
         }
     }

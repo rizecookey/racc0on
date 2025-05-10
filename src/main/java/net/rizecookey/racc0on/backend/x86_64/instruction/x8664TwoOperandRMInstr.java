@@ -22,7 +22,7 @@ public class x8664TwoOperandRMInstr implements x8664Instr {
         x8664StorageLocation target = out;
 
         if (out instanceof x8664StackLocation) {
-            target = x8664Register.RBP;
+            target = x8664Register.MEMORY_ACCESS_RESERVE;
         }
         new x8664TwoOperandRMOrMRInstr(name, new x8664Operands.Binary<>(target, inLeft, inRight)).write(generator);
 

@@ -20,14 +20,14 @@ public class x8664TwoOperandRMOrMRInstr implements x8664Instr {
     @Override
     public void write(x8664ProcedureGenerator generator) {
         if (out instanceof x8664StackLocation && (inLeft instanceof x8664StackLocation || inRight instanceof x8664StackLocation)) {
-            new x8664MovInstr(x8664Register.RBP, inLeft).write(generator);
-            generator.writeInstruction(name, x8664Register.RBP, inRight);
-            new x8664MovInstr(out, x8664Register.RBP).write(generator);
+            new x8664MovInstr(x8664Register.MEMORY_ACCESS_RESERVE, inLeft).write(generator);
+            generator.writeInstruction(name, x8664Register.MEMORY_ACCESS_RESERVE, inRight);
+            new x8664MovInstr(out, x8664Register.MEMORY_ACCESS_RESERVE).write(generator);
         } else {
             x8664StorageLocation actualRight = inRight;
             if (out != inLeft) {
                 if (out == inRight) {
-                    actualRight = x8664Register.RBP;
+                    actualRight = x8664Register.MEMORY_ACCESS_RESERVE;
                     new x8664MovInstr(actualRight, inRight).write(generator);
                 }
                 new x8664MovInstr(out, inLeft).write(generator);

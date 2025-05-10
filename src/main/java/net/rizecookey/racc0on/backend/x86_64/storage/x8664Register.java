@@ -17,10 +17,12 @@ public enum x8664Register implements x8664StorageLocation {
     R12(reg64("r12")),
     R13(reg64("r13")),
     R14(reg64("r14")),
-    R15(reg64("r15")),
+    R15(reg64("r15"), Usage.MEMORY_ACCESS_RESERVE),
 
     RSP(reg16("sp"), Usage.STACK_POINTER),
-    RBP(reg16("bp"), Usage.MEMORY_ACCESS_RESERVE);
+    RBP(reg16("bp"), Usage.BASE_POINTER);
+
+    public static final x8664Register MEMORY_ACCESS_RESERVE = R15;
 
     private final OperandId id;
     private final Usage usage;
@@ -63,6 +65,6 @@ public enum x8664Register implements x8664StorageLocation {
     }
 
     public enum Usage {
-        GENERAL, STACK_POINTER, MEMORY_ACCESS_RESERVE
+        GENERAL, STACK_POINTER, BASE_POINTER, MEMORY_ACCESS_RESERVE
     }
 }
