@@ -22,8 +22,8 @@ public final class NodeUtils {
 
     public static boolean providesValue(Node node) {
         return switch (node) {
-            case BinaryOperationNode _, ConstIntNode _, Phi _, ProjNode _ -> true;
-            case Block _, ReturnNode _, StartNode _ -> false;
+            case BinaryOperationNode _, ConstIntNode _, Phi _ -> true;
+            case Block _, ReturnNode _, StartNode _, ProjNode _ -> false;
         };
     }
 
