@@ -16,8 +16,6 @@ import net.rizecookey.racc0on.backend.x86_64.x8664CodeGenerator;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -31,6 +29,8 @@ public class Main {
         }
         Path input = Path.of(args[0]);
         Path output = Path.of(args[1]);
+        boolean debug = Boolean.parseBoolean(System.getenv("RACC0ON_DEBUG"));
+
         ProgramTree program = lexAndParse(input);
         try {
             new SemanticAnalysis(program).analyze();
@@ -46,6 +46,11 @@ public class Main {
         }
 
         String s = new x8664CodeGenerator().generateCode(graphs);
+
+        if (debug) {
+            Files.writeString(output.getParent().resolve(output.getFileName().toString() + ".s"), s);
+        }
+
         try {
             callAssembler(s, output);
         } catch (IOException e) {
@@ -72,7 +77,7 @@ public class Main {
 
     private static void callAssembler(String assembly, Path output) throws IOException, AssemblerException {
         Process gcc = Runtime.getRuntime().exec(new String[] {"gcc", "-Wl,--entry=_entry", "-o", output.toString(), "-x", "assembler", "-"});
-        var writer = new OutputStreamWriter(gcc.getOutputStream());
+        var writer = gcc.outputWriter();
         writer.write(assembly);
         writer.close();
 
@@ -84,10 +89,13 @@ public class Main {
 
         if (gcc.exitValue() != 0) {
             StringBuilder errorLines = new StringBuilder();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(gcc.getErrorStream()));
+            BufferedReader reader = gcc.errorReader();
 
             String line;
             while ((line = reader.readLine()) != null) {
+                if (line.startsWith("{standard input}:")) {
+                    line = line.substring("{standard input}:".length());
+                }
                 if (!errorLines.isEmpty()) {
                     errorLines.append("\n");
                 }
