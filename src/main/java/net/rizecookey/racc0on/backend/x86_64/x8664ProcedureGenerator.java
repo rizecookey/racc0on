@@ -7,7 +7,6 @@ import net.rizecookey.racc0on.backend.x86_64.instruction.x8664InstructionSelecto
 import net.rizecookey.racc0on.backend.x86_64.storage.x8664Operand;
 import net.rizecookey.racc0on.backend.x86_64.storage.x8664StorageAllocator;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class x8664ProcedureGenerator {
@@ -45,6 +44,15 @@ public class x8664ProcedureGenerator {
     }
 
     public void writeInstruction(String name, x8664Operand... locations) {
+        String[] sizedOperands = new String[locations.length];
+        for (int i = 0; i < locations.length; i++) {
+            sizedOperands[i] = locations[i].getId().dwordName();
+        }
+
+        writeInstruction0(name, sizedOperands);
+    }
+
+    public void writeInstruction0(String name, String... locations) {
         codeGenerator.append(name);
 
         if (locations.length == 0) {
@@ -52,7 +60,6 @@ public class x8664ProcedureGenerator {
             return;
         }
 
-        List<String> names = Arrays.stream(locations).map(loc -> loc.getId().dwordName()).toList();
-        codeGenerator.append(" ").appendLine(String.join(", ", names));
+        codeGenerator.append(" ").appendLine(String.join(", ", locations));
     }
 }

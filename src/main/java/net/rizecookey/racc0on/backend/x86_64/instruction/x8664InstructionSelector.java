@@ -35,8 +35,8 @@ public class x8664InstructionSelector {
             case AddNode addNode -> new x8664AddInstr(extractBinaryOperands(addNode));
             case SubNode subNode -> new x8664SubInstr(extractBinaryOperands(subNode));
             case MulNode mulNode -> new x8664IMulInstr(extractBinaryOperands(mulNode));
-            case DivNode divNode -> throw new UnsupportedOperationException("Div not supported");
-            case ModNode modNode -> throw new UnsupportedOperationException("Mod not supported");
+            case DivNode divNode -> new x8664DivPhantomInstr(extractBinaryOperands(divNode));
+            case ModNode modNode -> new x8664ModPhantomInstr(extractBinaryOperands(modNode));
             case ConstIntNode constIntNode -> new x8664MovInstr(locations.get(constIntNode), new x8664Immediate(String.valueOf(constIntNode.value())));
             case ReturnNode returnNode -> new x8664RetInstr(locations.get(returnNode.predecessor(ReturnNode.RESULT)));
             case Phi _ -> throw new IllegalStateException("Phi instruction not supported");
