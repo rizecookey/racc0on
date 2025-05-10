@@ -27,8 +27,8 @@ public class x8664TwoOperandRMOrMRInstr implements x8664Instr {
             x8664StorageLocation actualRight = inRight;
             if (out != inLeft) {
                 if (out == inRight) {
-                    new x8664MovInstr(x8664Register.RBP, inRight).write(generator);
                     actualRight = x8664Register.RBP;
+                    new x8664MovInstr(actualRight, inRight).write(generator);
                 }
                 new x8664MovInstr(out, inLeft).write(generator);
             }
