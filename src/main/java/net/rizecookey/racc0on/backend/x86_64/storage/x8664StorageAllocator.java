@@ -1,4 +1,4 @@
-package net.rizecookey.racc0on.backend.x86_64;
+package net.rizecookey.racc0on.backend.x86_64.storage;
 
 import edu.kit.kastel.vads.compiler.ir.node.Node;
 import net.rizecookey.racc0on.backend.InterferenceGraph;

@@ -1,9 +1,6 @@
-package net.rizecookey.racc0on.backend.x86_64;
+package net.rizecookey.racc0on.backend.x86_64.storage;
 
 import java.util.List;
-
-import static net.rizecookey.racc0on.backend.x86_64.x8664StorageLocation.reg16;
-import static net.rizecookey.racc0on.backend.x86_64.x8664StorageLocation.reg64;
 
 public enum x8664Register implements x8664StorageLocation {
     RAX(reg16("ax")),
@@ -25,18 +22,26 @@ public enum x8664Register implements x8664StorageLocation {
     RSP(reg16("sp"), Usage.STACK_POINTER),
     RBP(reg16("bp"), Usage.MEMORY_ACCESS_RESERVE);
 
-    private final LocationId id;
+    private final OperandId id;
     private final Usage usage;
-    x8664Register(LocationId id) {
+    x8664Register(OperandId id) {
         this(id, Usage.GENERAL);
     }
 
-    x8664Register(LocationId id, Usage usage) {
+    x8664Register(OperandId id, Usage usage) {
         this.id = id;
         this.usage = usage;
     }
 
-    public LocationId getId() {
+    static OperandId reg16(String coreId) {
+        return new OperandId("r" + coreId, "e" + coreId, coreId);
+    }
+
+    static OperandId reg64(String coreName) {
+        return new OperandId(coreName, coreName + "d", coreName + "w");
+    }
+
+    public OperandId getId() {
         return id;
     }
 
