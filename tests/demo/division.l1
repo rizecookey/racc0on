@@ -1,0 +1,6 @@
+int main() {
+  int x = 524288;
+  int y = 4096;
+
+  return x / y;
+}
