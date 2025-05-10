@@ -13,8 +13,9 @@ import edu.kit.kastel.vads.compiler.ir.node.StartNode;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public final class NodeUtils {
     private NodeUtils() {}
@@ -27,10 +28,21 @@ public final class NodeUtils {
     }
 
     public static List<Node> transformToSequential(IrGraph program) {
+        Set<Node> seen = new HashSet<>();
         List<Node> sequential = new ArrayList<>();
-        for (Node node : traverseBackwards(program)) {
-            sequential.remove(node);
-            sequential.addFirst(node);
+
+        Deque<Node> stack = new ArrayDeque<>();
+        stack.add(program.endBlock());
+        while (!stack.isEmpty()) {
+            Node node = stack.peek();
+
+            if (seen.add(node)) {
+                node.predecessors().forEach(stack::push);
+                continue;
+            }
+
+            stack.remove(node);
+            sequential.add(node);
         }
 
         return sequential;
@@ -59,30 +71,5 @@ public final class NodeUtils {
         }
 
         return sb.toString();
-    }
-
-    public static Iterable<Node> traverseBackwards(IrGraph program) {
-        return () -> new BackwardsProgramIterator(program);
-    }
-
-    public static class BackwardsProgramIterator implements Iterator<Node> {
-        private final Deque<Node> stack;
-
-        private BackwardsProgramIterator(IrGraph program) {
-            stack = new ArrayDeque<>();
-            stack.push(program.endBlock());
-        }
-
-        @Override
-        public boolean hasNext() {
-            return !stack.isEmpty();
-        }
-
-        @Override
-        public Node next() {
-            Node next = stack.pop();
-            next.predecessors().forEach(stack::push);
-            return next;
-        }
     }
 }
