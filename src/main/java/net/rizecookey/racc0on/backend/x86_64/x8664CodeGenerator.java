@@ -30,10 +30,10 @@ public class x8664CodeGenerator {
         initializeTextSegment();
 
         for (IrGraph graph : program) {
-            List<Node> sequentialProcedure = NodeUtils.transformToSequential(graph);
+            List<Node> statements = NodeUtils.transformToSequential(graph);
             x8664StorageAllocator allocator = new x8664StorageAllocator();
-            x8664StorageAllocator.Allocation allocation = allocator.allocate(sequentialProcedure);
-            generateProcedure(graph, allocation);
+            x8664StorageAllocator.Allocation allocation = allocator.allocate(statements);
+            generateProcedure(graph.name(), statements, allocation);
         }
 
         return builder.toString();
@@ -55,8 +55,8 @@ public class x8664CodeGenerator {
         appendLine(BOILERPLATE_ENTRY);
     }
 
-    public void generateProcedure(IrGraph program, x8664StorageAllocator.Allocation allocation) {
-        new x8664ProcedureGenerator(this, program, allocation).generate();
+    public void generateProcedure(String name, List<Node> statements, x8664StorageAllocator.Allocation allocation) {
+        new x8664ProcedureGenerator(this, name, statements, allocation).generate();
     }
 
     public void appendNewline() {
