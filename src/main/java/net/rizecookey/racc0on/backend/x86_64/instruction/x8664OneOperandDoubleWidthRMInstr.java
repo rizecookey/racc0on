@@ -6,8 +6,11 @@ import net.rizecookey.racc0on.backend.x86_64.storage.x8664StorageLocation;
 import net.rizecookey.racc0on.backend.x86_64.x8664ProcedureGenerator;
 
 import java.util.List;
+import java.util.Set;
 
 public class x8664OneOperandDoubleWidthRMInstr implements x8664Instr {
+    private static final Set<x8664Register> SELF_TAINTED = Set.of(x8664Register.RDX, x8664Register.RAX);
+
     private final String name;
     private final List<x8664Register> tainted;
     private final x8664Register inData, outData;
@@ -30,12 +33,12 @@ public class x8664OneOperandDoubleWidthRMInstr implements x8664Instr {
         pushTainted(generator);
 
         x8664StorageLocation realRight = inRight;
-        if (inLeft != inData) {
-            if (inData == inRight) {
-                realRight = x8664Register.MEMORY_ACCESS_RESERVE;
-                new x8664MovInstr(realRight, inRight).write(generator);
-            }
+        if (realRight instanceof x8664Register inRightRegister && SELF_TAINTED.contains(inRightRegister)) {
+            realRight = x8664Register.MEMORY_ACCESS_RESERVE;
+            new x8664MovInstr(realRight, inRight).write(generator);
+        }
 
+        if (inLeft != inData) {
             new x8664MovInstr(inData, inLeft).write(generator);
         }
 
