@@ -67,7 +67,7 @@ public class LivenessMap {
      * @param node the node for which to set all inputs as live
      */
     public void addInputs(Node node) {
-        addLiveAt(node, node.predecessors().stream()
+        addLiveAt(node, NodeUtils.shortcutPredecessors(node).stream()
                 .filter(NodeUtils::providesValue)
                 .toList());
     }

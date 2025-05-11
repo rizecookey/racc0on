@@ -27,6 +27,19 @@ public final class NodeUtils {
         };
     }
 
+    // TODO mhhh
+    public static List<Node> shortcutPredecessors(Node node) {
+        return node.predecessors().stream()
+                .map(pred -> {
+                    if (pred instanceof ProjNode projNode) {
+                        return projNode.predecessor(ProjNode.IN);
+                    }
+
+                    return pred;
+                })
+                .toList();
+    }
+
     public static List<Node> transformToSequential(IrGraph program) {
         Set<Node> seen = new HashSet<>();
         List<Node> sequential = new ArrayList<>();
@@ -42,7 +55,9 @@ public final class NodeUtils {
             }
 
             stack.remove(node);
-            sequential.add(node);
+            if (!sequential.contains(node)) {
+                sequential.add(node);
+            }
         }
 
         return sequential;
@@ -51,10 +66,6 @@ public final class NodeUtils {
     public static String printSequential(List<Node> sequential) {
         StringBuilder sb = new StringBuilder();
         for (Node node : sequential) {
-            if (!NodeUtils.providesValue(node)) {
-                continue;
-            }
-
             sb.append(sequential.indexOf(node)).append(": ");
             switch (node) {
                 case BinaryOperationNode bin -> sb.append(bin)
@@ -64,7 +75,8 @@ public final class NodeUtils {
                         .append(sequential.indexOf(bin.predecessor(BinaryOperationNode.RIGHT)));
                 case ConstIntNode con -> sb.append(con);
                 case ReturnNode ret -> sb.append(ret).append(" ").append(sequential.indexOf(ret));
-                case Phi _, ProjNode _, StartNode _, Block _ -> {}
+                case ProjNode projNode -> sb.append(projNode).append(" ").append(sequential.indexOf(projNode.predecessor(ProjNode.IN)));
+                case Phi _, StartNode _, Block _ -> sb.append(node);
             }
 
             sb.append("\n");

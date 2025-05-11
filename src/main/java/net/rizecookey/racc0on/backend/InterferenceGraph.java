@@ -38,10 +38,13 @@ public class InterferenceGraph extends Graph<Node> {
 
         for (int i = sequentialProgram.size() - 2; i >= 0; i--) {
             Node node = sequentialProgram.get(i);
+            if (!NodeUtils.providesValue(node)) {
+                continue;
+            }
             graph.addNode(node);
 
             for (Node alive : livenessMap.getLiveAt(sequentialProgram.get(i + 1))) {
-                if (alive.equals(node)) {
+                if (alive.equals(node) || !NodeUtils.providesValue(alive)) {
                     continue;
                 }
 
