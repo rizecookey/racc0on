@@ -8,7 +8,7 @@ import net.rizecookey.racc0on.backend.x86_64.x8664ProcedureGenerator;
 import java.util.List;
 import java.util.Set;
 
-public class x8664OneOperandDoubleWidthRMInstr implements x8664Instr {
+public class x8664OneOperandDoubleWidthMInstr implements x8664Instr {
     private static final Set<x8664Register> SELF_TAINTED = Set.of(x8664Register.RDX, x8664Register.RAX);
 
     private final String name;
@@ -16,9 +16,9 @@ public class x8664OneOperandDoubleWidthRMInstr implements x8664Instr {
     private final x8664Register inData, outData;
     private final x8664StorageLocation out, inLeft, inRight;
 
-    public x8664OneOperandDoubleWidthRMInstr(String name, List<x8664Register> tainted,
-                                             x8664Register inData, x8664Register outData,
-                                             x8664Operands.Binary<x8664StorageLocation> operands) {
+    public x8664OneOperandDoubleWidthMInstr(String name, List<x8664Register> tainted,
+                                            x8664Register inData, x8664Register outData,
+                                            x8664Operands.Binary<x8664StorageLocation> operands) {
         this.name = name;
         this.tainted = tainted;
         this.inData = inData;

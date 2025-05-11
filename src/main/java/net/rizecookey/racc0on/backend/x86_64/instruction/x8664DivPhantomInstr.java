@@ -6,7 +6,7 @@ import net.rizecookey.racc0on.backend.x86_64.storage.x8664StorageLocation;
 
 import java.util.List;
 
-public class x8664DivPhantomInstr extends x8664OneOperandDoubleWidthRMInstr {
+public class x8664DivPhantomInstr extends x8664OneOperandDoubleWidthMInstr {
     public x8664DivPhantomInstr(x8664Operands.Binary<x8664StorageLocation> operands) {
         super("idiv", List.of(x8664Register.RDX, x8664Register.RAX), x8664Register.RAX, x8664Register.RAX, operands);
     }
