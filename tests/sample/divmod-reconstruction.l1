@@ -1,0 +1,9 @@
+int main() {
+  int in = 0xFFFFFF;
+  int divisor = 3141;
+
+  int quotient = in / divisor;
+  int remainder = in % divisor;
+
+  return in - quotient * divisor - remainder;
+}

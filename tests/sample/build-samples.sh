@@ -1,6 +1,6 @@
 #!/bin/bash
 project_root="$(realpath $(dirname "$0")/../../)"
-demo_dir="$project_root/tests/demo"
+demo_dir="$project_root/tests/sample"
 
 if [ ! -d "$demo_dir/bin" ]; then
   mkdir "$demo_dir/bin"

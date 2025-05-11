@@ -1,0 +1,17 @@
+int main() {
+  int aaa = 316;
+  int aab = 9;
+  int aba = -7145;
+  int abb = 4;
+  int baa = 210965;
+  int bab = 41;
+  int bba = -803813;
+  int bbb = 854;
+
+  int aa = aaa / aab;
+  int ab = abb / abb;
+  int ba = baa / bab;
+  int bb = bba / bbb;
+
+  return (aa / ab) / (ba / bb);
+}
