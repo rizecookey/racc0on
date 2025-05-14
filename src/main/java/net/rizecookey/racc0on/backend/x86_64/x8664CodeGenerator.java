@@ -2,12 +2,13 @@ package net.rizecookey.racc0on.backend.x86_64;
 
 import edu.kit.kastel.vads.compiler.ir.IrGraph;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
+import net.rizecookey.racc0on.backend.CodeGenerator;
 import net.rizecookey.racc0on.backend.NodeUtils;
 import net.rizecookey.racc0on.backend.x86_64.storage.x8664StorageAllocator;
 
 import java.util.List;
 
-public class x8664CodeGenerator {
+public class x8664CodeGenerator implements CodeGenerator {
     public static final String ENTRYPOINT_NAME = "_entry";
 
     private static final String BOILERPLATE_ENTRY = """
@@ -21,6 +22,7 @@ public class x8664CodeGenerator {
 
     private final StringBuilder builder = new StringBuilder();
 
+    @Override
     public String generateCode(List<IrGraph> program) {
         appendLine(".intel_syntax noprefix"); // enable intel assembly syntax
         declareGlobal(ENTRYPOINT_NAME);
