@@ -1,8 +1,11 @@
-package net.rizecookey.racc0on.backend.x86_64.storage;
+package net.rizecookey.racc0on.backend.x86_64;
 
 import edu.kit.kastel.vads.compiler.ir.node.Node;
 import net.rizecookey.racc0on.backend.InterferenceGraph;
 import net.rizecookey.racc0on.backend.LivenessMap;
+import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Register;
+import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664StackLocation;
+import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664StoreLocation;
 import net.rizecookey.racc0on.utils.Graph;
 
 import java.util.ArrayList;
@@ -13,11 +16,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /* TODO: Deal with instructions requiring special registers */
-public class x8664StorageAllocator {
+public class x8664StoreAllocator {
     public static final int STACK_SLOT_SIZE = 4;
-    private final Map<Node, x8664StorageLocation> allocations = new HashMap<>();
 
-    public record Allocation(Map<Node, x8664StorageLocation> allocations, int stackSize) {}
+    private final Map<Node, x8664StoreLocation> allocations = new HashMap<>();
+
+    public record Allocation(Map<Node, x8664StoreLocation> allocations, int stackSize) {}
 
     public Allocation allocate(List<Node> sequentialProgram) {
         LivenessMap liveness = LivenessMap.calculateFor(sequentialProgram);
@@ -25,7 +29,7 @@ public class x8664StorageAllocator {
         Map<Node, Integer> coloring = getColoring(interference, interference.getSimplicialEliminationOrdering());
         int maxColor = coloring.values().stream().max(Integer::compareTo).orElseThrow();
 
-        List<x8664StorageLocation> availableLocations = new ArrayList<>(x8664Register.getRegisterSet()
+        List<x8664StoreLocation> availableLocations = new ArrayList<>(x8664Register.getRegisterSet()
                 .stream()
                 .filter(x8664Register::isGeneralPurpose)
                 .toList());

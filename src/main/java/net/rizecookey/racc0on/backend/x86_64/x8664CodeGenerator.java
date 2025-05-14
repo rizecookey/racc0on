@@ -4,7 +4,7 @@ import edu.kit.kastel.vads.compiler.ir.IrGraph;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
 import net.rizecookey.racc0on.backend.CodeGenerator;
 import net.rizecookey.racc0on.backend.NodeUtils;
-import net.rizecookey.racc0on.backend.x86_64.storage.x8664StorageAllocator;
+import net.rizecookey.racc0on.backend.x86_64.instruction.x8664Instr;
 
 import java.util.List;
 
@@ -34,9 +34,10 @@ public class x8664CodeGenerator implements CodeGenerator {
 
         for (IrGraph graph : program) {
             List<Node> statements = NodeUtils.transformToSequential(graph);
-            x8664StorageAllocator allocator = new x8664StorageAllocator();
-            x8664StorageAllocator.Allocation allocation = allocator.allocate(statements);
-            generateProcedure(graph.name(), statements, allocation);
+            x8664StoreAllocator allocator = new x8664StoreAllocator();
+            x8664StoreAllocator.Allocation allocation = allocator.allocate(statements);
+            append(graph.name()).appendLine(":");
+            generateProcedure(statements, allocation);
         }
 
         return builder.toString();
@@ -58,8 +59,10 @@ public class x8664CodeGenerator implements CodeGenerator {
         appendLine(BOILERPLATE_ENTRY);
     }
 
-    public void generateProcedure(String name, List<Node> statements, x8664StorageAllocator.Allocation allocation) {
-        new x8664ProcedureGenerator(this, name, statements, allocation).generate();
+    public void generateProcedure(List<Node> statements, x8664StoreAllocator.Allocation allocation) {
+        var instrGenerator = new x8664InstructionGenerator(this, statements, allocation);
+        List<x8664Instr> instructions = instrGenerator.generateInstructions();
+        appendLine(String.join("\n", instructions.stream().map(x8664Instr::toAssembly).toList()));
     }
 
     public void appendNewline() {

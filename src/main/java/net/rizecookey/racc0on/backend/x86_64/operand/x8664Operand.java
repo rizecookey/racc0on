@@ -1,15 +1,18 @@
-package net.rizecookey.racc0on.backend.x86_64.storage;
+package net.rizecookey.racc0on.backend.x86_64.operand;
+
+import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Register;
 
 public interface x8664Operand {
-    OperandId getId();
+    Id getId();
 
-    record OperandId(String qwordName, String dwordName, String wordName) {
-        OperandId(String commonName) {
-            this(commonName, commonName, commonName);
+    record Id(String qwordName, String dwordName, String wordName, String byteName) {
+        Id(String commonName) {
+            this(commonName, commonName, commonName, commonName);
         }
 
         public String getName(Size size) {
             return switch (size) {
+                case BYTE -> byteName;
                 case WORD -> wordName;
                 case DOUBLE_WORD -> dwordName;
                 case QUAD_WORD -> qwordName;
@@ -18,7 +21,7 @@ public interface x8664Operand {
     }
 
     enum Size {
-        WORD("word ptr"), DOUBLE_WORD("dword ptr"), QUAD_WORD("qword ptr");
+        BYTE("byte ptr"), WORD("word ptr"), DOUBLE_WORD("dword ptr"), QUAD_WORD("qword ptr");
 
         private final String prefix;
 
