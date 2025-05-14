@@ -1,8 +1,8 @@
-package net.rizecookey.racc0on.backend.x86_64.storage;
+package net.rizecookey.racc0on.backend.x86_64.operand.stored;
 
 import java.util.List;
 
-public enum x8664Register implements x8664StorageLocation {
+public enum x8664Register implements x8664StoreLocation {
     RAX(reg16("ax")),
     RBX(reg16("bx")),
     RCX(reg16("cx")),
@@ -24,26 +24,27 @@ public enum x8664Register implements x8664StorageLocation {
 
     public static final x8664Register MEMORY_ACCESS_RESERVE = R15;
 
-    private final OperandId id;
+    private final Id id;
     private final Usage usage;
-    x8664Register(OperandId id) {
+    x8664Register(Id id) {
         this(id, Usage.GENERAL);
     }
 
-    x8664Register(OperandId id, Usage usage) {
+    x8664Register(Id id, Usage usage) {
         this.id = id;
         this.usage = usage;
     }
 
-    static OperandId reg16(String coreId) {
-        return new OperandId("r" + coreId, "e" + coreId, coreId);
+    static Id reg16(String coreId) {
+        return new Id("r" + coreId, "e" + coreId, coreId,
+                coreId.contains("x") ? coreId.replace("x", "l") : coreId + "l");
     }
 
-    static OperandId reg64(String coreName) {
-        return new OperandId(coreName, coreName + "d", coreName + "w");
+    static Id reg64(String coreName) {
+        return new Id(coreName, coreName + "d", coreName + "w", coreName + "b");
     }
 
-    public OperandId getId() {
+    public Id getId() {
         return id;
     }
 
