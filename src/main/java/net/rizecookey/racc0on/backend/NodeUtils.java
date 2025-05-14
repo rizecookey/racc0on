@@ -27,7 +27,6 @@ public final class NodeUtils {
         };
     }
 
-    // TODO mhhh
     public static List<Node> shortcutPredecessors(Node node) {
         return node.predecessors().stream()
                 .map(pred -> {
