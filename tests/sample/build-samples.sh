@@ -9,5 +9,7 @@ fi
 files="$(find "$demo_dir" -name "*.l1")"
 IFS=$'\n'
 for file in $files; do
-  "$project_root/run.sh" "$file" "$(dirname "$file")/bin/$(basename "${file%.l1}")"
+  target="$(dirname "$file")/bin/$(basename "${file%.l1}")"
+  echo "Compiling $file > $target"
+  "$project_root/run.sh" "$file" "$target"
 done
