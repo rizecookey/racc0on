@@ -1,15 +1,16 @@
 package net.rizecookey.racc0on.backend.x86_64.instruction;
 
-import net.rizecookey.racc0on.backend.Instruction;
+import net.rizecookey.racc0on.backend.instruction.Instruction;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Register;
+import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664StoreLocation;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
-public sealed interface x8664Instr extends Instruction permits x8664Instr.NoOperand, x8664Instr.Unary, x8664Instr.Binary {
+public sealed interface x8664Instr extends Instruction<x8664Instr, x8664Operand, x8664StoreLocation> permits x8664Instr.NoOperand, x8664Instr.Unary, x8664Instr.Binary {
+    @Override
     x8664InstrType type();
-    List<? extends x8664Operand> operands();
     x8664Operand.@Nullable Size size();
 
     @Override
@@ -25,7 +26,7 @@ public sealed interface x8664Instr extends Instruction permits x8664Instr.NoOper
         }
 
         x8664Operand.Size finalSize = size;
-        return result.append(" ")
+        return result.append(!operands().isEmpty() ? " ": "")
                 .append(String.join(", ", operands()
                         .stream()
                         .map(operand -> operand.getId().getName(finalSize))
