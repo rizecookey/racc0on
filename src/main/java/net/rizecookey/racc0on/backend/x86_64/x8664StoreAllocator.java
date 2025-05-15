@@ -6,6 +6,7 @@ import net.rizecookey.racc0on.backend.LivenessMap;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Register;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664StackLocation;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664StoreLocation;
+import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
 import net.rizecookey.racc0on.utils.Graph;
 
 import java.util.ArrayList;
@@ -17,6 +18,8 @@ import java.util.stream.Collectors;
 
 /* TODO: Deal with instructions requiring special registers */
 public class x8664StoreAllocator {
+    private static final int STACK_STORE_SIZE = x8664Operand.Size.DOUBLE_WORD.getByteSize();
+
     private final Map<Node, x8664StoreLocation> allocations = new HashMap<>();
 
     public record Allocation(Map<Node, x8664StoreLocation> allocations, int stackSize) {}
@@ -33,14 +36,14 @@ public class x8664StoreAllocator {
                 .toList());
         int availableRegisters = availableLocations.size();
         for (int i = availableRegisters; i <= maxColor; i++) {
-            availableLocations.add(new x8664StackLocation(i * 4));
+            availableLocations.add(new x8664StackLocation(i * STACK_STORE_SIZE));
         }
 
         for (Node node : coloring.keySet()) {
             allocations.put(node, availableLocations.get(coloring.get(node)));
         }
 
-        return new Allocation(Map.copyOf(allocations), Math.max(0, (maxColor - availableRegisters + 1) * 4));
+        return new Allocation(Map.copyOf(allocations), Math.max(0, (maxColor - availableRegisters + 1) * STACK_STORE_SIZE));
     }
 
     private static Map<Node, Integer> getColoring(Graph<Node> interferenceGraph, List<Node> simplicialEliminationOrdering) {
