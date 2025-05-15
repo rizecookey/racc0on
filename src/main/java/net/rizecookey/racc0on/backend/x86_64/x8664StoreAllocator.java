@@ -6,6 +6,7 @@ import net.rizecookey.racc0on.backend.LivenessMap;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Register;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664StackLocation;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664StoreLocation;
+import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
 import net.rizecookey.racc0on.utils.Graph;
 
 import java.util.ArrayList;

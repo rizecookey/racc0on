@@ -1,13 +1,12 @@
 package net.rizecookey.racc0on.backend.x86_64.operand;
 
 import net.rizecookey.racc0on.backend.operand.Operand;
-import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Register;
 
 public interface x8664Operand extends Operand {
     Id getId();
 
     record Id(String qwordName, String dwordName, String wordName, String byteName) {
-        Id(String commonName) {
+        public Id(String commonName) {
             this(commonName, commonName, commonName, commonName);
         }
 
@@ -22,16 +21,21 @@ public interface x8664Operand extends Operand {
     }
 
     enum Size {
-        BYTE("byte ptr"), WORD("word ptr"), DOUBLE_WORD("dword ptr"), QUAD_WORD("qword ptr");
+        BYTE(1, "byte ptr"), WORD(2, "word ptr"), DOUBLE_WORD(4, "dword ptr"), QUAD_WORD(8, "qword ptr");
 
         private final String prefix;
-
-        Size(String prefix) {
+        private final int bytes;
+        Size(int bytes, String prefix) {
+            this.bytes = bytes;
             this.prefix = prefix;
         }
 
         public String getPrefix() {
             return prefix;
+        }
+
+        public int getByteSize() {
+            return bytes;
         }
     }
 }
