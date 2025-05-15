@@ -13,10 +13,11 @@ import edu.kit.kastel.vads.compiler.ir.node.ProjNode;
 import edu.kit.kastel.vads.compiler.ir.node.ReturnNode;
 import edu.kit.kastel.vads.compiler.ir.node.StartNode;
 import edu.kit.kastel.vads.compiler.ir.node.SubNode;
-import net.rizecookey.racc0on.backend.InstructionGenerator;
 import net.rizecookey.racc0on.backend.NodeUtils;
+import net.rizecookey.racc0on.backend.instruction.InstructionGenerator;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664Instr;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664InstrType;
+import net.rizecookey.racc0on.backend.x86_64.instruction.x8664InstructionStream;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664StoreLocation;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Immediate;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
@@ -30,10 +31,12 @@ import net.rizecookey.racc0on.backend.x86_64.operation.x8664MovOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664Op;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664RetOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664SubOp;
+import net.rizecookey.racc0on.backend.x86_64.optimization.x8664AsmOptimization;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class x8664InstructionGenerator implements InstructionGenerator<x8664Instr> {
     private final List<Node> statements;
@@ -57,7 +60,34 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
             selectInstructions(node);
         }
 
-        return List.copyOf(instructions);
+        return performOptimizations();
+    }
+
+    public static String printAssembly(List<x8664Instr> instructions) {
+        return instructions.stream()
+                .map(x8664Instr::toAssembly)
+                .collect(Collectors.joining("\n"));
+    }
+
+    private List<x8664Instr> performOptimizations() {
+        x8664InstructionStream stream = new x8664InstructionStream(instructions);
+        List<x8664AsmOptimization> optimizers = List.of();
+        int index = 0;
+
+        outerLoop:
+        while (index < stream.size()) {
+            for (x8664AsmOptimization optimizer : optimizers) {
+                optimizer.performOptimization(index);
+                if (stream.isMarkedDirty()) {
+                    index = stream.getLowestModifiedIndex();
+                    stream.resetDirtyMark();
+                    continue outerLoop;
+                }
+            }
+            index++;
+        }
+
+        return stream.toInstructionList();
     }
 
     public void prepareStack() {
