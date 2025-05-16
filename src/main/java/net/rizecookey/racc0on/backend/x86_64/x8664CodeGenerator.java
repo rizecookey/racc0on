@@ -34,10 +34,8 @@ public class x8664CodeGenerator implements CodeGenerator {
 
         for (IrGraph graph : program) {
             List<Node> statements = NodeUtils.transformToSequential(graph);
-            x8664StoreAllocator allocator = new x8664StoreAllocator();
-            x8664StoreAllocator.Allocation allocation = allocator.allocate(statements);
             append(graph.name()).appendLine(":");
-            generateProcedure(statements, allocation);
+            generateProcedure(statements);
         }
 
         return builder.toString();
@@ -59,8 +57,8 @@ public class x8664CodeGenerator implements CodeGenerator {
         appendLine(BOILERPLATE_ENTRY);
     }
 
-    public void generateProcedure(List<Node> statements, x8664StoreAllocator.Allocation allocation) {
-        var instrGenerator = new x8664InstructionGenerator(this, statements, allocation);
+    public void generateProcedure(List<Node> statements) {
+        var instrGenerator = new x8664InstructionGenerator(this, statements);
         List<x8664Instr> instructions = instrGenerator.generateInstructions();
         appendLine(String.join("\n", instructions.stream().map(x8664Instr::toAssembly).toList()));
     }

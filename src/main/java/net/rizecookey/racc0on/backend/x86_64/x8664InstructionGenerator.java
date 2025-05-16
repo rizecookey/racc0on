@@ -16,6 +16,9 @@ import edu.kit.kastel.vads.compiler.ir.node.SubNode;
 import net.rizecookey.racc0on.backend.NodeUtils;
 import net.rizecookey.racc0on.backend.instruction.InstructionGenerator;
 import net.rizecookey.racc0on.backend.operand.Operands;
+import net.rizecookey.racc0on.backend.store.StoreReference;
+import net.rizecookey.racc0on.backend.store.StoreRequests;
+import net.rizecookey.racc0on.backend.store.x8664StoreAllocator;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664Instr;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664InstrType;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664InstructionStream;
@@ -25,7 +28,9 @@ import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664AddOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664DivPhantomOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664EmptyOp;
+import net.rizecookey.racc0on.backend.x86_64.operation.x8664EnterOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664IMulOp;
+import net.rizecookey.racc0on.backend.x86_64.operation.x8664LoadConstPhantomOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664ModPhantomOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664MovOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664Op;
@@ -34,30 +39,44 @@ import net.rizecookey.racc0on.backend.x86_64.operation.x8664SubOp;
 import net.rizecookey.racc0on.backend.x86_64.optimization.x8664AsmOptimization;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class x8664InstructionGenerator implements InstructionGenerator<x8664Instr> {
     private final List<Node> statements;
     private final List<x8664Instr> instructions;
     private final x8664CodeGenerator codeGenerator;
-    private final Map<Node, x8664StoreLocation> locations;
-    private final int stackSize;
+    private final Map<StoreReference<x8664StoreLocation>, x8664StoreLocation> locations;
+    private int stackSize;
 
-    public x8664InstructionGenerator(x8664CodeGenerator codeGenerator, List<Node> statements, x8664StoreAllocator.Allocation allocation) {
+    public x8664InstructionGenerator(x8664CodeGenerator codeGenerator, List<Node> statements) {
         this.statements = statements;
         this.codeGenerator = codeGenerator;
-        this.locations = allocation.allocations();
-        this.stackSize = allocation.stackSize();
+        this.locations = new HashMap<>();
+        this.stackSize = 0;
 
         this.instructions = new ArrayList<>();
     }
 
     public List<x8664Instr> generateInstructions() {
-        prepareStack();
+        List<x8664Op> selectedOperations = new ArrayList<>();
+        StoreRequests<x8664Op, x8664StoreLocation> storeRequests = new StoreRequests<>();
+        selectedOperations.add(new x8664EnterOp());
         for (Node node : statements) {
-            selectInstructions(node);
+            x8664Op operation = selectOperation(node);
+            operation.makeStoreRequests(storeRequests);
+            selectedOperations.add(operation);
+        }
+
+        x8664StoreAllocator allocator = new x8664StoreAllocator();
+        x8664StoreAllocator.Allocation allocation = allocator.allocate(selectedOperations, storeRequests);
+        locations.putAll(allocation.allocations());
+        stackSize = allocation.stackSize();
+        for (var op : selectedOperations) {
+            op.write(this, ref -> Optional.ofNullable(locations.get(ref)));
         }
 
         return performOptimizations();
@@ -98,20 +117,18 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         write(x8664InstrType.LEAVE);
     }
 
-    public void selectInstructions(Node node) {
-        x8664Op operation = switch (node) {
+    public x8664Op selectOperation(Node node) {
+        return switch (node) {
             case AddNode addNode -> new x8664AddOp(extractOperands(addNode));
             case SubNode subNode -> new x8664SubOp(extractOperands(subNode));
             case MulNode mulNode -> new x8664IMulOp(extractOperands(mulNode));
             case DivNode divNode -> new x8664DivPhantomOp(extractOperands(divNode));
             case ModNode modNode -> new x8664ModPhantomOp(extractOperands(modNode));
-            case ConstIntNode constIntNode -> new x8664MovOp(locations.get(constIntNode), new x8664Immediate(String.valueOf(constIntNode.value())));
+            case ConstIntNode constIntNode -> new x8664LoadConstPhantomOp(constIntNode);
             case ReturnNode returnNode -> new x8664RetOp(NodeUtils.shortcutPredecessors(returnNode).get(ReturnNode.RESULT));
             case Phi _ -> throw new IllegalStateException("Phi node not supported");
             case Block _, ProjNode _, StartNode _ -> x8664EmptyOp.INSTANCE;
         };
-
-        operation.write(this, locations::get);
     }
 
     private Operands.Binary<Node> extractOperands(BinaryOperationNode node) {
@@ -140,7 +157,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
     }
 
     public void move(x8664StoreLocation to, x8664Operand from) {
-        new x8664MovOp(to, from).write(this, locations::get);
+        new x8664MovOp(to, from).write(this, ref -> Optional.ofNullable(locations.get(ref)));
     }
 
     public void push(x8664Operand operand) {
