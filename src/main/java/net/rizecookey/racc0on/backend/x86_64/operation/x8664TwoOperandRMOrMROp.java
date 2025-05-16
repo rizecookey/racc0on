@@ -21,17 +21,17 @@ public class x8664TwoOperandRMOrMROp implements x8664Op {
     @Override
     public void write(x8664InstructionGenerator generator) {
         if (out instanceof x8664StackLocation && (inLeft instanceof x8664StackLocation || inRight instanceof x8664StackLocation)) {
-            move(x8664Register.MEMORY_ACCESS_RESERVE, inLeft, generator);
+            generator.move(x8664Register.MEMORY_ACCESS_RESERVE, inLeft);
             generator.write(type, x8664Register.MEMORY_ACCESS_RESERVE, inRight);
-            move(out, x8664Register.MEMORY_ACCESS_RESERVE, generator);
+            generator.move(out, x8664Register.MEMORY_ACCESS_RESERVE);
         } else {
             x8664StoreLocation actualRight = inRight;
             if (out != inLeft) {
                 if (out == inRight) {
                     actualRight = x8664Register.MEMORY_ACCESS_RESERVE;
-                    move(actualRight, inRight, generator);
+                    generator.move(actualRight, inRight);
                 }
-                move(out, inLeft, generator);
+                generator.move(out, inLeft);
             }
 
             generator.write(type, out, actualRight);

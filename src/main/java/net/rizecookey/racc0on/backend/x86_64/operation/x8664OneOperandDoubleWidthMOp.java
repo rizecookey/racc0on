@@ -35,7 +35,7 @@ public class x8664OneOperandDoubleWidthMOp implements x8664Op {
                 continue;
             }
 
-            push(tainted, generator);
+            generator.push(tainted);
         }
     }
 
@@ -45,7 +45,7 @@ public class x8664OneOperandDoubleWidthMOp implements x8664Op {
                 continue;
             }
 
-            pop(tainted, generator);
+            generator.pop(tainted);
         }
     }
 
@@ -56,17 +56,17 @@ public class x8664OneOperandDoubleWidthMOp implements x8664Op {
         x8664StoreLocation realRight = inRight;
         if (realRight instanceof x8664Register inRightRegister && SELF_TAINTED.contains(inRightRegister)) {
             realRight = x8664Register.MEMORY_ACCESS_RESERVE;
-            move(realRight, inRight, generator);
+            generator.move(realRight, inRight);
         }
 
         if (inLeft != inData) {
-            move(inData, inLeft, generator);
+            generator.move(inData, inLeft);
         }
 
         generator.write(x8664InstrType.CDQ);
         generator.write(type, realRight);
         if (out != outData) {
-            move(out, outData, generator);
+            generator.move(out, outData);
         }
 
         popTainted(generator);

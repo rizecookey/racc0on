@@ -138,4 +138,16 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
     public void write(x8664InstrType type, x8664Operand.Size size, x8664Operand first, x8664Operand second) {
         instructions.add(new x8664Instr.Binary(type, first, second, size));
     }
+
+    public void move(x8664StoreLocation to, x8664Operand from) {
+        new x8664MovOp(to, from).write(this);
+    }
+
+    public void push(x8664Operand operand) {
+        write(x8664InstrType.PUSH, x8664Operand.Size.QUAD_WORD, operand);
+    }
+
+    public void pop(x8664Operand operand) {
+        write(x8664InstrType.POP, x8664Operand.Size.QUAD_WORD, operand);
+    }
 }

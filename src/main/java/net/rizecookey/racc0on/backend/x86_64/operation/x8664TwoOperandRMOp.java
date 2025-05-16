@@ -28,7 +28,7 @@ public class x8664TwoOperandRMOp implements x8664Op {
         new x8664TwoOperandRMOrMROp(type, new x8664Operands.Binary<>(target, inLeft, inRight)).write(generator);
 
         if (target != out) {
-            move(out, target, generator);
+            generator.move(out, target);
         }
     }
 }

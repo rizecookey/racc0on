@@ -9,7 +9,7 @@ public record x8664RetOp(x8664StoreLocation returnLocation) implements x8664Op {
     @Override
     public void write(x8664InstructionGenerator generator) {
         if (returnLocation != x8664Register.RAX) {
-            move(x8664Register.RAX, returnLocation, generator);
+            generator.move(x8664Register.RAX, returnLocation);
         }
 
         generator.tearDownStack();
