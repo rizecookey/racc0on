@@ -18,6 +18,8 @@ public class StoreRequests<T extends Operation<?, U>, U extends VariableStore> i
     private final Map<T, SequencedSet<StoreReference<U>>> additionalStores;
     private final Map<StoreReference<U>, Set<Condition<T, U>>> storeConditions;
 
+    private final Map<StoreReference<U>, T> pendingStores;
+
     private int additionalStoreId;
 
     public StoreRequests() {
@@ -25,6 +27,8 @@ public class StoreRequests<T extends Operation<?, U>, U extends VariableStore> i
         outputStores = new HashMap<>();
         additionalStores = new HashMap<>();
         storeConditions = new HashMap<>();
+
+        pendingStores = new HashMap<>();
 
         additionalStoreId = 0;
     }
@@ -35,9 +39,14 @@ public class StoreRequests<T extends Operation<?, U>, U extends VariableStore> i
     @Override
     public StoreReference<U> requestInputStore(T location, Node node, List<? extends Condition<T, U>> conditions) {
         RegularStore<U> nodeStore = new RegularStore<>(node);
-        outputStores.put(location, nodeStore);
         inputStores.computeIfAbsent(location, _ -> new LinkedHashSet<>()).add(nodeStore);
         storeConditions.computeIfAbsent(nodeStore, _ -> new HashSet<>()).addAll(conditions);
+
+        if (pendingStores.containsKey(nodeStore)) {
+            T pendingLoc = pendingStores.get(nodeStore);
+            pendingStores.remove(nodeStore);
+            outputStores.put(pendingLoc, nodeStore);
+        }
 
         return nodeStore;
     }
@@ -61,8 +70,10 @@ public class StoreRequests<T extends Operation<?, U>, U extends VariableStore> i
     }
 
     @Override
-    public StoreReference<U> resolveIfAllocated(Node node) {
-        return new RegularStore<>(node);
+    public StoreReference<U> resolveOutputIfAllocated(T location, Node node) {
+        RegularStore<U> nodeStore = new RegularStore<>(node);
+        pendingStores.put(nodeStore, location);
+        return nodeStore;
     }
 
     public SequencedSet<StoreReference<U>> getInputStores(T location) {

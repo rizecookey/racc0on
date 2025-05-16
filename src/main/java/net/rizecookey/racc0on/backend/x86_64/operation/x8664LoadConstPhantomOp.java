@@ -21,7 +21,7 @@ public class x8664LoadConstPhantomOp implements x8664Op {
 
     @Override
     public void makeStoreRequests(StoreRequestService<x8664Op, x8664StoreLocation> service) {
-        outWeakRef = service.resolveIfAllocated(out);
+        outWeakRef = service.resolveOutputIfAllocated(this, out);
     }
 
     @Override

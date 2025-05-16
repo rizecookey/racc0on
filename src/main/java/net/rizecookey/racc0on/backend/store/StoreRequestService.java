@@ -22,7 +22,7 @@ public interface StoreRequestService<T extends Operation<?, U>, U extends Variab
     }
     StoreReference<U> requestAdditional(T location, List<? extends Condition<T, U>> conditions);
 
-    StoreReference<U> resolveIfAllocated(Node node);
+    StoreReference<U> resolveOutputIfAllocated(T location, Node node);
 
     sealed interface Condition<T extends Operation<?, U>, U extends VariableStore> permits PreferredLocation {}
     record PreferredLocation<T extends Operation<?, U>, U extends VariableStore>(T location) implements Condition<T, U> {}
