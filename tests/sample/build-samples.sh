@@ -12,4 +12,5 @@ for file in $files; do
   target="$(dirname "$file")/bin/$(basename "${file%.l1}")"
   echo "Compiling $file > $target"
   "$project_root/run.sh" "$file" "$target"
+  echo
 done
