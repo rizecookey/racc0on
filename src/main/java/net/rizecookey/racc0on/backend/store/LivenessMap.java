@@ -73,8 +73,6 @@ public class LivenessMap<T extends Operation<?, U>, U extends VariableStore> {
             if (i > 0) {
                 liveness.propagateLiveness(op, program.get(i - 1), requests);
             }
-
-            liveness.addLiveAt(op, requests.getAdditionalStores(op));
         }
 
         return liveness;

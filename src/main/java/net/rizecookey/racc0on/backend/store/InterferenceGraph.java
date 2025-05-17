@@ -69,7 +69,7 @@ public class InterferenceGraph<T extends Operation<?, U>, U extends VariableStor
             graph.addNode(outStore);
 
             for (var alive : livenessMap.getLiveAt(sequentialProgram.get(i + 1))) {
-                if (alive.equals(outStore) || requests.getAdditionalStores(operation).contains(alive)) {
+                if (alive.equals(outStore)) {
                     continue;
                 }
 
