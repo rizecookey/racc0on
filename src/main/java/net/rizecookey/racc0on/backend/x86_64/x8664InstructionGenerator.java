@@ -18,7 +18,7 @@ import net.rizecookey.racc0on.backend.instruction.InstructionGenerator;
 import net.rizecookey.racc0on.backend.operand.Operands;
 import net.rizecookey.racc0on.backend.store.StoreReference;
 import net.rizecookey.racc0on.backend.store.StoreRequests;
-import net.rizecookey.racc0on.backend.store.x8664StoreAllocator;
+import net.rizecookey.racc0on.backend.x86_64.store.x8664StoreAllocator;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664Instr;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664InstrType;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664InstructionStream;
