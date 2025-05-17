@@ -26,7 +26,7 @@ public class x8664TwoOperandRMInstr implements x8664Instr {
         }
         new x8664TwoOperandRMOrMRInstr(name, new x8664Operands.Binary<>(target, inLeft, inRight)).write(generator);
 
-        if (target != out) {
+        if (!target.equals(out)) {
             new x8664MovInstr(out, target).write(generator);
         }
     }

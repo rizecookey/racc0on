@@ -13,7 +13,7 @@ public class x8664RetInstr implements x8664Instr {
 
     @Override
     public void write(x8664ProcedureGenerator generator) {
-        if (returnLoc != x8664Register.RAX) {
+        if (!returnLoc.equals(x8664Register.RAX)) {
             new x8664MovInstr(x8664Register.RAX, returnLoc).write(generator);
         }
 

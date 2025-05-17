@@ -38,13 +38,13 @@ public class x8664OneOperandDoubleWidthMInstr implements x8664Instr {
             new x8664MovInstr(realRight, inRight).write(generator);
         }
 
-        if (inLeft != inData) {
+        if (!inLeft.equals(inData)) {
             new x8664MovInstr(inData, inLeft).write(generator);
         }
 
         generator.writeInstruction("cdq");
         generator.writeInstruction(name, realRight);
-        if (out != outData) {
+        if (!out.equals(outData)) {
             new x8664MovInstr(out, outData).write(generator);
         }
 
@@ -53,7 +53,7 @@ public class x8664OneOperandDoubleWidthMInstr implements x8664Instr {
 
     private void pushTainted(x8664ProcedureGenerator generator) {
         for (x8664Register tainted : tainted.reversed()) {
-            if (tainted == out) {
+            if (tainted.equals(out)) {
                 continue;
             }
             new x8664PushInstr(tainted).write(generator);
@@ -62,7 +62,7 @@ public class x8664OneOperandDoubleWidthMInstr implements x8664Instr {
 
     private void popTainted(x8664ProcedureGenerator generator) {
         for (x8664Register tainted : tainted) {
-            if (tainted == out) {
+            if (tainted.equals(out)) {
                 continue;
             }
             new x8664PopInstr(tainted).write(generator);
