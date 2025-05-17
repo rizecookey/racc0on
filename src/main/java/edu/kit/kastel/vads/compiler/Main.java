@@ -85,7 +85,12 @@ public class Main {
     }
 
     private static void callAssembler(String assembly, Path output) throws IOException, AssemblerException {
-        Process gcc = Runtime.getRuntime().exec(new String[] {"gcc", "-Wl,--entry=_entry", "-o", output.toString(), "-x", "assembler", "-"});
+        Process gcc = Runtime.getRuntime().exec(new String[] {"gcc",
+                "-Wl,--entry=" + x8664CodeGenerator.ENTRYPOINT_NAME,
+                "-o", output.toString(),
+                "-x", "assembler",
+                "-m64",
+                "-"});
         var writer = gcc.outputWriter();
         writer.write(assembly);
         writer.close();
