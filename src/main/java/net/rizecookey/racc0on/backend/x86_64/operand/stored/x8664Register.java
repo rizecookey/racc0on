@@ -3,10 +3,8 @@ package net.rizecookey.racc0on.backend.x86_64.operand.stored;
 import java.util.List;
 
 public enum x8664Register implements x8664StoreLocation {
-    RAX(reg16("ax")),
     RBX(reg16("bx")),
     RCX(reg16("cx")),
-    RDX(reg16("dx")),
     RSI(reg16("si")),
     RDI(reg16("di")),
 
@@ -17,6 +15,10 @@ public enum x8664Register implements x8664StoreLocation {
     R12(reg64("r12")),
     R13(reg64("r13")),
     R14(reg64("r14")),
+
+    RAX(reg16("ax")), // move down to make allocation prefer other registers
+    RDX(reg16("dx")),
+
     R15(reg64("r15"), Usage.MEMORY_ACCESS_RESERVE),
 
     RSP(reg16("sp"), Usage.STACK_POINTER),
