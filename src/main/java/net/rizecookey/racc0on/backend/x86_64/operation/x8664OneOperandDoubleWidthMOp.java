@@ -70,8 +70,12 @@ public class x8664OneOperandDoubleWidthMOp implements x8664Op {
         inLeftRef = service.requestInputStore(this, inLeft);
         inRightRef = service.requestInputStore(this, inRight);
 
+        StoreRequestService.Conditions<x8664StoreLocation> backupConditions = StoreRequestService.Conditions
+                .<x8664StoreLocation>builder()
+                .collidesWith(tainted)
+                .build();
         for (x8664Register _: tainted) {
-            taintedRefs.add(service.requestAdditional(this));
+            taintedRefs.add(service.requestAdditional(this, backupConditions));
         }
     }
 
