@@ -12,9 +12,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class InterferenceGraph<T extends Operation<?, U>, U extends VariableStore> extends Graph<StoreReference<U>> {
+    private final StoreRequests<T, U> requests;
+
+    public InterferenceGraph(StoreRequests<T, U> requests) {
+        this.requests = requests;
+    }
 
     public List<StoreReference<U>> getSimplicialEliminationOrdering() {
         PriorityQueue<Weighted<StoreReference<U>>> priorityQueue =
@@ -39,26 +45,36 @@ public class InterferenceGraph<T extends Operation<?, U>, U extends VariableStor
         return ordering;
     }
 
-    public Map<StoreReference<U>, Integer> createColoring() {
+    public Map<StoreReference<U>, U> createColoring(List<U> initiallyAvailable, Supplier<U> newStoreProvider) {
         List<StoreReference<U>> ordering = getSimplicialEliminationOrdering();
-        Map<StoreReference<U>, Integer> coloring = new HashMap<>();
+        Map<StoreReference<U>, U> coloring = new HashMap<>();
+        List<U> availableStores = new ArrayList<>(initiallyAvailable);
 
+        outer:
         for (var store : ordering) {
-            Set<Integer> neighborsColors = getNeighbors(store).stream()
+            Set<U> neighborsColors = getNeighbors(store).stream()
                     .filter(coloring::containsKey)
                     .map(coloring::get)
                     .collect(Collectors.toSet());
 
-            int color;
-            for (color = 0; neighborsColors.contains(color); color++) {}
-            coloring.put(store, color);
+            StoreRequests.Conditions<U> conditions = requests.getConditions(store);
+            for (U availableColor : availableStores) {
+                if (!neighborsColors.contains(availableColor) && !conditions.collisions().contains(availableColor)) {
+                    coloring.put(store, availableColor);
+                    continue outer;
+                }
+            }
+
+            U newColor = newStoreProvider.get();
+            coloring.put(store, newColor);
+            availableStores.add(newColor);
         }
 
         return coloring;
     }
 
     public static <T extends Operation<?, U>, U extends VariableStore> InterferenceGraph<T, U> createFrom(List<T> sequentialProgram, LivenessMap<T, U> livenessMap, StoreRequests<T, U> requests) {
-        InterferenceGraph<T, U> graph = new InterferenceGraph<>();
+        InterferenceGraph<T, U> graph = new InterferenceGraph<>(requests);
 
         for (int i = sequentialProgram.size() - 2; i >= 0; i--) {
             T operation = sequentialProgram.get(i);
@@ -68,12 +84,12 @@ public class InterferenceGraph<T extends Operation<?, U>, U extends VariableStor
             var outStore = requests.getOutputStore(operation);
             graph.addNode(outStore);
 
-            for (var alive : livenessMap.getLiveAt(sequentialProgram.get(i + 1))) {
-                if (alive.equals(outStore)) {
+            for (var live : livenessMap.getLiveAt(sequentialProgram.get(i + 1))) {
+                if (live.equals(outStore)) {
                     continue;
                 }
 
-                graph.addEdge(outStore, alive);
+                graph.addEdge(outStore, live);
             }
         }
 

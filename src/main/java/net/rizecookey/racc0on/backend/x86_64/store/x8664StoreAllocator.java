@@ -14,8 +14,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
-/* TODO: Deal with instructions requiring special registers */
 public class x8664StoreAllocator {
     private static final int STACK_STORE_SIZE = x8664Operand.Size.DOUBLE_WORD.getByteSize();
 
@@ -26,23 +26,23 @@ public class x8664StoreAllocator {
     public Allocation allocate(List<x8664Op> sequentialProgram, StoreRequests<x8664Op, x8664StoreLocation> storeRequests) {
         LivenessMap<x8664Op, x8664StoreLocation> liveness = LivenessMap.calculateFor(sequentialProgram, storeRequests);
         InterferenceGraph<x8664Op, x8664StoreLocation> interference = InterferenceGraph.createFrom(sequentialProgram, liveness, storeRequests);
-        Map<StoreReference<x8664StoreLocation>, Integer> coloring = interference.createColoring();
-        int maxColor = coloring.values().stream().max(Integer::compareTo).orElseThrow();
-
         List<x8664StoreLocation> availableLocations = new ArrayList<>(x8664Register.getRegisterSet()
                 .stream()
                 .filter(x8664Register::isGeneralPurpose)
                 .toList());
-        int availableRegisters = availableLocations.size();
-        int requiredRegisters = maxColor + 1 - availableRegisters;
-        for (int i = 0; i < requiredRegisters; i++) {
-            availableLocations.add(new x8664StackLocation((i + 1) * STACK_STORE_SIZE));
-        }
 
-        for (var store : coloring.keySet()) {
-            allocations.put(store, availableLocations.get(coloring.get(store)));
-        }
+        var stackAllocator = new Supplier<x8664StoreLocation>() {
+            private int size = 0;
 
-        return new Allocation(Map.copyOf(allocations), Math.max(0, requiredRegisters * STACK_STORE_SIZE));
+            @Override
+            public x8664StoreLocation get() {
+                return new x8664StackLocation(++size * STACK_STORE_SIZE);
+            }
+        };
+
+        Map<StoreReference<x8664StoreLocation>, x8664StoreLocation> coloring = interference.createColoring(availableLocations, stackAllocator);
+        allocations.putAll(coloring);
+
+        return new Allocation(Map.copyOf(allocations), Math.max(0, stackAllocator.size * STACK_STORE_SIZE));
     }
 }
