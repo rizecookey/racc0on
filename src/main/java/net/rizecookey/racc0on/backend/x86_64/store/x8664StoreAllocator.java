@@ -38,6 +38,6 @@ public class x8664StoreAllocator {
         };
 
         Map<StoreReference<x8664StoreLocation>, x8664StoreLocation> coloring = interference.createColoring(availableLocations, stackAllocator);
-        return new Allocation(liveness, Map.copyOf(coloring), Math.max(0, stackAllocator.size * STACK_STORE_SIZE));
+        return new Allocation(liveness, Map.copyOf(coloring), stackAllocator.size * STACK_STORE_SIZE);
     }
 }
