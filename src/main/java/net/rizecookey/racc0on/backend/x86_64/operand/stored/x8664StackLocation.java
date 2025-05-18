@@ -2,14 +2,13 @@ package net.rizecookey.racc0on.backend.x86_64.operand.stored;
 
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
 
-public record x8664StackLocation(Id id, int offset) implements x8664StoreLocation {
-    public x8664StackLocation(int offset) {
-        this(stackId(offset), offset);
+public record x8664StackLocation(Id id, int rbpRelativeOffset) implements x8664StoreLocation {
+    public x8664StackLocation(int rbpRelativeOffset) {
+        this(stackId(rbpRelativeOffset), rbpRelativeOffset);
     }
 
-    private static Id stackId(int offset) {
-        int relativeToBasePointer = offset * 4 + 8;
-        String common = "[" + x8664Register.RBP.getId().qwordName() + "-" + relativeToBasePointer + "]";
+    private static Id stackId(int rbpRelativeOffset) {
+        String common = "[" + x8664Register.RBP.getId().qwordName() + "-" + rbpRelativeOffset + "]";
         return new x8664Operand.Id(common);
     }
 
