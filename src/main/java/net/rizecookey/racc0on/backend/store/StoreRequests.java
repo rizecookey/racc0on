@@ -86,10 +86,10 @@ public class StoreRequests<T extends Operation<?, U>, U extends VariableStore> i
     }
 
     public SequencedSet<StoreReference<U>> getAdditionalStores(T location) {
-        return additionalStores.getOrDefault(location, new LinkedHashSet<>());
+        return additionalStores.containsKey(location) ? additionalStores.get(location) : new LinkedHashSet<>();
     }
 
     public Conditions<U> getConditions(StoreReference<U> reference) {
-        return storeConditions.getOrDefault(reference, Conditions.empty());
+        return storeConditions.containsKey(reference) ? storeConditions.get(reference) : Conditions.empty();
     }
 }

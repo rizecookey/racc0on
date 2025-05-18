@@ -22,7 +22,7 @@ public class LivenessMap<T extends Operation<?, U>, U extends VariableStore> {
     }
 
     public SequencedSet<StoreReference<U>> getLiveAt(T at) {
-        return map.getOrDefault(at, new LinkedHashSet<>());
+        return map.containsKey(at) ? map.get(at) : new LinkedHashSet<>();
     }
 
     public boolean isLiveAt(T at, StoreReference<U> other) {

@@ -47,13 +47,13 @@ public class Graph<T> {
     public void removeNode(T node) {
         nodes.remove(node);
 
-        Set<T> neighbors = edges.getOrDefault(node, new LinkedHashSet<>());
+        Set<T> neighbors = edges.containsKey(node) ? edges.get(node) : new LinkedHashSet<>();
         neighbors.forEach(neighbor -> edges.get(neighbor).remove(node));
         edges.remove(node);
     }
 
     public Set<T> getNeighbors(T node) {
-        return Set.copyOf(edges.getOrDefault(node, new LinkedHashSet<>()));
+        return Set.copyOf(edges.containsKey(node) ? edges.get(node) : new LinkedHashSet<>());
     }
 
     public Map<T, Set<T>> getEdges() {
