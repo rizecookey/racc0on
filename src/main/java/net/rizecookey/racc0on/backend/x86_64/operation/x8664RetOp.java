@@ -20,7 +20,10 @@ public class x8664RetOp implements x8664Op {
 
     @Override
     public void makeStoreRequests(StoreRequestService<x8664Op, x8664Store> service) {
-        inRef = service.requestInputStore(this, returnValue);
+        inRef = service.requestInputStore(this, returnValue, StoreRequestService.Conditions
+                .<x8664Store>builder()
+                .prefers(x8664Register.RAX)
+                .build());
     }
 
     @Override

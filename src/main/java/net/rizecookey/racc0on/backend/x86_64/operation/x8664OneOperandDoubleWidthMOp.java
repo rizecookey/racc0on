@@ -66,8 +66,12 @@ public class x8664OneOperandDoubleWidthMOp implements x8664Op {
 
     @Override
     public void makeStoreRequests(StoreRequestService<x8664Op, x8664Store> service) {
-        outRef = service.requestOutputStore(this, out);
-        inLeftRef = service.requestInputStore(this, inLeft);
+        StoreRequestService.Conditions<x8664Store> preferredOperandLocations = StoreRequestService.Conditions
+                .<x8664Store>builder()
+                .prefers(outData)
+                .build();
+        outRef = service.requestOutputStore(this, out, preferredOperandLocations);
+        inLeftRef = service.requestInputStore(this, inLeft, preferredOperandLocations);
         inRightRef = service.requestInputStore(this, inRight);
 
         StoreRequestService.Conditions<x8664Store> backupConditions = StoreRequestService.Conditions
