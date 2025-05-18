@@ -50,7 +50,6 @@ public class InterferenceGraph<T extends Operation<?, U>, U extends VariableStor
         Map<StoreReference<U>, U> coloring = new HashMap<>();
         List<U> availableStores = new ArrayList<>(initiallyAvailable);
 
-        outer:
         for (var store : ordering) {
             Set<U> neighborsColors = getNeighbors(store).stream()
                     .filter(coloring::containsKey)
@@ -58,16 +57,22 @@ public class InterferenceGraph<T extends Operation<?, U>, U extends VariableStor
                     .collect(Collectors.toSet());
 
             StoreRequests.Conditions<U> conditions = requests.getConditions(store);
+            U color = null;
             for (U availableColor : availableStores) {
-                if (!neighborsColors.contains(availableColor) && !conditions.collisions().contains(availableColor)) {
-                    coloring.put(store, availableColor);
-                    continue outer;
+                if (neighborsColors.contains(availableColor) || conditions.collisions().contains(availableColor)) {
+                    continue;
                 }
+
+                color = availableColor;
+                break;
             }
 
-            U newColor = newStoreProvider.get();
-            coloring.put(store, newColor);
-            availableStores.add(newColor);
+            if (color == null) {
+                color = newStoreProvider.get();
+                availableStores.add(color);
+            }
+
+            coloring.put(store, color);
         }
 
         return coloring;
