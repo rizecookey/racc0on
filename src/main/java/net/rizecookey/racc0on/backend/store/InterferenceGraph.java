@@ -4,10 +4,12 @@ import net.rizecookey.racc0on.backend.operand.stored.VariableStore;
 import net.rizecookey.racc0on.backend.operation.Operation;
 import net.rizecookey.racc0on.utils.Graph;
 import net.rizecookey.racc0on.utils.Weighted;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -16,9 +18,13 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class InterferenceGraph<T extends Operation<?, U>, U extends VariableStore> extends Graph<StoreReference<U>> {
+    private final List<T> operations;
+    private final LivenessMap<T, U> livenessMap;
     private final StoreRequests<T, U> requests;
 
-    public InterferenceGraph(StoreRequests<T, U> requests) {
+    public InterferenceGraph(List<T> operations, LivenessMap<T, U> livenessMap, StoreRequests<T, U> requests) {
+        this.operations = operations;
+        this.livenessMap = livenessMap;
         this.requests = requests;
     }
 
@@ -56,17 +62,7 @@ public class InterferenceGraph<T extends Operation<?, U>, U extends VariableStor
                     .map(coloring::get)
                     .collect(Collectors.toSet());
 
-            StoreRequests.Conditions<U> conditions = requests.getConditions(store);
-            U color = null;
-            for (U availableColor : availableStores) {
-                if (neighborsColors.contains(availableColor) || conditions.collisions().contains(availableColor)) {
-                    continue;
-                }
-
-                color = availableColor;
-                break;
-            }
-
+            U color = colorWithExisting(store, availableStores, neighborsColors);
             if (color == null) {
                 color = newStoreProvider.get();
                 availableStores.add(color);
@@ -75,21 +71,67 @@ public class InterferenceGraph<T extends Operation<?, U>, U extends VariableStor
             coloring.put(store, color);
         }
 
+        allocateAdditional(availableStores, newStoreProvider, coloring);
+
         return coloring;
     }
 
-    public static <T extends Operation<?, U>, U extends VariableStore> InterferenceGraph<T, U> createFrom(List<T> sequentialProgram, LivenessMap<T, U> livenessMap, StoreRequests<T, U> requests) {
-        InterferenceGraph<T, U> graph = new InterferenceGraph<>(requests);
+    private void allocateAdditional(List<U> initiallyAvailable, Supplier<U> newStoreProvider, Map<StoreReference<U>, U> coloring) {
+        for (T operation : operations) {
+            Set<U> forbiddenStores = livenessMap.getLiveAt(operation).stream()
+                    .map(coloring::get)
+                    .collect(Collectors.toCollection(HashSet::new));
+            if (requests.requiresOutputStore(operation)) {
+                forbiddenStores.add(coloring.get(requests.getOutputStore(operation)));
+            }
 
-        for (int i = sequentialProgram.size() - 2; i >= 0; i--) {
-            T operation = sequentialProgram.get(i);
+            for (StoreReference<U> additionalStore : requests.getAdditionalStores(operation)) {
+                U color = colorWithExisting(additionalStore, initiallyAvailable, forbiddenStores);
+                if (color == null) {
+                    color = newStoreProvider.get();
+                    initiallyAvailable.add(color);
+                }
+
+                coloring.put(additionalStore, color);
+                forbiddenStores.add(color);
+            }
+        }
+    }
+
+    /**
+     * Color a reference with one of the available stores, not using any of the forbidden colors, if possible.
+     *
+     * @param store the store reference to color
+     * @param availableStores the available stores for coloring
+     * @param forbiddenColors colors that cannot be used for coloring
+     *
+     * @return a valid coloring for the provided reference, or {@code null} if not enough colors are available
+     */
+    private @Nullable U colorWithExisting(StoreReference<U> store, List<U> availableStores, Set<U> forbiddenColors) {
+        StoreRequests.Conditions<U> conditions = requests.getConditions(store);
+        for (U availableColor : availableStores) {
+            if (forbiddenColors.contains(availableColor) || conditions.collisions().contains(availableColor)) {
+                continue;
+            }
+
+            return availableColor;
+        }
+
+        return null;
+    }
+
+    public static <T extends Operation<?, U>, U extends VariableStore> InterferenceGraph<T, U> createFrom(List<T> operations, LivenessMap<T, U> livenessMap, StoreRequests<T, U> requests) {
+        InterferenceGraph<T, U> graph = new InterferenceGraph<>(operations, livenessMap, requests);
+
+        for (int i = operations.size() - 2; i >= 0; i--) {
+            T operation = operations.get(i);
             if (!requests.requiresOutputStore(operation)) {
                 continue;
             }
             var outStore = requests.getOutputStore(operation);
             graph.addNode(outStore);
 
-            for (var live : livenessMap.getLiveAt(sequentialProgram.get(i + 1))) {
+            for (var live : livenessMap.getLiveAt(operations.get(i + 1))) {
                 if (live.equals(outStore)) {
                     continue;
                 }

@@ -10,8 +10,11 @@ import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664StoreLocation;
 import net.rizecookey.racc0on.backend.x86_64.store.x8664StoreRefResolver;
 import net.rizecookey.racc0on.backend.x86_64.x8664InstructionGenerator;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.SequencedSet;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 public class x8664OneOperandDoubleWidthMOp implements x8664Op {
     private static final Set<x8664Register> SELF_TAINTED = Set.of(x8664Register.RDX, x8664Register.RAX);
@@ -22,6 +25,7 @@ public class x8664OneOperandDoubleWidthMOp implements x8664Op {
     private final Node out, inLeft, inRight;
 
     private StoreReference<x8664StoreLocation> outRef, inLeftRef, inRightRef;
+    private final List<StoreReference<x8664StoreLocation>> taintedRefs;
 
     public x8664OneOperandDoubleWidthMOp(x8664InstrType type, List<x8664Register> tainted,
                                          x8664Register inData, x8664Register outData,
@@ -35,26 +39,29 @@ public class x8664OneOperandDoubleWidthMOp implements x8664Op {
         this.inRight = operands.inRight();
 
         outRef = inLeftRef = inRightRef = new StoreReference.Null<>();
+        taintedRefs = new ArrayList<>();
     }
 
-    private void pushTainted(x8664InstructionGenerator generator, x8664StoreLocation outOp) {
-        for (x8664Register tainted : tainted.reversed()) {
-            if (tainted.equals(outOp)) {
+    private void forEachTaintedBackupPair(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier,
+                                BiConsumer<x8664StoreLocation, x8664StoreLocation> consumer) {
+        SequencedSet<x8664StoreLocation> live = generator.getLiveAt(this);
+        for (int i = 0; i < tainted.size(); i++) {
+            x8664Register taintedReg = tainted.get(i);
+            if (!live.contains(taintedReg)) {
                 continue;
             }
 
-            generator.push(tainted);
+            x8664StoreLocation backup = storeSupplier.resolve(taintedRefs.get(i)).orElseThrow();
+            consumer.accept(taintedReg, backup);
         }
     }
 
-    private void popTainted(x8664InstructionGenerator generator, x8664StoreLocation outOp) {
-        for (x8664Register tainted : tainted) {
-            if (tainted.equals(outOp)) {
-                continue;
-            }
+    private void backupTainted(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {
+        forEachTaintedBackupPair(generator, storeSupplier, (tainted, backup) -> generator.move(backup, tainted));
+    }
 
-            generator.pop(tainted);
-        }
+    private void restoreTainted(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {
+        forEachTaintedBackupPair(generator, storeSupplier, generator::move);
     }
 
     @Override
@@ -62,6 +69,10 @@ public class x8664OneOperandDoubleWidthMOp implements x8664Op {
         outRef = service.requestOutputStore(this, out);
         inLeftRef = service.requestInputStore(this, inLeft);
         inRightRef = service.requestInputStore(this, inRight);
+
+        for (x8664Register _: tainted) {
+            taintedRefs.add(service.requestAdditional(this));
+        }
     }
 
     @Override
@@ -69,7 +80,8 @@ public class x8664OneOperandDoubleWidthMOp implements x8664Op {
         x8664StoreLocation outOp = storeSupplier.resolve(outRef).orElseThrow();
         x8664StoreLocation inLeftOp = storeSupplier.resolve(inLeftRef).orElseThrow();
         x8664StoreLocation inRightOp = storeSupplier.resolve(inRightRef).orElseThrow();
-        pushTainted(generator, outOp);
+
+        backupTainted(generator, storeSupplier);
 
         x8664StoreLocation realRight = inRightOp;
         if (realRight instanceof x8664Register inRightRegister && SELF_TAINTED.contains(inRightRegister)) {
@@ -87,6 +99,6 @@ public class x8664OneOperandDoubleWidthMOp implements x8664Op {
             generator.move(outOp, outData);
         }
 
-        popTainted(generator, outOp);
+        restoreTainted(generator, storeSupplier);
     }
 }

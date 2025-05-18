@@ -11,7 +11,6 @@ import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664Op;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -19,9 +18,7 @@ import java.util.function.Supplier;
 public class x8664StoreAllocator {
     private static final int STACK_STORE_SIZE = x8664Operand.Size.DOUBLE_WORD.getByteSize();
 
-    private final Map<StoreReference<x8664StoreLocation>, x8664StoreLocation> allocations = new HashMap<>();
-
-    public record Allocation(Map<StoreReference<x8664StoreLocation>, x8664StoreLocation> allocations, int stackSize) {}
+    public record Allocation(LivenessMap<x8664Op, x8664StoreLocation> livenessMap, Map<StoreReference<x8664StoreLocation>, x8664StoreLocation> allocations, int stackSize) {}
 
     public Allocation allocate(List<x8664Op> sequentialProgram, StoreRequests<x8664Op, x8664StoreLocation> storeRequests) {
         LivenessMap<x8664Op, x8664StoreLocation> liveness = LivenessMap.calculateFor(sequentialProgram, storeRequests);
@@ -41,8 +38,6 @@ public class x8664StoreAllocator {
         };
 
         Map<StoreReference<x8664StoreLocation>, x8664StoreLocation> coloring = interference.createColoring(availableLocations, stackAllocator);
-        allocations.putAll(coloring);
-
-        return new Allocation(Map.copyOf(allocations), Math.max(0, stackAllocator.size * STACK_STORE_SIZE));
+        return new Allocation(liveness, Map.copyOf(coloring), Math.max(0, stackAllocator.size * STACK_STORE_SIZE));
     }
 }
