@@ -22,6 +22,7 @@ import net.rizecookey.racc0on.backend.store.StoreRequests;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664Instr;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664InstrType;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664InstructionStream;
+import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Register;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664StoreLocation;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Immediate;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
@@ -124,7 +125,11 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
     }
 
     public void prepareStack() {
-        write(x8664InstrType.ENTER, new x8664Immediate(stackSize), new x8664Immediate(0));
+        write(x8664InstrType.PUSH, x8664Operand.Size.QUAD_WORD, x8664Register.RBP);
+        write(x8664InstrType.MOV, x8664Operand.Size.QUAD_WORD, x8664Register.RBP, x8664Register.RSP);
+        if (stackSize > 0) {
+            write(x8664InstrType.SUB, x8664Operand.Size.QUAD_WORD, x8664Register.RSP, new x8664Immediate(stackSize));
+        }
     }
 
     public void tearDownStack() {

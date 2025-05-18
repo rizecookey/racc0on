@@ -13,7 +13,6 @@ public class x8664CodeGenerator implements CodeGenerator {
 
     private static final String BOILERPLATE_ENTRY = """
             _entry:
-            enter 0, 0
             call main
             mov rdi, rax
             mov rax, 0x3C
