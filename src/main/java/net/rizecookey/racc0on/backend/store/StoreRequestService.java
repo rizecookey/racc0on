@@ -60,7 +60,7 @@ public interface StoreRequestService<T extends Operation<?, U>, U extends Variab
         }
     }
 
-    record Conditions<U extends VariableStore>(List<U> collisions, List<U> preferredLocations) {
+    record Conditions<U extends VariableStore>(List<U> preferredLocations, List<U> collisions) {
         public static <U extends VariableStore> ConditionBuilder<U> builder() {
             return new ConditionBuilder<>();
         }
