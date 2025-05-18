@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 /* TODO: Deal with instructions requiring special registers */
 public class x8664StorageAllocator {
+    public static final int STACK_SLOT_SIZE = 4;
     private final Map<Node, x8664StorageLocation> allocations = new HashMap<>();
 
     public record Allocation(Map<Node, x8664StorageLocation> allocations, int stackSize) {}
@@ -29,15 +30,16 @@ public class x8664StorageAllocator {
                 .filter(x8664Register::isGeneralPurpose)
                 .toList());
         int availableRegisters = availableLocations.size();
-        for (int i = availableRegisters; i <= maxColor; i++) {
-            availableLocations.add(new x8664StackLocation(i * 4));
+        int requiredStackSlots = maxColor + 1 - availableRegisters;
+        for (int i = 0; i < requiredStackSlots; i++) {
+            availableLocations.add(new x8664StackLocation((i + 1) * STACK_SLOT_SIZE));
         }
 
         for (Node node : coloring.keySet()) {
             allocations.put(node, availableLocations.get(coloring.get(node)));
         }
 
-        return new Allocation(Map.copyOf(allocations), Math.max(0, (maxColor - availableRegisters + 1) * 4));
+        return new Allocation(Map.copyOf(allocations), Math.max(0, requiredStackSlots * STACK_SLOT_SIZE));
     }
 
     private static Map<Node, Integer> getColoring(Graph<Node> interferenceGraph, List<Node> simplicialEliminationOrdering) {

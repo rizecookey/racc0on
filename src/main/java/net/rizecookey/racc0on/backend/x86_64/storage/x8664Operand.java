@@ -15,12 +15,6 @@ public interface x8664Operand {
                 case QUAD_WORD -> qwordName;
             };
         }
-
-        public static OperandId stack(int offset) {
-            int relativeToBasePointer = offset * 4 + 8;
-            String common = "[" + x8664Register.RBP.getId().qwordName() + "-" + relativeToBasePointer + "]";
-            return new OperandId(common);
-        }
     }
 
     enum Size {
