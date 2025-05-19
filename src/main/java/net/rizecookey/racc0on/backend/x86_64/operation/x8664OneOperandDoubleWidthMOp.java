@@ -6,7 +6,7 @@ import net.rizecookey.racc0on.backend.store.StoreReference;
 import net.rizecookey.racc0on.backend.store.StoreRequestService;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664InstrType;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Register;
-import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664StoreLocation;
+import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Store;
 import net.rizecookey.racc0on.backend.x86_64.store.x8664StoreRefResolver;
 import net.rizecookey.racc0on.backend.x86_64.x8664InstructionGenerator;
 
@@ -24,8 +24,8 @@ public class x8664OneOperandDoubleWidthMOp implements x8664Op {
     private final x8664Register inData, outData;
     private final Node out, inLeft, inRight;
 
-    private StoreReference<x8664StoreLocation> outRef, inLeftRef, inRightRef;
-    private final List<StoreReference<x8664StoreLocation>> taintedRefs;
+    private StoreReference<x8664Store> outRef, inLeftRef, inRightRef;
+    private final List<StoreReference<x8664Store>> taintedRefs;
 
     public x8664OneOperandDoubleWidthMOp(x8664InstrType type, List<x8664Register> tainted,
                                          x8664Register inData, x8664Register outData,
@@ -43,15 +43,15 @@ public class x8664OneOperandDoubleWidthMOp implements x8664Op {
     }
 
     private void forEachTaintedBackupPair(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier,
-                                BiConsumer<x8664StoreLocation, x8664StoreLocation> consumer) {
-        SequencedSet<x8664StoreLocation> live = generator.getLiveAt(this);
+                                BiConsumer<x8664Store, x8664Store> consumer) {
+        SequencedSet<x8664Store> live = generator.getLiveAt(this);
         for (int i = 0; i < tainted.size(); i++) {
             x8664Register taintedReg = tainted.get(i);
             if (!live.contains(taintedReg)) {
                 continue;
             }
 
-            x8664StoreLocation backup = storeSupplier.resolve(taintedRefs.get(i)).orElseThrow();
+            x8664Store backup = storeSupplier.resolve(taintedRefs.get(i)).orElseThrow();
             consumer.accept(taintedReg, backup);
         }
     }
@@ -65,13 +65,13 @@ public class x8664OneOperandDoubleWidthMOp implements x8664Op {
     }
 
     @Override
-    public void makeStoreRequests(StoreRequestService<x8664Op, x8664StoreLocation> service) {
+    public void makeStoreRequests(StoreRequestService<x8664Op, x8664Store> service) {
         outRef = service.requestOutputStore(this, out);
         inLeftRef = service.requestInputStore(this, inLeft);
         inRightRef = service.requestInputStore(this, inRight);
 
-        StoreRequestService.Conditions<x8664StoreLocation> backupConditions = StoreRequestService.Conditions
-                .<x8664StoreLocation>builder()
+        StoreRequestService.Conditions<x8664Store> backupConditions = StoreRequestService.Conditions
+                .<x8664Store>builder()
                 .collidesWith(tainted)
                 .build();
         for (x8664Register _: tainted) {
@@ -81,13 +81,13 @@ public class x8664OneOperandDoubleWidthMOp implements x8664Op {
 
     @Override
     public void write(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {
-        x8664StoreLocation outOp = storeSupplier.resolve(outRef).orElseThrow();
-        x8664StoreLocation inLeftOp = storeSupplier.resolve(inLeftRef).orElseThrow();
-        x8664StoreLocation inRightOp = storeSupplier.resolve(inRightRef).orElseThrow();
+        x8664Store outOp = storeSupplier.resolve(outRef).orElseThrow();
+        x8664Store inLeftOp = storeSupplier.resolve(inLeftRef).orElseThrow();
+        x8664Store inRightOp = storeSupplier.resolve(inRightRef).orElseThrow();
 
         backupTainted(generator, storeSupplier);
 
-        x8664StoreLocation realRight = inRightOp;
+        x8664Store realRight = inRightOp;
         if (realRight instanceof x8664Register inRightRegister && SELF_TAINTED.contains(inRightRegister)) {
             realRight = x8664Register.MEMORY_ACCESS_RESERVE;
             generator.move(realRight, inRightOp);

@@ -23,7 +23,7 @@ import net.rizecookey.racc0on.backend.x86_64.instruction.x8664Instr;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664InstrType;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664InstructionStream;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Register;
-import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664StoreLocation;
+import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Store;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Immediate;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664AddOp;
@@ -53,9 +53,9 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
     private final List<Node> statements;
     private final List<x8664Instr> instructions;
     private final x8664CodeGenerator codeGenerator;
-    private final Map<StoreReference<x8664StoreLocation>, x8664StoreLocation> locations;
+    private final Map<StoreReference<x8664Store>, x8664Store> locations;
     private int stackSize;
-    private LivenessMap<x8664Op, x8664StoreLocation> livenessMap;
+    private LivenessMap<x8664Op, x8664Store> livenessMap;
 
     public x8664InstructionGenerator(x8664CodeGenerator codeGenerator, List<Node> statements) {
         this.statements = statements;
@@ -69,7 +69,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
 
     public List<x8664Instr> generateInstructions() {
         List<x8664Op> selectedOperations = new ArrayList<>();
-        StoreRequests<x8664Op, x8664StoreLocation> storeRequests = new StoreRequests<>();
+        StoreRequests<x8664Op, x8664Store> storeRequests = new StoreRequests<>();
         selectedOperations.add(new x8664EnterOp());
         for (Node node : statements) {
             x8664Op operation = selectOperation(node);
@@ -89,11 +89,11 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         return performOptimizations();
     }
 
-    public SequencedSet<StoreReference<x8664StoreLocation>> getReferencesLiveAt(x8664Op at) {
+    public SequencedSet<StoreReference<x8664Store>> getReferencesLiveAt(x8664Op at) {
         return livenessMap.getLiveAt(at);
     }
 
-    public SequencedSet<x8664StoreLocation> getLiveAt(x8664Op at) {
+    public SequencedSet<x8664Store> getLiveAt(x8664Op at) {
         return getReferencesLiveAt(at).stream().map(locations::get).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
@@ -175,7 +175,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         instructions.add(new x8664Instr.Binary(type, first, second, size));
     }
 
-    public void move(x8664StoreLocation to, x8664Operand from) {
+    public void move(x8664Store to, x8664Operand from) {
         new x8664MovOp(to, from).write(this, ref -> Optional.ofNullable(locations.get(ref)));
     }
 

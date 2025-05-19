@@ -2,13 +2,13 @@ package net.rizecookey.racc0on.backend.x86_64.instruction;
 
 import net.rizecookey.racc0on.backend.instruction.Instruction;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Register;
-import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664StoreLocation;
+import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Store;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
-public sealed interface x8664Instr extends Instruction<x8664Instr, x8664Operand, x8664StoreLocation> permits x8664Instr.NoOperand, x8664Instr.Unary, x8664Instr.Binary {
+public sealed interface x8664Instr extends Instruction<x8664Instr, x8664Operand, x8664Store> permits x8664Instr.NoOperand, x8664Instr.Unary, x8664Instr.Binary {
     @Override
     x8664InstrType type();
     x8664Operand.@Nullable Size size();

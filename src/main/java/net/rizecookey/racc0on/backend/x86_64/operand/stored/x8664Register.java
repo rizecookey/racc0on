@@ -2,7 +2,7 @@ package net.rizecookey.racc0on.backend.x86_64.operand.stored;
 
 import java.util.List;
 
-public enum x8664Register implements x8664StoreLocation {
+public enum x8664Register implements x8664Store {
     RBX(reg16("bx")),
     RCX(reg16("cx")),
     RSI(reg16("si")),

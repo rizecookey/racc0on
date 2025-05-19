@@ -2,13 +2,13 @@ package net.rizecookey.racc0on.backend.x86_64.instruction;
 
 import net.rizecookey.racc0on.backend.instruction.InstructionType;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Register;
-import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664StoreLocation;
+import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Store;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.Objects;
 
-public enum x8664InstrType implements InstructionType<x8664Instr, x8664StoreLocation> {
+public enum x8664InstrType implements InstructionType<x8664Instr, x8664Store> {
     ADD("add", operand(0)),
     SUB("sub", operand(0)),
     IMUL("imul", operand(0)),
@@ -34,14 +34,14 @@ public enum x8664InstrType implements InstructionType<x8664Instr, x8664StoreLoca
     }
 
     @Override
-    public List<x8664StoreLocation> getOverridenStores(x8664Instr instruction) {
+    public List<x8664Store> getOverridenStores(x8664Instr instruction) {
         return overriddenStoreGetters.stream()
                 .map(getter -> getter.getOverridden(instruction))
                 .filter(Objects::nonNull)
                 .toList();
     }
 
-    public static SpecificStoreGetter specific(x8664StoreLocation location) {
+    public static SpecificStoreGetter specific(x8664Store location) {
         return new SpecificStoreGetter(location);
     }
 
@@ -51,20 +51,21 @@ public enum x8664InstrType implements InstructionType<x8664Instr, x8664StoreLoca
 
     @FunctionalInterface
     public interface OverriddenStoreGetter {
-        @Nullable x8664StoreLocation getOverridden(x8664Instr instr);
+        @Nullable
+        x8664Store getOverridden(x8664Instr instr);
     }
 
-    public record SpecificStoreGetter(x8664StoreLocation storeLocation) implements OverriddenStoreGetter {
+    public record SpecificStoreGetter(x8664Store storeLocation) implements OverriddenStoreGetter {
         @Override
-        public x8664StoreLocation getOverridden(x8664Instr instr) {
+        public x8664Store getOverridden(x8664Instr instr) {
             return storeLocation;
         }
     }
 
     public record OperandStoreGetter(int operandIndex) implements OverriddenStoreGetter {
         @Override @Nullable
-        public x8664StoreLocation getOverridden(x8664Instr instr) {
-            if (!(instr.operands().get(operandIndex) instanceof x8664StoreLocation storeLocation)) {
+        public x8664Store getOverridden(x8664Instr instr) {
+            if (!(instr.operands().get(operandIndex) instanceof x8664Store storeLocation)) {
                 return null;
             }
 

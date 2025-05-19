@@ -7,8 +7,8 @@ import net.rizecookey.racc0on.backend.store.StoreReference;
 import net.rizecookey.racc0on.backend.store.StoreRequestService;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664InstrType;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Register;
-import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664StackLocation;
-import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664StoreLocation;
+import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664StackStore;
+import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Store;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Immediate;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
 import net.rizecookey.racc0on.backend.x86_64.store.x8664StoreRefResolver;
@@ -17,7 +17,7 @@ import net.rizecookey.racc0on.backend.x86_64.x8664InstructionGenerator;
 public class x8664TwoOperandRmMrOrMiOp implements x8664Op {
     private final x8664InstrType type;
     private final Node out, inLeft, inRight;
-    private StoreReference<x8664StoreLocation> outRef, inLeftRef, inRightRef;
+    private StoreReference<x8664Store> outRef, inLeftRef, inRightRef;
 
     public x8664TwoOperandRmMrOrMiOp(x8664InstrType type, Operands.Binary<Node> operands) {
         this.type = type;
@@ -28,7 +28,7 @@ public class x8664TwoOperandRmMrOrMiOp implements x8664Op {
     }
 
     @Override
-    public void makeStoreRequests(StoreRequestService<x8664Op, x8664StoreLocation> service) {
+    public void makeStoreRequests(StoreRequestService<x8664Op, x8664Store> service) {
         outRef = service.requestOutputStore(this, out);
         if (!(inLeft instanceof ConstIntNode)) {
             inLeftRef = service.requestInputStore(this, inLeft);
@@ -41,7 +41,7 @@ public class x8664TwoOperandRmMrOrMiOp implements x8664Op {
 
     @Override
     public void write(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {
-        x8664StoreLocation outOp = storeSupplier.resolve(outRef).orElseThrow();
+        x8664Store outOp = storeSupplier.resolve(outRef).orElseThrow();
         x8664Operand inLeftOp = inLeft instanceof ConstIntNode constNode
                 ? new x8664Immediate(constNode.value())
                 : storeSupplier.resolve(inLeftRef).orElseThrow();
@@ -52,8 +52,8 @@ public class x8664TwoOperandRmMrOrMiOp implements x8664Op {
         write(generator, type, outOp, inLeftOp, inRightOp);
     }
 
-    public static void write(x8664InstructionGenerator generator, x8664InstrType type, x8664StoreLocation outOp, x8664Operand inLeftOp, x8664Operand inRightOp) {
-        if (outOp instanceof x8664StackLocation && (inLeftOp instanceof x8664StackLocation || inRightOp instanceof x8664StackLocation)) {
+    public static void write(x8664InstructionGenerator generator, x8664InstrType type, x8664Store outOp, x8664Operand inLeftOp, x8664Operand inRightOp) {
+        if (outOp instanceof x8664StackStore && (inLeftOp instanceof x8664StackStore || inRightOp instanceof x8664StackStore)) {
             generator.move(x8664Register.MEMORY_ACCESS_RESERVE, inLeftOp);
             generator.write(type, x8664Register.MEMORY_ACCESS_RESERVE, inRightOp);
             generator.move(outOp, x8664Register.MEMORY_ACCESS_RESERVE);
