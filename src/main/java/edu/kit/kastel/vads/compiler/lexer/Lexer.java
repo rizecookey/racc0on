@@ -55,6 +55,9 @@ public class Lexer {
             case '!' -> singleOrFollowedByEq(OperatorType.NOT, OperatorType.NOT_EQUAL);
             case '=' -> singleOrFollowedByEq(OperatorType.ASSIGN, OperatorType.EQUAL);
 
+            case '?' -> new Operator(OperatorType.TERNARY_IF_BRANCH, buildSpan(1));
+            case ':' -> new Operator(OperatorType.TERNARY_ELSE_BRANCH, buildSpan(1));
+
             default -> {
                 if (isIdentifierChar(peek())) {
                     if (isNumeric(peek())) {

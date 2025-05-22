@@ -49,6 +49,9 @@ public record Operator(OperatorType type, Span span) implements Token {
 
         NOT("!"),
         BITWISE_NOT("~"),
+
+        TERNARY_IF_BRANCH("?"),
+        TERNARY_ELSE_BRANCH(":"),
         ;
 
         private final String value;
