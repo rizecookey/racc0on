@@ -34,6 +34,16 @@ public class TokenSource {
         return this.tokens.get(this.idx);
     }
 
+    public Keyword expectType() {
+        Token token = peek();
+        if (!(token instanceof Keyword kw) || !kw.isTypeKeyword()) {
+            throw new ParseException("expected one of " + KeywordType.DATA_TYPES.keySet() + " but got " + token);
+        }
+
+        this.idx++;
+        return kw;
+    }
+
     public Keyword expectKeyword(KeywordType type) {
         Token token = peek();
         if (!(token instanceof Keyword kw) || kw.type() != type) {

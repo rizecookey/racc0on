@@ -74,8 +74,10 @@ public class Parser {
     }
 
     private StatementTree parseStatement() {
+        /* TODO: - Parsing if, while, for, continue, break
+                 - parsing inner blocks */
         StatementTree statement;
-        if (this.tokenSource.peek().isKeyword(KeywordType.INT)) {
+        if (this.tokenSource.peek().isTypeKeyword()) {
             statement = parseDeclaration();
         } else if (this.tokenSource.peek().isKeyword(KeywordType.RETURN)) {
             statement = parseReturn();
@@ -87,14 +89,14 @@ public class Parser {
     }
 
     private StatementTree parseDeclaration() {
-        Keyword type = this.tokenSource.expectKeyword(KeywordType.INT);
+        Keyword typeKeyword = this.tokenSource.expectType();
         Identifier ident = this.tokenSource.expectIdentifier();
         ExpressionTree expr = null;
         if (this.tokenSource.peek().isOperator(OperatorType.ASSIGN)) {
             this.tokenSource.expectOperator(OperatorType.ASSIGN);
             expr = parseExpression();
         }
-        return new DeclarationTree(new TypeTree(BasicType.INT, type.span()), name(ident), expr);
+        return new DeclarationTree(new TypeTree(KeywordType.DATA_TYPES.get(typeKeyword.type()), typeKeyword.span()), name(ident), expr);
     }
 
     private StatementTree parseSimple() {
@@ -105,14 +107,9 @@ public class Parser {
     }
 
     private Operator parseAssignmentOperator() {
-        if (this.tokenSource.peek() instanceof Operator op) {
-            return switch (op.type()) {
-                case ASSIGN, ASSIGN_DIV, ASSIGN_MINUS, ASSIGN_MOD, ASSIGN_MUL, ASSIGN_PLUS -> {
-                    this.tokenSource.consume();
-                    yield op;
-                }
-                default -> throw new ParseException("expected assignment but got " + op.type());
-            };
+        if (this.tokenSource.peek() instanceof Operator op && op.type().isAssignment()) {
+            this.tokenSource.consume();
+            return op;
         }
         throw new ParseException("expected assignment but got " + this.tokenSource.peek());
     }
@@ -134,6 +131,8 @@ public class Parser {
         return new ReturnTree(expression, ret.span().start());
     }
 
+    /* TODO: - precedence
+             - new operators */
     private ExpressionTree parseExpression() {
         ExpressionTree lhs = parseTerm();
         while (true) {

@@ -6,6 +6,10 @@ public sealed interface Token permits ErrorToken, Identifier, Keyword, NumberLit
 
     Span span();
 
+    default boolean isTypeKeyword() {
+        return false;
+    }
+
     default boolean isKeyword(KeywordType keywordType) {
         return false;
     }

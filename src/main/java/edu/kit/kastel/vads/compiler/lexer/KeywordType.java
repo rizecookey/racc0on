@@ -1,5 +1,9 @@
 package edu.kit.kastel.vads.compiler.lexer;
 
+import edu.kit.kastel.vads.compiler.parser.type.BasicType;
+
+import java.util.Map;
+
 public enum KeywordType {
   STRUCT("struct"),
   IF("if"),
@@ -23,6 +27,8 @@ public enum KeywordType {
   CHAR("char"),
   STRING("string"),
   ;
+
+  public static final Map<KeywordType, BasicType> DATA_TYPES = Map.of(INT, BasicType.INT, BOOL, BasicType.BOOL);
 
   private final String keyword;
 

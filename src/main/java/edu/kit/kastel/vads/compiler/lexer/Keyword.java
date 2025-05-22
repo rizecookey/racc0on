@@ -12,4 +12,9 @@ public record Keyword(KeywordType type, Span span) implements Token {
     public String asString() {
         return type().keyword();
     }
+
+    @Override
+    public boolean isTypeKeyword() {
+        return KeywordType.DATA_TYPES.containsKey(type());
+    }
 }
