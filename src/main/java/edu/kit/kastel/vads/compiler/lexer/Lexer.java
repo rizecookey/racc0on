@@ -36,12 +36,25 @@ public class Lexer {
             case '{' -> separator(SeparatorType.BRACE_OPEN);
             case '}' -> separator(SeparatorType.BRACE_CLOSE);
             case ';' -> separator(SeparatorType.SEMICOLON);
-            case '-' -> singleOrAssign(OperatorType.MINUS, OperatorType.ASSIGN_MINUS);
-            case '+' -> singleOrAssign(OperatorType.PLUS, OperatorType.ASSIGN_PLUS);
-            case '*' -> singleOrAssign(OperatorType.MUL, OperatorType.ASSIGN_MUL);
-            case '/' -> singleOrAssign(OperatorType.DIV, OperatorType.ASSIGN_DIV);
-            case '%' -> singleOrAssign(OperatorType.MOD, OperatorType.ASSIGN_MOD);
-            case '=' -> new Operator(OperatorType.ASSIGN, buildSpan(1));
+            case '-' -> singleOrFollowedByEq(OperatorType.MINUS, OperatorType.ASSIGN_MINUS);
+            case '+' -> singleOrFollowedByEq(OperatorType.PLUS, OperatorType.ASSIGN_PLUS);
+            case '*' -> singleOrFollowedByEq(OperatorType.MUL, OperatorType.ASSIGN_MUL);
+            case '/' -> singleOrFollowedByEq(OperatorType.DIV, OperatorType.ASSIGN_DIV);
+            case '%' -> singleOrFollowedByEq(OperatorType.MOD, OperatorType.ASSIGN_MOD);
+            case '^' -> singleOrFollowedByEq(OperatorType.BITWISE_XOR, OperatorType.ASSIGN_BITWISE_XOR);
+
+            case '&' -> singleOrAssignOrDouble(OperatorType.BITWISE_AND, OperatorType.ASSIGN_BITWISE_AND, OperatorType.AND);
+            case '|' -> singleOrAssignOrDouble(OperatorType.BITWISE_OR, OperatorType.ASSIGN_BITWISE_OR, OperatorType.OR);
+
+            case '<' -> compareOrDoubleOrDoubleAssign(OperatorType.LESS_THAN, OperatorType.LESS_OR_EQUAL,
+                    OperatorType.SHIFT_LEFT, OperatorType.ASSIGN_SHIFT_LEFT);
+            case '>' -> compareOrDoubleOrDoubleAssign(OperatorType.GREATER_THAN, OperatorType.GREATER_OR_EQUAL,
+                    OperatorType.SHIFT_RIGHT, OperatorType.ASSIGN_SHIFT_RIGHT);
+
+            case '~' -> new Operator(OperatorType.BITWISE_NOT, buildSpan(1));
+            case '!' -> singleOrFollowedByEq(OperatorType.NOT, OperatorType.NOT_EQUAL);
+            case '=' -> singleOrFollowedByEq(OperatorType.ASSIGN, OperatorType.EQUAL);
+
             default -> {
                 if (isIdentifierChar(peek())) {
                     if (isNumeric(peek())) {
@@ -188,10 +201,46 @@ public class Lexer {
         return isNumeric(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
     }
 
-    private Token singleOrAssign(OperatorType single, OperatorType assign) {
+    private Token singleOrFollowedByEq(OperatorType single, OperatorType assign) {
         if (hasMore(1) && peek(1) == '=') {
             return new Operator(assign, buildSpan(2));
         }
+        return new Operator(single, buildSpan(1));
+    }
+
+    private Token compareOrDoubleOrDoubleAssign(OperatorType compare, OperatorType compareEquals, OperatorType doubly, OperatorType doubleAssign) {
+        if (hasMore(1)) {
+            char second = peek(1);
+            if (second == peek()) {
+                return doubleOrAssign(doubly, doubleAssign);
+            }
+            if (second == '=') {
+                return new Operator(compareEquals, buildSpan(2));
+            }
+        }
+
+        return new Operator(compare, buildSpan(1));
+    }
+
+    private Token doubleOrAssign(OperatorType doubly, OperatorType assign) {
+        if (hasMore(2) && peek(2) == '=') {
+            return new Operator(assign, buildSpan(3));
+        }
+
+        return new Operator(doubly, buildSpan(2));
+    }
+
+    private Token singleOrAssignOrDouble(OperatorType single, OperatorType assign, OperatorType doubly) {
+        if (hasMore(1)) {
+            char second = peek(1);
+            if (second == peek()) {
+                return new Operator(doubly, buildSpan(2));
+            }
+            if (second == '=') {
+                return new Operator(assign, buildSpan(2));
+            }
+        }
+
         return new Operator(single, buildSpan(1));
     }
 

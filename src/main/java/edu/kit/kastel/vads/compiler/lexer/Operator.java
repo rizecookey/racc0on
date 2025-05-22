@@ -26,6 +26,29 @@ public record Operator(OperatorType type, Span span) implements Token {
         ASSIGN_MOD("%="),
         MOD("%"),
         ASSIGN("="),
+
+        BITWISE_AND("&"),
+        ASSIGN_BITWISE_AND("&="),
+        BITWISE_XOR("^"),
+        ASSIGN_BITWISE_XOR("^="),
+        BITWISE_OR("|"),
+        ASSIGN_BITWISE_OR("|="),
+        SHIFT_LEFT("<<"),
+        ASSIGN_SHIFT_LEFT("<<="),
+        SHIFT_RIGHT(">>"),
+        ASSIGN_SHIFT_RIGHT(">>="),
+
+        LESS_THAN("<"),
+        LESS_OR_EQUAL("<="),
+        GREATER_THAN(">"),
+        GREATER_OR_EQUAL(">="),
+        EQUAL("=="),
+        NOT_EQUAL("!="),
+        AND("&&"),
+        OR("||"),
+
+        NOT("!"),
+        BITWISE_NOT("~"),
         ;
 
         private final String value;
