@@ -6,10 +6,10 @@ if [ ! -d "$demo_dir/bin" ]; then
   mkdir "$demo_dir/bin"
 fi
 
-files="$(find "$demo_dir" -name "*.l1")"
+files="$(find "$demo_dir" -name "*.l*")"
 IFS=$'\n'
 for file in $files; do
-  target="$(dirname "$file")/bin/$(basename "${file%.l1}")"
+  target="$(dirname "$file")/bin/$(basename "${file%.l*}")"
   echo "Compiling $file > $target"
   "$project_root/run.sh" "$file" "$target"
   echo
