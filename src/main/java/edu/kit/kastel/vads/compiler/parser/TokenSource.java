@@ -2,14 +2,18 @@ package edu.kit.kastel.vads.compiler.parser;
 
 import edu.kit.kastel.vads.compiler.lexer.Identifier;
 import edu.kit.kastel.vads.compiler.lexer.Keyword;
-import edu.kit.kastel.vads.compiler.lexer.KeywordType;
+import edu.kit.kastel.vads.compiler.lexer.keyword.ControlKeywordType;
+import edu.kit.kastel.vads.compiler.lexer.keyword.KeywordType;
 import edu.kit.kastel.vads.compiler.lexer.Lexer;
 import edu.kit.kastel.vads.compiler.lexer.Operator;
 import edu.kit.kastel.vads.compiler.lexer.Operator.OperatorType;
 import edu.kit.kastel.vads.compiler.lexer.Separator;
 import edu.kit.kastel.vads.compiler.lexer.Separator.SeparatorType;
 import edu.kit.kastel.vads.compiler.lexer.Token;
+import edu.kit.kastel.vads.compiler.lexer.keyword.TypeKeywordType;
+import net.rizecookey.racc0on.utils.Pair;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -34,19 +38,29 @@ public class TokenSource {
         return this.tokens.get(this.idx);
     }
 
-    public Keyword expectType() {
+    public Pair<Keyword, TypeKeywordType> expectType() {
         Token token = peek();
         if (!(token instanceof Keyword kw) || !kw.isTypeKeyword()) {
-            throw new ParseException("expected one of " + KeywordType.DATA_TYPES.keySet() + " but got " + token);
+            throw new ParseException("expected one of " + Arrays.toString(TypeKeywordType.values()) + " but got " + token);
         }
 
         this.idx++;
-        return kw;
+        return new Pair<>(kw, (TypeKeywordType) kw.type());
+    }
+
+    public Pair<Keyword, ControlKeywordType> expectControl() {
+        Token token = peek();
+        if (!(token instanceof Keyword kw) || !kw.isControlKeyword()) {
+            throw new ParseException("expected one of " + Arrays.toString(ControlKeywordType.values()) + " but got " + token);
+        }
+
+        this.idx++;
+        return new Pair<>(kw, (ControlKeywordType) kw.type());
     }
 
     public Keyword expectKeyword(KeywordType type) {
         Token token = peek();
-        if (!(token instanceof Keyword kw) || kw.type() != type) {
+        if (!(token instanceof Keyword kw) || !kw.type().equals(type)) {
             throw new ParseException("expected keyword '" + type + "' but got " + token);
         }
         this.idx++;

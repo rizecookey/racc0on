@@ -2,7 +2,7 @@ package edu.kit.kastel.vads.compiler.parser;
 
 import edu.kit.kastel.vads.compiler.lexer.Identifier;
 import edu.kit.kastel.vads.compiler.lexer.Keyword;
-import edu.kit.kastel.vads.compiler.lexer.KeywordType;
+import edu.kit.kastel.vads.compiler.lexer.keyword.ControlKeywordType;
 import edu.kit.kastel.vads.compiler.lexer.NumberLiteral;
 import edu.kit.kastel.vads.compiler.lexer.Operator;
 import edu.kit.kastel.vads.compiler.lexer.Operator.OperatorType;
@@ -10,6 +10,7 @@ import edu.kit.kastel.vads.compiler.lexer.Separator;
 import edu.kit.kastel.vads.compiler.lexer.Separator.SeparatorType;
 import edu.kit.kastel.vads.compiler.Span;
 import edu.kit.kastel.vads.compiler.lexer.Token;
+import edu.kit.kastel.vads.compiler.lexer.keyword.TypeKeywordType;
 import edu.kit.kastel.vads.compiler.parser.ast.AssignmentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.BinaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.BlockTree;
@@ -48,7 +49,7 @@ public class Parser {
     }
 
     private FunctionTree parseFunction() {
-        Keyword returnType = this.tokenSource.expectKeyword(KeywordType.INT);
+        Keyword returnType = this.tokenSource.expectKeyword(TypeKeywordType.INT);
         Identifier identifier = this.tokenSource.expectIdentifier();
         if (!identifier.value().equals("main")) {
             throw new ParseException("expected main function but got " + identifier);
@@ -79,7 +80,7 @@ public class Parser {
         StatementTree statement;
         if (this.tokenSource.peek().isTypeKeyword()) {
             statement = parseDeclaration();
-        } else if (this.tokenSource.peek().isKeyword(KeywordType.RETURN)) {
+        } else if (this.tokenSource.peek().isKeyword(ControlKeywordType.RETURN)) {
             statement = parseReturn();
         } else {
             statement = parseSimple();
@@ -89,14 +90,16 @@ public class Parser {
     }
 
     private StatementTree parseDeclaration() {
-        Keyword typeKeyword = this.tokenSource.expectType();
+        var result = this.tokenSource.expectType();
+        Keyword keyword = result.first();
+        TypeKeywordType type = result.second();
         Identifier ident = this.tokenSource.expectIdentifier();
         ExpressionTree expr = null;
         if (this.tokenSource.peek().isOperator(OperatorType.ASSIGN)) {
             this.tokenSource.expectOperator(OperatorType.ASSIGN);
             expr = parseExpression();
         }
-        return new DeclarationTree(new TypeTree(KeywordType.DATA_TYPES.get(typeKeyword.type()), typeKeyword.span()), name(ident), expr);
+        return new DeclarationTree(new TypeTree(type.type(), keyword.span()), name(ident), expr);
     }
 
     private StatementTree parseSimple() {
@@ -126,7 +129,7 @@ public class Parser {
     }
 
     private StatementTree parseReturn() {
-        Keyword ret = this.tokenSource.expectKeyword(KeywordType.RETURN);
+        Keyword ret = this.tokenSource.expectKeyword(ControlKeywordType.RETURN);
         ExpressionTree expression = parseExpression();
         return new ReturnTree(expression, ret.span().start());
     }

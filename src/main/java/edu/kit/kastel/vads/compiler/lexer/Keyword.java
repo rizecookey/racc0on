@@ -1,11 +1,14 @@
 package edu.kit.kastel.vads.compiler.lexer;
 
 import edu.kit.kastel.vads.compiler.Span;
+import edu.kit.kastel.vads.compiler.lexer.keyword.ControlKeywordType;
+import edu.kit.kastel.vads.compiler.lexer.keyword.KeywordType;
+import edu.kit.kastel.vads.compiler.lexer.keyword.TypeKeywordType;
 
 public record Keyword(KeywordType type, Span span) implements Token {
     @Override
     public boolean isKeyword(KeywordType keywordType) {
-        return type() == keywordType;
+        return type().equals(keywordType);
     }
 
     @Override
@@ -15,6 +18,11 @@ public record Keyword(KeywordType type, Span span) implements Token {
 
     @Override
     public boolean isTypeKeyword() {
-        return KeywordType.DATA_TYPES.containsKey(type());
+        return type instanceof TypeKeywordType;
+    }
+
+    @Override
+    public boolean isControlKeyword() {
+        return type instanceof ControlKeywordType;
     }
 }

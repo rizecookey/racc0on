@@ -4,6 +4,7 @@ import edu.kit.kastel.vads.compiler.Position;
 import edu.kit.kastel.vads.compiler.Span;
 import edu.kit.kastel.vads.compiler.lexer.Operator.OperatorType;
 import edu.kit.kastel.vads.compiler.lexer.Separator.SeparatorType;
+import edu.kit.kastel.vads.compiler.lexer.keyword.KeywordType;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
@@ -160,11 +161,9 @@ public class Lexer {
             off++;
         }
         String id = this.source.substring(this.pos, this.pos + off);
-        // This is a naive solution. Using a better data structure (hashmap, trie) likely performs better.
-        for (KeywordType value : KeywordType.values()) {
-            if (value.keyword().equals(id)) {
-                return new Keyword(value, buildSpan(off));
-            }
+        KeywordType keyword = KeywordType.STRING_TO_KEYWORD.get(id);
+        if (keyword != null) {
+            return new Keyword(keyword, buildSpan(off));
         }
         return new Identifier(id, buildSpan(off));
     }
