@@ -1,5 +1,6 @@
 package edu.kit.kastel.vads.compiler.parser;
 
+import edu.kit.kastel.vads.compiler.Position;
 import edu.kit.kastel.vads.compiler.lexer.Identifier;
 import edu.kit.kastel.vads.compiler.lexer.Keyword;
 import edu.kit.kastel.vads.compiler.lexer.keyword.ControlKeywordType;
@@ -14,6 +15,7 @@ import edu.kit.kastel.vads.compiler.lexer.keyword.TypeKeywordType;
 import edu.kit.kastel.vads.compiler.parser.ast.AssignmentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.BinaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.BlockTree;
+import edu.kit.kastel.vads.compiler.parser.ast.ControlTree;
 import edu.kit.kastel.vads.compiler.parser.ast.DeclarationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.ExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.FunctionTree;
@@ -21,12 +23,17 @@ import edu.kit.kastel.vads.compiler.parser.ast.IdentExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.LValueIdentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.LValueTree;
 import edu.kit.kastel.vads.compiler.parser.ast.LiteralTree;
+import edu.kit.kastel.vads.compiler.parser.ast.SimpleStatementTree;
+import edu.kit.kastel.vads.compiler.parser.ast.control.ForTree;
+import edu.kit.kastel.vads.compiler.parser.ast.control.IfElseTree;
+import edu.kit.kastel.vads.compiler.parser.ast.control.LoopControlTree;
 import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
 import edu.kit.kastel.vads.compiler.parser.ast.NegateTree;
 import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
-import edu.kit.kastel.vads.compiler.parser.ast.ReturnTree;
+import edu.kit.kastel.vads.compiler.parser.ast.control.ReturnTree;
 import edu.kit.kastel.vads.compiler.parser.ast.StatementTree;
 import edu.kit.kastel.vads.compiler.parser.ast.TypeTree;
+import edu.kit.kastel.vads.compiler.parser.ast.control.WhileTree;
 import edu.kit.kastel.vads.compiler.parser.symbol.Name;
 import edu.kit.kastel.vads.compiler.parser.type.BasicType;
 
@@ -75,21 +82,19 @@ public class Parser {
     }
 
     private StatementTree parseStatement() {
-        /* TODO: - Parsing if, while, for, continue, break
-                 - parsing inner blocks */
         StatementTree statement;
-        if (this.tokenSource.peek().isTypeKeyword()) {
-            statement = parseDeclaration();
-        } else if (this.tokenSource.peek().isKeyword(ControlKeywordType.RETURN)) {
-            statement = parseReturn();
+        if (this.tokenSource.peek().isControlKeyword()) {
+            statement = parseControl();
+        } else if (this.tokenSource.peek().isSeparator(SeparatorType.BRACE_OPEN)) {
+            statement = parseBlock();
         } else {
             statement = parseSimple();
+            this.tokenSource.expectSeparator(SeparatorType.SEMICOLON);
         }
-        this.tokenSource.expectSeparator(SeparatorType.SEMICOLON);
         return statement;
     }
 
-    private StatementTree parseDeclaration() {
+    private SimpleStatementTree parseDeclaration() {
         var result = this.tokenSource.expectType();
         Keyword keyword = result.first();
         TypeKeywordType type = result.second();
@@ -102,7 +107,11 @@ public class Parser {
         return new DeclarationTree(new TypeTree(type.type(), keyword.span()), name(ident), expr);
     }
 
-    private StatementTree parseSimple() {
+    private SimpleStatementTree parseSimple() {
+        if (this.tokenSource.peek().isTypeKeyword()) {
+            return parseDeclaration();
+        }
+
         LValueTree lValue = parseLValue();
         Operator assignmentOperator = parseAssignmentOperator();
         ExpressionTree expression = parseExpression();
@@ -128,10 +137,60 @@ public class Parser {
         return new LValueIdentTree(name(identifier));
     }
 
-    private StatementTree parseReturn() {
-        Keyword ret = this.tokenSource.expectKeyword(ControlKeywordType.RETURN);
-        ExpressionTree expression = parseExpression();
-        return new ReturnTree(expression, ret.span().start());
+    private ControlTree parseControl() {
+        var result = this.tokenSource.expectControl();
+        Keyword keyword = result.first();
+        Position start = keyword.span().start();
+        ControlKeywordType controlType = result.second();
+        return switch (controlType) {
+            case IF -> {
+                this.tokenSource.expectSeparator(SeparatorType.PAREN_OPEN);
+                ExpressionTree condition = parseExpression();
+                this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
+                StatementTree then = parseStatement();
+                StatementTree elsey = null;
+                if (this.tokenSource.peek().isKeyword(ControlKeywordType.ELSE)) {
+                    this.tokenSource.expectKeyword(ControlKeywordType.ELSE);
+                    elsey = parseStatement();
+                }
+
+                yield new IfElseTree(condition, then, elsey, start);
+            }
+            case ELSE -> throw new ParseException("found else without preceding if statement");
+            case WHILE -> {
+                this.tokenSource.expectSeparator(SeparatorType.PAREN_OPEN);
+                ExpressionTree condition = parseExpression();
+                this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
+                StatementTree body = parseStatement();
+                yield new WhileTree(condition, body, start);
+            }
+            case FOR -> {
+                this.tokenSource.expectSeparator(SeparatorType.PAREN_OPEN);
+                SimpleStatementTree initializer = null;
+                if (!this.tokenSource.peek().isSeparator(SeparatorType.SEMICOLON)) {
+                    initializer = parseSimple();
+                }
+                this.tokenSource.expectSeparator(SeparatorType.SEMICOLON);
+                ExpressionTree condition = parseExpression();
+                this.tokenSource.expectSeparator(SeparatorType.SEMICOLON);
+                SimpleStatementTree step = null;
+                if (!this.tokenSource.peek().isSeparator(SeparatorType.PAREN_CLOSE)) {
+                    step = parseSimple();
+                }
+                this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
+                StatementTree body = parseStatement();
+                yield new ForTree(initializer, condition, body, step, start);
+            }
+            case BREAK, CONTINUE -> {
+                this.tokenSource.expectSeparator(SeparatorType.SEMICOLON);
+                yield new LoopControlTree(keyword.type(), keyword.span());
+            }
+            case RETURN -> {
+                ExpressionTree expression = parseExpression();
+                this.tokenSource.expectSeparator(SeparatorType.SEMICOLON);
+                yield new ReturnTree(expression, keyword.span().start());
+            }
+        };
     }
 
     /* TODO: - precedence

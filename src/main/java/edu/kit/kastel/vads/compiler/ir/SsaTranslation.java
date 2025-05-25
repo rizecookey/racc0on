@@ -15,13 +15,17 @@ import edu.kit.kastel.vads.compiler.parser.ast.FunctionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.IdentExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.LValueIdentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.LiteralTree;
+import edu.kit.kastel.vads.compiler.parser.ast.control.ForTree;
+import edu.kit.kastel.vads.compiler.parser.ast.control.IfElseTree;
+import edu.kit.kastel.vads.compiler.parser.ast.control.LoopControlTree;
 import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
 import edu.kit.kastel.vads.compiler.parser.ast.NegateTree;
 import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
-import edu.kit.kastel.vads.compiler.parser.ast.ReturnTree;
+import edu.kit.kastel.vads.compiler.parser.ast.control.ReturnTree;
 import edu.kit.kastel.vads.compiler.parser.ast.StatementTree;
 import edu.kit.kastel.vads.compiler.parser.ast.Tree;
 import edu.kit.kastel.vads.compiler.parser.ast.TypeTree;
+import edu.kit.kastel.vads.compiler.parser.ast.control.WhileTree;
 import edu.kit.kastel.vads.compiler.parser.symbol.Name;
 import edu.kit.kastel.vads.compiler.parser.visitor.Visitor;
 
@@ -212,6 +216,30 @@ public class SsaTranslation {
 
         @Override
         public Optional<Node> visit(TypeTree typeTree, SsaTranslation data) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Optional<Node> visit(LoopControlTree loopControlTree, SsaTranslation data) {
+            // TODO
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Optional<Node> visit(IfElseTree ifElseTree, SsaTranslation data) {
+            // TODO
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Optional<Node> visit(WhileTree whileTree, SsaTranslation data) {
+            // TODO
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Optional<Node> visit(ForTree forTree, SsaTranslation data) {
+            // TODO
             throw new UnsupportedOperationException();
         }
 

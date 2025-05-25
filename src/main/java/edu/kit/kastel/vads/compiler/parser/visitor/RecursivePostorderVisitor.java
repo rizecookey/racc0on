@@ -8,12 +8,16 @@ import edu.kit.kastel.vads.compiler.parser.ast.FunctionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.IdentExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.LValueIdentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.LiteralTree;
+import edu.kit.kastel.vads.compiler.parser.ast.control.ForTree;
+import edu.kit.kastel.vads.compiler.parser.ast.control.IfElseTree;
+import edu.kit.kastel.vads.compiler.parser.ast.control.LoopControlTree;
 import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
 import edu.kit.kastel.vads.compiler.parser.ast.NegateTree;
 import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
-import edu.kit.kastel.vads.compiler.parser.ast.ReturnTree;
+import edu.kit.kastel.vads.compiler.parser.ast.control.ReturnTree;
 import edu.kit.kastel.vads.compiler.parser.ast.StatementTree;
 import edu.kit.kastel.vads.compiler.parser.ast.TypeTree;
+import edu.kit.kastel.vads.compiler.parser.ast.control.WhileTree;
 
 /// A visitor that traverses a tree in postorder
 /// @param <T> a type for additional data
@@ -126,6 +130,46 @@ public class RecursivePostorderVisitor<T, R> implements Visitor<T, R> {
     @Override
     public R visit(TypeTree typeTree, T data) {
         return this.visitor.visit(typeTree, data);
+    }
+
+    @Override
+    public R visit(LoopControlTree loopControlTree, T data) {
+        return this.visitor.visit(loopControlTree, data);
+    }
+
+    @Override
+    public R visit(IfElseTree ifElseTree, T data) {
+        R r = ifElseTree.condition().accept(this, data);
+        r = ifElseTree.thenBranch().accept(this, accumulate(data, r));
+        if (ifElseTree.elseBranch() != null) {
+            r = ifElseTree.elseBranch().accept(this, accumulate(data, r));
+        }
+        r = this.visitor.visit(ifElseTree, accumulate(data, r));
+        return r;
+    }
+
+    @Override
+    public R visit(WhileTree whileTree, T data) {
+        R r = whileTree.condition().accept(this, data);
+        r = whileTree.body().accept(this, accumulate(data, r));
+        r = this.visitor.visit(whileTree, accumulate(data, r));
+        return r;
+    }
+
+    @Override
+    public R visit(ForTree forTree, T data) {
+        R r = null;
+        if (forTree.initializer() != null) {
+            r = forTree.initializer().accept(this, data);
+        }
+
+        r = forTree.condition().accept(this, r != null ? accumulate(data, r) : data);
+        r = forTree.body().accept(this, accumulate(data, r));
+        if (forTree.step() != null) {
+            r = forTree.step().accept(this, accumulate(data, r));
+        }
+        r = this.visitor.visit(forTree, accumulate(data, r));
+        return r;
     }
 
     protected T accumulate(T data, R value) {

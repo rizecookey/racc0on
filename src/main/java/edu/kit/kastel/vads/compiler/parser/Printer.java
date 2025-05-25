@@ -6,15 +6,20 @@ import edu.kit.kastel.vads.compiler.parser.ast.BlockTree;
 import edu.kit.kastel.vads.compiler.parser.ast.IdentExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.LValueIdentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.LiteralTree;
+import edu.kit.kastel.vads.compiler.parser.ast.SimpleStatementTree;
+import edu.kit.kastel.vads.compiler.parser.ast.control.ForTree;
+import edu.kit.kastel.vads.compiler.parser.ast.control.IfElseTree;
+import edu.kit.kastel.vads.compiler.parser.ast.control.LoopControlTree;
 import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
 import edu.kit.kastel.vads.compiler.parser.ast.NegateTree;
-import edu.kit.kastel.vads.compiler.parser.ast.ReturnTree;
+import edu.kit.kastel.vads.compiler.parser.ast.control.ReturnTree;
 import edu.kit.kastel.vads.compiler.parser.ast.Tree;
 import edu.kit.kastel.vads.compiler.parser.ast.DeclarationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.FunctionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
 import edu.kit.kastel.vads.compiler.parser.ast.StatementTree;
 import edu.kit.kastel.vads.compiler.parser.ast.TypeTree;
+import edu.kit.kastel.vads.compiler.parser.ast.control.WhileTree;
 
 import java.util.List;
 
@@ -48,6 +53,10 @@ public class Printer {
                 this.indentDepth++;
                 for (StatementTree statement : statements) {
                     printTree(statement);
+                    if (statement instanceof SimpleStatementTree) {
+                        semicolon();
+                    }
+                    lineBreak();
                 }
                 this.indentDepth--;
                 print("}");
@@ -88,10 +97,9 @@ public class Printer {
             case AssignmentTree(var lValue, var op, var expression) -> {
                 printTree(lValue);
                 space();
-                this.builder.append(op);
+                this.builder.append(op.type());
                 space();
                 printTree(expression);
-                semicolon();
             }
             case DeclarationTree(var type, var name, var initializer) -> {
                 printTree(type);
@@ -101,7 +109,6 @@ public class Printer {
                     print(" = ");
                     printTree(initializer);
                 }
-                semicolon();
             }
             case ReturnTree(var expr, _) -> {
                 print("return ");
@@ -110,6 +117,44 @@ public class Printer {
             }
             case LValueIdentTree(var name) -> printTree(name);
             case IdentExpressionTree(var name) -> printTree(name);
+            case LoopControlTree(var keywordType, _) -> {
+                print(keywordType.keyword());
+                semicolon();
+            }
+            case ForTree forTree -> {
+                print("for (");
+                if (forTree.initializer() != null) {
+                    printTree(forTree.initializer());
+                }
+                semicolon();
+                space();
+                printTree(forTree.condition());
+                semicolon();
+                space();
+                if (forTree.step() != null) {
+                    printTree(forTree.step());
+                } else {
+                    space();
+                }
+                print(") ");
+                printTree(forTree.body());
+            }
+            case IfElseTree ifElseTree -> {
+                print("if (");
+                printTree(ifElseTree.condition());
+                print(") ");
+                printTree(ifElseTree.thenBranch());
+                if (ifElseTree.elseBranch() != null) {
+                    print(" else ");
+                    printTree(ifElseTree.elseBranch());
+                }
+            }
+            case WhileTree whileTree -> {
+                print("while (");
+                printTree(whileTree.condition());
+                print(") ");
+                printTree(whileTree.body());
+            }
         }
     }
 
@@ -128,7 +173,6 @@ public class Printer {
 
     private void semicolon() {
         this.builder.append(";");
-        lineBreak();
     }
 
     private void space() {

@@ -7,6 +7,7 @@ import edu.kit.kastel.vads.compiler.ir.util.YCompPrinter;
 import edu.kit.kastel.vads.compiler.lexer.Lexer;
 import edu.kit.kastel.vads.compiler.parser.ParseException;
 import edu.kit.kastel.vads.compiler.parser.Parser;
+import edu.kit.kastel.vads.compiler.parser.Printer;
 import edu.kit.kastel.vads.compiler.parser.TokenSource;
 import edu.kit.kastel.vads.compiler.parser.ast.FunctionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
@@ -23,6 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Main {
+    public static final boolean DEBUG = Boolean.parseBoolean(System.getenv("RACC0ON_DEBUG"));
+
     public static void main(String[] args) throws IOException {
         if (args.length != 2) {
             System.err.println("Invalid arguments: Expected one input file and one output file");
@@ -30,7 +33,6 @@ public class Main {
         }
         Path input = Path.of(args[0]);
         Path output = Path.of(args[1]);
-        boolean debug = Boolean.parseBoolean(System.getenv("RACC0ON_DEBUG"));
 
         ProgramTree program = lexAndParse(input);
         try {
@@ -56,7 +58,7 @@ public class Main {
 
         String s = new x8664CodeGenerator().generateCode(graphs);
 
-        if (debug) {
+        if (DEBUG) {
             Files.writeString(output.getParent().resolve(output.getFileName().toString() + ".s"), s);
         }
 
@@ -76,7 +78,12 @@ public class Main {
             Lexer lexer = Lexer.forString(Files.readString(input));
             TokenSource tokenSource = new TokenSource(lexer);
             Parser parser = new Parser(tokenSource);
-            return parser.parseProgram();
+            ProgramTree result = parser.parseProgram();
+            if (DEBUG) {
+                System.out.println("Parsed program:");
+                System.out.println(Printer.print(result));
+            }
+            return result;
         } catch (ParseException e) {
             e.printStackTrace();
             System.exit(42);
