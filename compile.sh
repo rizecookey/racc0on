@@ -15,7 +15,7 @@ done
 for file in "${files[@]}"; do
   target_dir="$(dirname "$file")/bin"
   if [ ! -d "$target_dir" ]; then
-    mkdir "$target_dir/bin"
+    mkdir "$target_dir"
   fi
   target_name=$(basename "$file")
   target="$target_dir/${target_name%.l*}"
