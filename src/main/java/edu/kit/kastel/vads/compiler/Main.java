@@ -15,20 +15,24 @@ import edu.kit.kastel.vads.compiler.semantic.SemanticAnalysis;
 import edu.kit.kastel.vads.compiler.semantic.SemanticException;
 import net.rizecookey.racc0on.backend.AssemblerException;
 import net.rizecookey.racc0on.backend.x86_64.x8664CodeGenerator;
+import net.rizecookey.racc0on.utils.ConsoleColors;
+import net.rizecookey.racc0on.utils.Logger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Main {
+    public static final Logger LOGGER = new Logger();
     public static final boolean DEBUG = Boolean.parseBoolean(System.getenv("RACC0ON_DEBUG"));
 
     public static void main(String[] args) throws IOException {
         if (args.length != 2) {
-            System.err.println("Invalid arguments: Expected one input file and one output file");
+            LOGGER.writeError("invalid arguments: expected one input file and one output file");
             System.exit(3);
         }
         Path input = Path.of(args[0]);
@@ -65,29 +69,61 @@ public class Main {
         try {
             callAssembler(s, output);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.writeError("could not call gcc:", e);
             System.exit(1);
         } catch (AssemblerException e) {
-            System.err.println("Assembler failed with error code " + e.getExitCode() + ":");
-            System.err.println(e.getMessage());
+            LOGGER.writeError("assembler failed with error code " + e.getExitCode() + ":", e.getMessage());
+            System.exit(1);
         }
     }
 
     private static ProgramTree lexAndParse(Path input) throws IOException {
+        String programString = Files.readString(input);
         try {
-            Lexer lexer = Lexer.forString(Files.readString(input));
+            Lexer lexer = Lexer.forString(programString);
             TokenSource tokenSource = new TokenSource(lexer);
             Parser parser = new Parser(tokenSource);
             ProgramTree result = parser.parseProgram();
+
             if (DEBUG) {
-                System.out.println("Parsed program:");
-                System.out.println(Printer.print(result));
+                LOGGER.writeLog("Parsed program: ", Printer.print(result));
             }
+
             return result;
         } catch (ParseException e) {
-            e.printStackTrace();
+            printParserError(programString, e);
             System.exit(42);
             throw new AssertionError("unreachable");
+        }
+    }
+
+    private static void printParserError(String program, ParseException e) {
+        Span span = e.getSpan();
+        List<String> lines = Arrays.asList(program.split("(\\r\\n|\\r|\\n)"));
+
+        LOGGER.writeError(String.format("line %s, column %s: %s%n", span.start().line() + 1, span.start().column() + 1, e.getMessage()));
+
+        for (int i = span.start().line(); i <= span.end().line(); i++) {
+            String line = lines.get(i);
+            LOGGER.writeErrorContext(line);
+            StringBuilder positionMarker = new StringBuilder();
+            int startMarking = span.start().line() == i ? span.start().column() : 0;
+            int stopMarking = span.end().line() == i ? span.end().column() : line.length() - 1;
+            positionMarker
+                    .append(ConsoleColors.RED)
+                    .repeat(' ', startMarking)
+                    .repeat('^', stopMarking - startMarking)
+                    .repeat(' ', line.length() - 1 + stopMarking)
+                    .append(ConsoleColors.RESET);
+
+            LOGGER.writeErrorContext(positionMarker.toString());
+        }
+        LOGGER.errorNewline();
+
+        if (DEBUG) {
+            LOGGER.writeErrorAdditional(ConsoleColors.RED + "Stacktrace:");
+            LOGGER.writeErrorContext(e);
+            LOGGER.writeErrorAdditional(ConsoleColors.RESET);
         }
     }
 
@@ -98,9 +134,12 @@ public class Main {
                 "-x", "assembler",
                 "-m64",
                 "-"});
-        var writer = gcc.outputWriter();
-        writer.write(assembly);
-        writer.close();
+
+        if (gcc.isAlive()) {
+            var writer = gcc.outputWriter();
+            writer.write(assembly);
+            writer.close();
+        }
 
         while (gcc.isAlive()) {
             try {
@@ -114,13 +153,10 @@ public class Main {
 
             String line;
             while ((line = reader.readLine()) != null) {
-                if (line.startsWith("{standard input}:")) {
-                    line = line.substring("{standard input}:".length());
-                }
                 if (!errorLines.isEmpty()) {
                     errorLines.append("\n");
                 }
-                errorLines.append(line);
+                errorLines.append("  ").append(line);
             }
             reader.close();
             throw new AssemblerException(gcc.exitValue(), errorLines.toString());

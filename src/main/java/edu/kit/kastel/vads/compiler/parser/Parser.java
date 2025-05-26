@@ -53,7 +53,7 @@ public class Parser {
     public ProgramTree parseProgram() {
         ProgramTree programTree = new ProgramTree(List.of(parseFunction()));
         if (this.tokenSource.hasMore()) {
-            throw new ParseException("expected end of input but got " + this.tokenSource.peek());
+            throw new ParseException(this.tokenSource.peek().span(), "expected end of input but got " + this.tokenSource.peek());
         }
         return programTree;
     }
@@ -62,7 +62,7 @@ public class Parser {
         Keyword returnType = this.tokenSource.expectKeyword(TypeKeywordType.INT);
         Identifier identifier = this.tokenSource.expectIdentifier();
         if (!identifier.value().equals("main")) {
-            throw new ParseException("expected main function but got " + identifier);
+            throw new ParseException(identifier.span(), "expected main function but got " + identifier);
         }
         this.tokenSource.expectSeparator(SeparatorType.PAREN_OPEN);
         this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
@@ -126,7 +126,7 @@ public class Parser {
             this.tokenSource.consume();
             return op;
         }
-        throw new ParseException("expected assignment but got " + this.tokenSource.peek());
+        throw new ParseException(this.tokenSource.peek().span(), "expected assignment but got " + this.tokenSource.peek());
     }
 
     private LValueTree parseLValue() {
@@ -159,7 +159,7 @@ public class Parser {
 
                 yield new IfElseTree(condition, then, elsey, start);
             }
-            case ELSE -> throw new ParseException("found else without preceding if statement");
+            case ELSE -> throw new ParseException(keyword.span(), "found else without preceding if statement");
             case WHILE -> {
                 this.tokenSource.expectSeparator(SeparatorType.PAREN_OPEN);
                 ExpressionTree condition = parseExpression();
@@ -246,7 +246,7 @@ public class Parser {
                 this.tokenSource.consume();
                 yield new BoolLiteralTree(value, span);
             }
-            case Token t -> throw new ParseException("invalid factor " + t);
+            case Token t -> throw new ParseException(t.span(), "invalid factor " + t);
         };
     }
 
