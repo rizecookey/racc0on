@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-project_root="$(realpath "$(dirname "$0")/../")"
+project_root="$(realpath "$(dirname "$0")")"
 compiler="$project_root/run.sh"
 
 files=()
@@ -17,11 +17,13 @@ for file in "${files[@]}"; do
   if [ ! -d "$target_dir" ]; then
     mkdir "$target_dir/bin"
   fi
-  target="$target_dir/${file%.l*}"
+  target_name=$(basename "$file")
+  target="$target_dir/${target_name%.l*}"
   echo "Compiling $file > $target"
   JAVA_OPTS="$java_opts" "$compiler" "$file" "$target"
-  if [ "$?" != "0" ]; then
-    echo "Compilation failed with error code $?."
+  error="$?"
+  if [ "$error" != "0" ]; then
+    echo "Compilation failed with error code $error."
   else
     echo Compilation successful.
   fi
