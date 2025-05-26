@@ -3,15 +3,16 @@ package edu.kit.kastel.vads.compiler.parser;
 import edu.kit.kastel.vads.compiler.parser.ast.AssignmentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.BinaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.BlockTree;
+import edu.kit.kastel.vads.compiler.parser.ast.BoolLiteralTree;
 import edu.kit.kastel.vads.compiler.parser.ast.IdentExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.LValueIdentTree;
-import edu.kit.kastel.vads.compiler.parser.ast.LiteralTree;
+import edu.kit.kastel.vads.compiler.parser.ast.IntLiteralTree;
 import edu.kit.kastel.vads.compiler.parser.ast.SimpleStatementTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.ForTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.IfElseTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.LoopControlTree;
 import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
-import edu.kit.kastel.vads.compiler.parser.ast.NegateTree;
+import edu.kit.kastel.vads.compiler.parser.ast.UnaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.ReturnTree;
 import edu.kit.kastel.vads.compiler.parser.ast.Tree;
 import edu.kit.kastel.vads.compiler.parser.ast.DeclarationTree;
@@ -88,9 +89,11 @@ public class Printer {
                 printTree(rhs);
                 print(")");
             }
-            case LiteralTree(var value, _, _) -> this.builder.append(value);
-            case NegateTree(var expression, _) -> {
-                print("-(");
+            case IntLiteralTree(var value, _, _) -> this.builder.append(value);
+            case BoolLiteralTree(var value, _) -> this.builder.append(value);
+            case UnaryOperationTree(var type, var expression, _) -> {
+                print(type.toString());
+                print("(");
                 printTree(expression);
                 print(")");
             }

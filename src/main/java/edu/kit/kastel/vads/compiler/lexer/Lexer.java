@@ -2,7 +2,7 @@ package edu.kit.kastel.vads.compiler.lexer;
 
 import edu.kit.kastel.vads.compiler.Position;
 import edu.kit.kastel.vads.compiler.Span;
-import edu.kit.kastel.vads.compiler.lexer.Operator.OperatorType;
+import edu.kit.kastel.vads.compiler.lexer.Operator.*;
 import edu.kit.kastel.vads.compiler.lexer.Separator.SeparatorType;
 import edu.kit.kastel.vads.compiler.lexer.keyword.KeywordType;
 import org.jspecify.annotations.Nullable;
@@ -39,27 +39,27 @@ public class Lexer {
             case '{' -> separator(SeparatorType.BRACE_OPEN);
             case '}' -> separator(SeparatorType.BRACE_CLOSE);
             case ';' -> separator(SeparatorType.SEMICOLON);
-            case '-' -> singleOrFollowedByEq(OperatorType.MINUS, OperatorType.ASSIGN_MINUS);
-            case '+' -> singleOrFollowedByEq(OperatorType.PLUS, OperatorType.ASSIGN_PLUS);
-            case '*' -> singleOrFollowedByEq(OperatorType.MUL, OperatorType.ASSIGN_MUL);
-            case '/' -> singleOrFollowedByEq(OperatorType.DIV, OperatorType.ASSIGN_DIV);
-            case '%' -> singleOrFollowedByEq(OperatorType.MOD, OperatorType.ASSIGN_MOD);
-            case '^' -> singleOrFollowedByEq(OperatorType.BITWISE_XOR, OperatorType.ASSIGN_BITWISE_XOR);
+            case '-' -> singleOrFollowedByEq(AmbiguousOperatorType.MINUS, BinaryOperatorType.ASSIGN_MINUS);
+            case '+' -> singleOrFollowedByEq(BinaryOperatorType.PLUS, BinaryOperatorType.ASSIGN_PLUS);
+            case '*' -> singleOrFollowedByEq(BinaryOperatorType.MUL, BinaryOperatorType.ASSIGN_MUL);
+            case '/' -> singleOrFollowedByEq(BinaryOperatorType.DIV, BinaryOperatorType.ASSIGN_DIV);
+            case '%' -> singleOrFollowedByEq(BinaryOperatorType.MOD, BinaryOperatorType.ASSIGN_MOD);
+            case '^' -> singleOrFollowedByEq(BinaryOperatorType.BITWISE_XOR, BinaryOperatorType.ASSIGN_BITWISE_XOR);
 
-            case '&' -> singleOrAssignOrDouble(OperatorType.BITWISE_AND, OperatorType.ASSIGN_BITWISE_AND, OperatorType.AND);
-            case '|' -> singleOrAssignOrDouble(OperatorType.BITWISE_OR, OperatorType.ASSIGN_BITWISE_OR, OperatorType.OR);
+            case '&' -> singleOrAssignOrDouble(BinaryOperatorType.BITWISE_AND, BinaryOperatorType.ASSIGN_BITWISE_AND, BinaryOperatorType.AND);
+            case '|' -> singleOrAssignOrDouble(BinaryOperatorType.BITWISE_OR, BinaryOperatorType.ASSIGN_BITWISE_OR, BinaryOperatorType.OR);
 
-            case '<' -> compareOrDoubleOrDoubleAssign(OperatorType.LESS_THAN, OperatorType.LESS_OR_EQUAL,
-                    OperatorType.SHIFT_LEFT, OperatorType.ASSIGN_SHIFT_LEFT);
-            case '>' -> compareOrDoubleOrDoubleAssign(OperatorType.GREATER_THAN, OperatorType.GREATER_OR_EQUAL,
-                    OperatorType.SHIFT_RIGHT, OperatorType.ASSIGN_SHIFT_RIGHT);
+            case '<' -> compareOrDoubleOrDoubleAssign(BinaryOperatorType.LESS_THAN, BinaryOperatorType.LESS_OR_EQUAL,
+                    BinaryOperatorType.SHIFT_LEFT, BinaryOperatorType.ASSIGN_SHIFT_LEFT);
+            case '>' -> compareOrDoubleOrDoubleAssign(BinaryOperatorType.GREATER_THAN, BinaryOperatorType.GREATER_OR_EQUAL,
+                    BinaryOperatorType.SHIFT_RIGHT, BinaryOperatorType.ASSIGN_SHIFT_RIGHT);
 
-            case '~' -> new Operator(OperatorType.BITWISE_NOT, buildSpan(1));
-            case '!' -> singleOrFollowedByEq(OperatorType.NOT, OperatorType.NOT_EQUAL);
-            case '=' -> singleOrFollowedByEq(OperatorType.ASSIGN, OperatorType.EQUAL);
+            case '~' -> new Operator(UnaryOperatorType.BITWISE_NOT, buildSpan(1));
+            case '!' -> singleOrFollowedByEq(UnaryOperatorType.NOT, BinaryOperatorType.NOT_EQUAL);
+            case '=' -> singleOrFollowedByEq(BinaryOperatorType.ASSIGN, BinaryOperatorType.EQUAL);
 
-            case '?' -> new Operator(OperatorType.TERNARY_IF_BRANCH, buildSpan(1));
-            case ':' -> new Operator(OperatorType.TERNARY_ELSE_BRANCH, buildSpan(1));
+            case '?' -> new Operator(BinaryOperatorType.TERNARY_IF_BRANCH, buildSpan(1));
+            case ':' -> new Operator(BinaryOperatorType.TERNARY_ELSE_BRANCH, buildSpan(1));
 
             default -> {
                 if (isIdentifierChar(peek())) {

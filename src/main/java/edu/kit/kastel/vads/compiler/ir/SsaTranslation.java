@@ -7,19 +7,21 @@ import edu.kit.kastel.vads.compiler.ir.node.Node;
 import edu.kit.kastel.vads.compiler.ir.optimize.Optimizer;
 import edu.kit.kastel.vads.compiler.ir.util.DebugInfo;
 import edu.kit.kastel.vads.compiler.ir.util.DebugInfoHelper;
+import edu.kit.kastel.vads.compiler.lexer.Operator.BinaryOperatorType;
 import edu.kit.kastel.vads.compiler.parser.ast.AssignmentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.BinaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.BlockTree;
+import edu.kit.kastel.vads.compiler.parser.ast.BoolLiteralTree;
 import edu.kit.kastel.vads.compiler.parser.ast.DeclarationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.FunctionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.IdentExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.LValueIdentTree;
-import edu.kit.kastel.vads.compiler.parser.ast.LiteralTree;
+import edu.kit.kastel.vads.compiler.parser.ast.IntLiteralTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.ForTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.IfElseTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.LoopControlTree;
 import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
-import edu.kit.kastel.vads.compiler.parser.ast.NegateTree;
+import edu.kit.kastel.vads.compiler.parser.ast.UnaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.ReturnTree;
 import edu.kit.kastel.vads.compiler.parser.ast.StatementTree;
@@ -88,12 +90,12 @@ public class SsaTranslation {
         public Optional<Node> visit(AssignmentTree assignmentTree, SsaTranslation data) {
             pushSpan(assignmentTree);
             BinaryOperator<Node> desugar = switch (assignmentTree.operator().type()) {
-                case ASSIGN_MINUS -> data.constructor::newSub;
-                case ASSIGN_PLUS -> data.constructor::newAdd;
-                case ASSIGN_MUL -> data.constructor::newMul;
-                case ASSIGN_DIV -> (lhs, rhs) -> projResultDivMod(data, data.constructor.newDiv(lhs, rhs));
-                case ASSIGN_MOD -> (lhs, rhs) -> projResultDivMod(data, data.constructor.newMod(lhs, rhs));
-                case ASSIGN -> null;
+                case BinaryOperatorType.ASSIGN_MINUS -> data.constructor::newSub;
+                case BinaryOperatorType.ASSIGN_PLUS -> data.constructor::newAdd;
+                case BinaryOperatorType.ASSIGN_MUL -> data.constructor::newMul;
+                case BinaryOperatorType.ASSIGN_DIV -> (lhs, rhs) -> projResultDivMod(data, data.constructor.newDiv(lhs, rhs));
+                case BinaryOperatorType.ASSIGN_MOD -> (lhs, rhs) -> projResultDivMod(data, data.constructor.newMod(lhs, rhs));
+                case BinaryOperatorType.ASSIGN -> null;
                 default ->
                     throw new IllegalArgumentException("not an assignment operator " + assignmentTree.operator());
             };
@@ -173,11 +175,17 @@ public class SsaTranslation {
         }
 
         @Override
-        public Optional<Node> visit(LiteralTree literalTree, SsaTranslation data) {
-            pushSpan(literalTree);
-            Node node = data.constructor.newConstInt((int) literalTree.parseValue().orElseThrow());
+        public Optional<Node> visit(IntLiteralTree intLiteralTree, SsaTranslation data) {
+            pushSpan(intLiteralTree);
+            Node node = data.constructor.newConstInt((int) intLiteralTree.parseValue().orElseThrow());
             popSpan();
             return Optional.of(node);
+        }
+
+        @Override
+        public Optional<Node> visit(BoolLiteralTree boolLiteralTree, SsaTranslation data) {
+            // TODO
+            throw new UnsupportedOperationException();
         }
 
         @Override
@@ -191,9 +199,9 @@ public class SsaTranslation {
         }
 
         @Override
-        public Optional<Node> visit(NegateTree negateTree, SsaTranslation data) {
-            pushSpan(negateTree);
-            Node node = negateTree.expression().accept(this, data).orElseThrow();
+        public Optional<Node> visit(UnaryOperationTree unaryOperationTree, SsaTranslation data) {
+            pushSpan(unaryOperationTree);
+            Node node = unaryOperationTree.expression().accept(this, data).orElseThrow();
             Node res = data.constructor.newSub(data.constructor.newConstInt(0), node);
             popSpan();
             return Optional.of(res);

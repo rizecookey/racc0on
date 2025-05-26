@@ -1,12 +1,13 @@
 package edu.kit.kastel.vads.compiler.parser;
 
 import edu.kit.kastel.vads.compiler.Position;
+import edu.kit.kastel.vads.compiler.lexer.BooleanLiteral;
 import edu.kit.kastel.vads.compiler.lexer.Identifier;
 import edu.kit.kastel.vads.compiler.lexer.Keyword;
 import edu.kit.kastel.vads.compiler.lexer.keyword.ControlKeywordType;
 import edu.kit.kastel.vads.compiler.lexer.NumberLiteral;
 import edu.kit.kastel.vads.compiler.lexer.Operator;
-import edu.kit.kastel.vads.compiler.lexer.Operator.OperatorType;
+import edu.kit.kastel.vads.compiler.lexer.Operator.*;
 import edu.kit.kastel.vads.compiler.lexer.Separator;
 import edu.kit.kastel.vads.compiler.lexer.Separator.SeparatorType;
 import edu.kit.kastel.vads.compiler.Span;
@@ -15,6 +16,7 @@ import edu.kit.kastel.vads.compiler.lexer.keyword.TypeKeywordType;
 import edu.kit.kastel.vads.compiler.parser.ast.AssignmentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.BinaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.BlockTree;
+import edu.kit.kastel.vads.compiler.parser.ast.BoolLiteralTree;
 import edu.kit.kastel.vads.compiler.parser.ast.ControlTree;
 import edu.kit.kastel.vads.compiler.parser.ast.DeclarationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.ExpressionTree;
@@ -22,13 +24,13 @@ import edu.kit.kastel.vads.compiler.parser.ast.FunctionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.IdentExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.LValueIdentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.LValueTree;
-import edu.kit.kastel.vads.compiler.parser.ast.LiteralTree;
+import edu.kit.kastel.vads.compiler.parser.ast.IntLiteralTree;
 import edu.kit.kastel.vads.compiler.parser.ast.SimpleStatementTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.ForTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.IfElseTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.LoopControlTree;
 import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
-import edu.kit.kastel.vads.compiler.parser.ast.NegateTree;
+import edu.kit.kastel.vads.compiler.parser.ast.UnaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.ReturnTree;
 import edu.kit.kastel.vads.compiler.parser.ast.StatementTree;
@@ -39,6 +41,7 @@ import edu.kit.kastel.vads.compiler.parser.type.BasicType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class Parser {
     private final TokenSource tokenSource;
@@ -100,8 +103,8 @@ public class Parser {
         TypeKeywordType type = result.second();
         Identifier ident = this.tokenSource.expectIdentifier();
         ExpressionTree expr = null;
-        if (this.tokenSource.peek().isOperator(OperatorType.ASSIGN)) {
-            this.tokenSource.expectOperator(OperatorType.ASSIGN);
+        if (this.tokenSource.peek().isOperator(BinaryOperatorType.ASSIGN)) {
+            this.tokenSource.expectOperator(BinaryOperatorType.ASSIGN);
             expr = parseExpression();
         }
         return new DeclarationTree(new TypeTree(type.type(), keyword.span()), name(ident), expr);
@@ -193,28 +196,22 @@ public class Parser {
         };
     }
 
-    /* TODO: - precedence
-             - new operators */
     private ExpressionTree parseExpression() {
-        ExpressionTree lhs = parseTerm();
-        while (true) {
-            if (this.tokenSource.peek() instanceof Operator(var type, _)
-                && (type == OperatorType.PLUS || type == OperatorType.MINUS)) {
-                this.tokenSource.consume();
-                lhs = new BinaryOperationTree(lhs, parseTerm(), type);
-            } else {
-                return lhs;
-            }
-        }
+        return parseExpression(0);
     }
 
-    private ExpressionTree parseTerm() {
-        ExpressionTree lhs = parseFactor();
+    private ExpressionTree parseExpression(int level) {
+        if (level >= BinaryOperatorType.PRECEDENCE.size()) {
+            return parseFactor();
+        }
+
+        ExpressionTree lhs = parseExpression(level + 1);
         while (true) {
-            if (this.tokenSource.peek() instanceof Operator(var type, _)
-                && (type == OperatorType.MUL || type == OperatorType.DIV || type == OperatorType.MOD)) {
+            Optional<BinaryOperatorType> binary;
+            if (this.tokenSource.peek() instanceof Operator(OperatorType type, _) && (binary = type.as(BinaryOperatorType.class)).isPresent()
+                    && BinaryOperatorType.PRECEDENCE.get(level).contains(binary.get())) {
                 this.tokenSource.consume();
-                lhs = new BinaryOperationTree(lhs, parseFactor(), type);
+                lhs = new BinaryOperationTree(lhs, parseExpression(level + 1), binary.get());
             } else {
                 return lhs;
             }
@@ -229,9 +226,13 @@ public class Parser {
                 this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
                 yield expression;
             }
-            case Operator(var type, _) when type == OperatorType.MINUS -> {
+            case Operator(UnaryOperatorType type, _) -> {
                 Span span = this.tokenSource.consume().span();
-                yield new NegateTree(parseFactor(), span);
+                yield new UnaryOperationTree(type, parseFactor(), span);
+            }
+            case Operator(AmbiguousOperatorType ambiguous, _) when ambiguous == AmbiguousOperatorType.MINUS -> {
+                Span span = this.tokenSource.consume().span();
+                yield new UnaryOperationTree(UnaryOperatorType.NEGATION, parseFactor(), span);
             }
             case Identifier ident -> {
                 this.tokenSource.consume();
@@ -239,7 +240,11 @@ public class Parser {
             }
             case NumberLiteral(String value, int base, Span span) -> {
                 this.tokenSource.consume();
-                yield new LiteralTree(value, base, span);
+                yield new IntLiteralTree(value, base, span);
+            }
+            case BooleanLiteral(boolean value, Span span) -> {
+                this.tokenSource.consume();
+                yield new BoolLiteralTree(value, span);
             }
             case Token t -> throw new ParseException("invalid factor " + t);
         };
