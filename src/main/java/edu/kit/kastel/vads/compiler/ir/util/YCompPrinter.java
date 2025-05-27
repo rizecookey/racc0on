@@ -1,7 +1,7 @@
 package edu.kit.kastel.vads.compiler.ir.util;
 
 import edu.kit.kastel.vads.compiler.ir.IrGraph;
-import edu.kit.kastel.vads.compiler.ir.node.BinaryOperationNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.BinaryOperationNode;
 import edu.kit.kastel.vads.compiler.ir.node.Block;
 import edu.kit.kastel.vads.compiler.ir.node.ConstIntNode;
 import edu.kit.kastel.vads.compiler.ir.node.Node;

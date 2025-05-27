@@ -1,18 +1,18 @@
 package net.rizecookey.racc0on.backend.x86_64;
 
-import edu.kit.kastel.vads.compiler.ir.node.AddNode;
-import edu.kit.kastel.vads.compiler.ir.node.BinaryOperationNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.AddNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.BinaryOperationNode;
 import edu.kit.kastel.vads.compiler.ir.node.Block;
 import edu.kit.kastel.vads.compiler.ir.node.ConstIntNode;
-import edu.kit.kastel.vads.compiler.ir.node.DivNode;
-import edu.kit.kastel.vads.compiler.ir.node.ModNode;
-import edu.kit.kastel.vads.compiler.ir.node.MulNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.DivNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.ModNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.MulNode;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
 import edu.kit.kastel.vads.compiler.ir.node.Phi;
 import edu.kit.kastel.vads.compiler.ir.node.ProjNode;
 import edu.kit.kastel.vads.compiler.ir.node.ReturnNode;
 import edu.kit.kastel.vads.compiler.ir.node.StartNode;
-import edu.kit.kastel.vads.compiler.ir.node.SubNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.SubNode;
 import net.rizecookey.racc0on.backend.NodeUtils;
 import net.rizecookey.racc0on.backend.instruction.InstructionGenerator;
 import net.rizecookey.racc0on.backend.operand.Operands;
