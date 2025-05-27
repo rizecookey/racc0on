@@ -3,7 +3,7 @@ package edu.kit.kastel.vads.compiler.ir.node.operation.binary;
 import edu.kit.kastel.vads.compiler.ir.node.Block;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
 
-public sealed abstract class CommutativeBinaryOperationNode extends BinaryOperationNode permits AddNode, MulNode {
+public sealed abstract class CommutativeBinaryOperationNode extends BinaryOperationNode permits AddNode, BitwiseAndNode, BitwiseOrNode, BitwiseXorNode, EqNode, MulNode, NotEqNode {
     protected CommutativeBinaryOperationNode(Block block, Node left, Node right) {
         super(block, left, right);
     }

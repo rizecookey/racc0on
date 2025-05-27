@@ -3,7 +3,7 @@ package edu.kit.kastel.vads.compiler.ir.node.operation.binary;
 import edu.kit.kastel.vads.compiler.ir.node.Block;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
 
-public sealed abstract class BinaryOperationNode extends Node permits CommutativeBinaryOperationNode, DivNode, ModNode, SubNode {
+public sealed abstract class BinaryOperationNode extends Node permits CommutativeBinaryOperationNode, DivNode, GreaterNode, GreaterOrEqNode, LessNode, LessOrEqNode, ModNode, ShiftLeftNode, ShiftRightNode, SubNode {
     public static final int LEFT = 0;
     public static final int RIGHT = 1;
 
