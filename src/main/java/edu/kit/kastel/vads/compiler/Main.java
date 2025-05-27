@@ -32,7 +32,7 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         if (args.length != 2) {
-            LOGGER.writeError("invalid arguments: expected one input file and one output file");
+            LOGGER.prefixedError("invalid arguments: expected one input file and one output file");
             System.exit(3);
         }
         Path input = Path.of(args[0]);
@@ -69,10 +69,10 @@ public class Main {
         try {
             callAssembler(s, output);
         } catch (IOException e) {
-            LOGGER.writeError("could not call gcc:", e);
+            LOGGER.prefixedError("could not call gcc:", e);
             System.exit(1);
         } catch (AssemblerException e) {
-            LOGGER.writeError("assembler failed with error code " + e.getExitCode() + ":", e.getMessage());
+            LOGGER.prefixedError("assembler failed with error code " + e.getExitCode() + ":", e.getMessage());
             System.exit(1);
         }
     }
@@ -86,7 +86,7 @@ public class Main {
             ProgramTree result = parser.parseProgram();
 
             if (DEBUG) {
-                LOGGER.writeLog("Parsed program: ", Printer.print(result));
+                LOGGER.log("Parsed program: ", Printer.print(result));
             }
 
             return result;
@@ -101,11 +101,11 @@ public class Main {
         Span span = e.getSpan();
         List<String> lines = Arrays.asList(program.split("(\\r\\n|\\r|\\n)"));
 
-        LOGGER.writeError(String.format("line %s, column %s: %s%n", span.start().line() + 1, span.start().column() + 1, e.getMessage()));
+        LOGGER.prefixedError(String.format("line %s, column %s: %s%n", span.start().line() + 1, span.start().column() + 1, e.getMessage()));
 
         for (int i = span.start().line(); i <= span.end().line(); i++) {
             String line = lines.get(i);
-            LOGGER.writeErrorContext(line);
+            LOGGER.errorContext(line);
             StringBuilder positionMarker = new StringBuilder();
             int startMarking = span.start().line() == i ? span.start().column() : 0;
             int stopMarking = span.end().line() == i ? span.end().column() : line.length() - 1;
@@ -116,14 +116,14 @@ public class Main {
                     .repeat(' ', line.length() - 1 + stopMarking)
                     .append(ConsoleColors.RESET);
 
-            LOGGER.writeErrorContext(positionMarker.toString());
+            LOGGER.errorContext(positionMarker.toString());
         }
         LOGGER.errorNewline();
 
         if (DEBUG) {
-            LOGGER.writeErrorAdditional(ConsoleColors.RED + "Stacktrace:");
-            LOGGER.writeErrorContext(e);
-            LOGGER.writeErrorAdditional(ConsoleColors.RESET);
+            LOGGER.error(ConsoleColors.RED + "Stacktrace:");
+            LOGGER.errorContext(e);
+            LOGGER.error(ConsoleColors.RESET);
         }
     }
 

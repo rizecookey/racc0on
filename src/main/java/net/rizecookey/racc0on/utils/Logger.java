@@ -6,32 +6,36 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 
 public final class Logger {
-    public void writeLog(String message) {
+    public void log(String message) {
         System.out.println(message);
     }
 
-    public void writeLog(String message, String context) {
-        writeLog(message);
+    public void log(String message, String context) {
+        log(message);
         System.out.println(indent(2, context));
     }
 
-    public void writeError(String message) {
+    public void logContext(String context) {
+        System.out.println(indent(2, context));
+    }
+
+    public void error(String message) {
+        System.err.println(message);
+    }
+
+    public void prefixedError(String message) {
         errorPrefix();
         errorMessage(message);
     }
 
-    public void writeError(String message, String context) {
-        writeError(message);
-        writeErrorContext(context);
+    public void prefixedError(String message, String context) {
+        prefixedError(message);
+        errorContext(context);
     }
 
-    public void writeError(String message, Exception e) {
-        writeError(message);
-        writeErrorContext(e);
-    }
-
-    public void writeErrorAdditional(String message) {
-        System.err.println(message);
+    public void prefixedError(String message, Exception e) {
+        prefixedError(message);
+        errorContext(e);
     }
 
     private void errorPrefix() {
@@ -42,15 +46,15 @@ public final class Logger {
         System.err.println(ConsoleColors.YELLOW + message + ConsoleColors.RESET);
     }
 
-    public void writeErrorContext(Exception e) {
+    public void errorContext(Exception e) {
         StringWriter sw = new StringWriter();
         PrintWriter print = new PrintWriter(sw);
         e.printStackTrace(print);
         print.close();
-        writeErrorContext(sw.toString());
+        errorContext(sw.toString());
     }
 
-    public void writeErrorContext(String context) {
+    public void errorContext(String context) {
         System.err.println(indent(2, context));
     }
 
