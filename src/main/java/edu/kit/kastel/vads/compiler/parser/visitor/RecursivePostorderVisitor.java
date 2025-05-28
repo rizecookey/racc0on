@@ -9,6 +9,7 @@ import edu.kit.kastel.vads.compiler.parser.ast.FunctionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.IdentExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.LValueIdentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.IntLiteralTree;
+import edu.kit.kastel.vads.compiler.parser.ast.TernaryExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.ForTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.IfElseTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.LoopControlTree;
@@ -175,6 +176,15 @@ public class RecursivePostorderVisitor<T, R> implements Visitor<T, R> {
             r = forTree.step().accept(this, accumulate(data, r));
         }
         r = this.visitor.visit(forTree, accumulate(data, r));
+        return r;
+    }
+
+    @Override
+    public R visit(TernaryExpressionTree ternaryExpressionTree, T data) {
+        R r = ternaryExpressionTree.condition().accept(this, data);
+        r = ternaryExpressionTree.ifBranch().accept(this, accumulate(data, r));
+        r = ternaryExpressionTree.elseBranch().accept(this, accumulate(data, r));
+        r = this.visitor.visit(ternaryExpressionTree, accumulate(data, r));
         return r;
     }
 

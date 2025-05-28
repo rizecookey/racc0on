@@ -7,6 +7,7 @@ import edu.kit.kastel.vads.compiler.parser.ast.BoolLiteralTree;
 import edu.kit.kastel.vads.compiler.parser.ast.DeclarationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.FunctionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.IdentExpressionTree;
+import edu.kit.kastel.vads.compiler.parser.ast.TernaryExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.ForTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.IfElseTree;
 import edu.kit.kastel.vads.compiler.parser.ast.LValueIdentTree;
@@ -56,4 +57,6 @@ public interface Visitor<T, R> {
     R visit(WhileTree whileTree, T data);
 
     R visit(ForTree forTree, T data);
+
+    R visit(TernaryExpressionTree ternaryExpressionTree, T data);
 }

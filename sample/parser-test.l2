@@ -33,5 +33,5 @@ int main() {
 
   for (int e = 2; e; ) {}
 
-  return 0;
+  return 9 > 3 ? 7 < 3 ? 5 : 13 : 28;
 }

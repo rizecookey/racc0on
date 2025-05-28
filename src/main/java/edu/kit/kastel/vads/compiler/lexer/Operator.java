@@ -123,7 +123,6 @@ public record Operator(OperatorType type, Span span) implements Token {
         ;
 
         public static final List<Set<BinaryOperatorType>> PRECEDENCE = List.of(
-                Set.of(TERNARY_IF_BRANCH, TERNARY_ELSE_BRANCH),
                 Set.of(OR),
                 Set.of(AND),
                 Set.of(BITWISE_OR),

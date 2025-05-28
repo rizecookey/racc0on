@@ -9,6 +9,7 @@ import edu.kit.kastel.vads.compiler.parser.ast.FunctionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.IdentExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.LValueIdentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.IntLiteralTree;
+import edu.kit.kastel.vads.compiler.parser.ast.TernaryExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.ForTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.IfElseTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.LoopControlTree;
@@ -110,6 +111,11 @@ public interface NoOpVisitor<T> extends Visitor<T, Unit> {
 
     @Override
     default Unit visit(ForTree forTree, T data) {
+        return Unit.INSTANCE;
+    }
+
+    @Override
+    default Unit visit(TernaryExpressionTree ternaryExpressionTree, T data) {
         return Unit.INSTANCE;
     }
 }

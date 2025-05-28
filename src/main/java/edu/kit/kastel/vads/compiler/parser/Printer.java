@@ -8,6 +8,7 @@ import edu.kit.kastel.vads.compiler.parser.ast.IdentExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.LValueIdentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.IntLiteralTree;
 import edu.kit.kastel.vads.compiler.parser.ast.SimpleStatementTree;
+import edu.kit.kastel.vads.compiler.parser.ast.TernaryExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.ForTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.IfElseTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.LoopControlTree;
@@ -157,6 +158,15 @@ public class Printer {
                 printTree(whileTree.condition());
                 print(") ");
                 printTree(whileTree.body());
+            }
+            case TernaryExpressionTree ternaryExpressionTree -> {
+                print("(");
+                printTree(ternaryExpressionTree.condition());
+                print(") ? (");
+                printTree(ternaryExpressionTree.ifBranch());
+                print(") : (");
+                printTree(ternaryExpressionTree.elseBranch());
+                print(")");
             }
         }
     }

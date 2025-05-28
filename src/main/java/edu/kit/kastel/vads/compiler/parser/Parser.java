@@ -26,6 +26,7 @@ import edu.kit.kastel.vads.compiler.parser.ast.LValueIdentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.LValueTree;
 import edu.kit.kastel.vads.compiler.parser.ast.IntLiteralTree;
 import edu.kit.kastel.vads.compiler.parser.ast.SimpleStatementTree;
+import edu.kit.kastel.vads.compiler.parser.ast.TernaryExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.ForTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.IfElseTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.LoopControlTree;
@@ -197,7 +198,16 @@ public class Parser {
     }
 
     private ExpressionTree parseExpression() {
-        return parseExpression(0);
+        ExpressionTree current = parseExpression(0);
+        if (this.tokenSource.peek() instanceof Operator(OperatorType type, _) && type.equals(BinaryOperatorType.TERNARY_IF_BRANCH)) {
+            this.tokenSource.expectOperator(BinaryOperatorType.TERNARY_IF_BRANCH);
+            ExpressionTree ifBranch = parseExpression();
+            this.tokenSource.expectOperator(BinaryOperatorType.TERNARY_ELSE_BRANCH);
+            ExpressionTree elseBranch = parseExpression();
+            return new TernaryExpressionTree(current, ifBranch, elseBranch);
+        } else {
+            return current;
+        }
     }
 
     private ExpressionTree parseExpression(int level) {
