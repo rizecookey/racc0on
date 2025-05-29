@@ -19,7 +19,7 @@ public sealed interface Token permits ErrorToken, Identifier, Keyword, NumberLit
         return false;
     }
 
-    default boolean isOperator(Operator.OperatorType operatorType) {
+    default boolean isOperator(OperatorType operatorType) {
         return false;
     }
 

@@ -1,13 +1,28 @@
 package edu.kit.kastel.vads.compiler.ir;
 
 import edu.kit.kastel.vads.compiler.ir.node.Block;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.AddNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.BitwiseAndNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.BitwiseOrNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.BitwiseXorNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.DivNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.EqNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.GreaterNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.GreaterOrEqNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.LessNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.LessOrEqNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.ModNode;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.MulNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.NotEqNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.ShiftLeftNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.ShiftRightNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.SubNode;
 import edu.kit.kastel.vads.compiler.ir.optimize.Optimizer;
 import edu.kit.kastel.vads.compiler.ir.util.DebugInfo;
 import edu.kit.kastel.vads.compiler.ir.util.DebugInfoHelper;
-import edu.kit.kastel.vads.compiler.lexer.Operator.BinaryOperatorType;
+import edu.kit.kastel.vads.compiler.lexer.Operator;
+import edu.kit.kastel.vads.compiler.lexer.OperatorType;
 import edu.kit.kastel.vads.compiler.parser.ast.AssignmentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.BinaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.BlockTree;
@@ -31,6 +46,7 @@ import edu.kit.kastel.vads.compiler.parser.ast.TypeTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.WhileTree;
 import edu.kit.kastel.vads.compiler.parser.symbol.Name;
 import edu.kit.kastel.vads.compiler.parser.visitor.Visitor;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -87,19 +103,33 @@ public class SsaTranslation {
             DebugInfoHelper.setDebugInfo(this.debugStack.pop());
         }
 
+        private @Nullable BinaryOperator<Node> desugarer(SsaTranslation data, Operator op) {
+            OperatorType type = op.type();
+            if (!(type instanceof OperatorType.Assignment binType)) {
+                throw new IllegalArgumentException("not an assignment operator " + op);
+            }
+            return switch (binType) {
+                case OperatorType.Assignment.MINUS -> data.constructor.forBinaryOp(SubNode::new);
+                case OperatorType.Assignment.PLUS -> data.constructor.forBinaryOp(AddNode::new);
+                case OperatorType.Assignment.MUL -> data.constructor.forBinaryOp(MulNode::new);
+                case OperatorType.Assignment.DIV -> (lhs, rhs) -> projResultDivMod(data, data.constructor.newBinarySideEffectOp(DivNode::new, lhs, rhs));
+                case OperatorType.Assignment.MOD -> (lhs, rhs) -> projResultDivMod(data, data.constructor.newBinarySideEffectOp(ModNode::new, lhs, rhs));
+
+                case OperatorType.Assignment.BITWISE_AND -> data.constructor.forBinaryOp(BitwiseAndNode::new);
+                case OperatorType.Assignment.BITWISE_XOR -> data.constructor.forBinaryOp(BitwiseXorNode::new);
+                case OperatorType.Assignment.BITWISE_OR -> data.constructor.forBinaryOp(BitwiseOrNode::new);
+
+                case OperatorType.Assignment.SHIFT_LEFT -> data.constructor.forBinaryOp(ShiftLeftNode::new);
+                case OperatorType.Assignment.SHIFT_RIGHT -> data.constructor.forBinaryOp(ShiftRightNode::new);
+
+                case OperatorType.Assignment.DEFAULT -> null;
+            };
+        }
+
         @Override
         public Optional<Node> visit(AssignmentTree assignmentTree, SsaTranslation data) {
             pushSpan(assignmentTree);
-            BinaryOperator<Node> desugar = switch (assignmentTree.operator().type()) {
-                case BinaryOperatorType.ASSIGN_MINUS -> data.constructor::newSub;
-                case BinaryOperatorType.ASSIGN_PLUS -> data.constructor::newAdd;
-                case BinaryOperatorType.ASSIGN_MUL -> data.constructor::newMul;
-                case BinaryOperatorType.ASSIGN_DIV -> (lhs, rhs) -> projResultDivMod(data, data.constructor.newDiv(lhs, rhs));
-                case BinaryOperatorType.ASSIGN_MOD -> (lhs, rhs) -> projResultDivMod(data, data.constructor.newMod(lhs, rhs));
-                case BinaryOperatorType.ASSIGN -> null;
-                default ->
-                    throw new IllegalArgumentException("not an assignment operator " + assignmentTree.operator());
-            };
+            BinaryOperator<Node> desugar = desugarer(data, assignmentTree.operator());
 
             switch (assignmentTree.lValue()) {
                 case LValueIdentTree(var name) -> {
@@ -120,13 +150,24 @@ public class SsaTranslation {
             Node lhs = binaryOperationTree.lhs().accept(this, data).orElseThrow();
             Node rhs = binaryOperationTree.rhs().accept(this, data).orElseThrow();
             Node res = switch (binaryOperationTree.operatorType()) {
-                case MINUS -> data.constructor.newSub(lhs, rhs);
-                case PLUS -> data.constructor.newAdd(lhs, rhs);
-                case MUL -> data.constructor.newMul(lhs, rhs);
-                case DIV -> projResultDivMod(data, data.constructor.newDiv(lhs, rhs));
-                case MOD -> projResultDivMod(data, data.constructor.newMod(lhs, rhs));
-                default ->
-                    throw new IllegalArgumentException("not a binary expression operator " + binaryOperationTree.operatorType());
+                case MINUS -> data.constructor.newBinaryOp(SubNode::new, lhs, rhs);
+                case PLUS -> data.constructor.newBinaryOp(AddNode::new, lhs, rhs);
+                case MUL -> data.constructor.newBinaryOp(MulNode::new, lhs, rhs);
+                case DIV -> projResultDivMod(data, data.constructor.newBinarySideEffectOp(DivNode::new, lhs, rhs));
+                case MOD -> projResultDivMod(data, data.constructor.newBinarySideEffectOp(ModNode::new, lhs, rhs));
+                case BITWISE_AND -> data.constructor.newBinaryOp(BitwiseAndNode::new, lhs, rhs);
+                case BITWISE_XOR -> data.constructor.newBinaryOp(BitwiseXorNode::new, lhs, rhs);
+                case BITWISE_OR -> data.constructor.newBinaryOp(BitwiseOrNode::new, lhs, rhs);
+                case SHIFT_LEFT -> data.constructor.newBinaryOp(ShiftLeftNode::new, lhs, rhs);
+                case SHIFT_RIGHT -> data.constructor.newBinaryOp(ShiftRightNode::new, lhs, rhs);
+                case LESS_THAN -> data.constructor.newBinaryOp(LessNode::new, lhs, rhs);
+                case LESS_OR_EQUAL -> data.constructor.newBinaryOp(LessOrEqNode::new, lhs, rhs);
+                case GREATER_THAN -> data.constructor.newBinaryOp(GreaterNode::new, lhs, rhs);
+                case GREATER_OR_EQUAL -> data.constructor.newBinaryOp(GreaterOrEqNode::new, lhs, rhs);
+                case EQUAL -> data.constructor.newBinaryOp(EqNode::new, lhs, rhs);
+                case NOT_EQUAL -> data.constructor.newBinaryOp(NotEqNode::new, lhs, rhs);
+
+                case AND, OR -> throw new UnsupportedOperationException();
             };
             popSpan();
             return Optional.of(res);
@@ -203,7 +244,7 @@ public class SsaTranslation {
         public Optional<Node> visit(UnaryOperationTree unaryOperationTree, SsaTranslation data) {
             pushSpan(unaryOperationTree);
             Node node = unaryOperationTree.expression().accept(this, data).orElseThrow();
-            Node res = data.constructor.newSub(data.constructor.newConstInt(0), node);
+            Node res = data.constructor.newBinaryOp(SubNode::new, data.constructor.newConstInt(0), node);
             popSpan();
             return Optional.of(res);
         }

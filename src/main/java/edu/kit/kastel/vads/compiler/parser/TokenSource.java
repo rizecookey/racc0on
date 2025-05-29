@@ -6,7 +6,7 @@ import edu.kit.kastel.vads.compiler.lexer.keyword.ControlKeywordType;
 import edu.kit.kastel.vads.compiler.lexer.keyword.KeywordType;
 import edu.kit.kastel.vads.compiler.lexer.Lexer;
 import edu.kit.kastel.vads.compiler.lexer.Operator;
-import edu.kit.kastel.vads.compiler.lexer.Operator.OperatorType;
+import edu.kit.kastel.vads.compiler.lexer.OperatorType;
 import edu.kit.kastel.vads.compiler.lexer.Separator;
 import edu.kit.kastel.vads.compiler.lexer.Separator.SeparatorType;
 import edu.kit.kastel.vads.compiler.lexer.Token;

@@ -2,7 +2,6 @@ package edu.kit.kastel.vads.compiler.lexer;
 
 import edu.kit.kastel.vads.compiler.Position;
 import edu.kit.kastel.vads.compiler.Span;
-import edu.kit.kastel.vads.compiler.lexer.Operator.*;
 import edu.kit.kastel.vads.compiler.lexer.Separator.SeparatorType;
 import edu.kit.kastel.vads.compiler.lexer.keyword.KeywordType;
 import org.jspecify.annotations.Nullable;
@@ -39,27 +38,27 @@ public class Lexer {
             case '{' -> separator(SeparatorType.BRACE_OPEN);
             case '}' -> separator(SeparatorType.BRACE_CLOSE);
             case ';' -> separator(SeparatorType.SEMICOLON);
-            case '-' -> singleOrFollowedByEq(AmbiguousOperatorType.MINUS, BinaryOperatorType.ASSIGN_MINUS);
-            case '+' -> singleOrFollowedByEq(BinaryOperatorType.PLUS, BinaryOperatorType.ASSIGN_PLUS);
-            case '*' -> singleOrFollowedByEq(BinaryOperatorType.MUL, BinaryOperatorType.ASSIGN_MUL);
-            case '/' -> singleOrFollowedByEq(BinaryOperatorType.DIV, BinaryOperatorType.ASSIGN_DIV);
-            case '%' -> singleOrFollowedByEq(BinaryOperatorType.MOD, BinaryOperatorType.ASSIGN_MOD);
-            case '^' -> singleOrFollowedByEq(BinaryOperatorType.BITWISE_XOR, BinaryOperatorType.ASSIGN_BITWISE_XOR);
+            case '-' -> singleOrFollowedByEq(OperatorType.Ambiguous.MINUS, OperatorType.Assignment.MINUS);
+            case '+' -> singleOrFollowedByEq(OperatorType.Binary.PLUS, OperatorType.Assignment.PLUS);
+            case '*' -> singleOrFollowedByEq(OperatorType.Binary.MUL, OperatorType.Assignment.MUL);
+            case '/' -> singleOrFollowedByEq(OperatorType.Binary.DIV, OperatorType.Assignment.DIV);
+            case '%' -> singleOrFollowedByEq(OperatorType.Binary.MOD, OperatorType.Assignment.MOD);
+            case '^' -> singleOrFollowedByEq(OperatorType.Binary.BITWISE_XOR, OperatorType.Assignment.BITWISE_XOR);
 
-            case '&' -> singleOrAssignOrDouble(BinaryOperatorType.BITWISE_AND, BinaryOperatorType.ASSIGN_BITWISE_AND, BinaryOperatorType.AND);
-            case '|' -> singleOrAssignOrDouble(BinaryOperatorType.BITWISE_OR, BinaryOperatorType.ASSIGN_BITWISE_OR, BinaryOperatorType.OR);
+            case '&' -> singleOrAssignOrDouble(OperatorType.Binary.BITWISE_AND, OperatorType.Assignment.BITWISE_AND, OperatorType.Binary.AND);
+            case '|' -> singleOrAssignOrDouble(OperatorType.Binary.BITWISE_OR, OperatorType.Assignment.BITWISE_OR, OperatorType.Binary.OR);
 
-            case '<' -> compareOrDoubleOrDoubleAssign(BinaryOperatorType.LESS_THAN, BinaryOperatorType.LESS_OR_EQUAL,
-                    BinaryOperatorType.SHIFT_LEFT, BinaryOperatorType.ASSIGN_SHIFT_LEFT);
-            case '>' -> compareOrDoubleOrDoubleAssign(BinaryOperatorType.GREATER_THAN, BinaryOperatorType.GREATER_OR_EQUAL,
-                    BinaryOperatorType.SHIFT_RIGHT, BinaryOperatorType.ASSIGN_SHIFT_RIGHT);
+            case '<' -> compareOrDoubleOrDoubleAssign(OperatorType.Binary.LESS_THAN, OperatorType.Binary.LESS_OR_EQUAL,
+                    OperatorType.Binary.SHIFT_LEFT, OperatorType.Assignment.SHIFT_LEFT);
+            case '>' -> compareOrDoubleOrDoubleAssign(OperatorType.Binary.GREATER_THAN, OperatorType.Binary.GREATER_OR_EQUAL,
+                    OperatorType.Binary.SHIFT_RIGHT, OperatorType.Assignment.SHIFT_RIGHT);
 
-            case '~' -> new Operator(UnaryOperatorType.BITWISE_NOT, buildSpan(1));
-            case '!' -> singleOrFollowedByEq(UnaryOperatorType.NOT, BinaryOperatorType.NOT_EQUAL);
-            case '=' -> singleOrFollowedByEq(BinaryOperatorType.ASSIGN, BinaryOperatorType.EQUAL);
+            case '~' -> new Operator(OperatorType.Unary.BITWISE_NOT, buildSpan(1));
+            case '!' -> singleOrFollowedByEq(OperatorType.Unary.NOT, OperatorType.Binary.NOT_EQUAL);
+            case '=' -> singleOrFollowedByEq(OperatorType.Assignment.DEFAULT, OperatorType.Binary.EQUAL);
 
-            case '?' -> new Operator(BinaryOperatorType.TERNARY_IF_BRANCH, buildSpan(1));
-            case ':' -> new Operator(BinaryOperatorType.TERNARY_ELSE_BRANCH, buildSpan(1));
+            case '?' -> new Operator(OperatorType.Ternary.IF_BRANCH, buildSpan(1));
+            case ':' -> new Operator(OperatorType.Ternary.ELSE_BRANCH, buildSpan(1));
 
             default -> {
                 if (isIdentifierChar(peek())) {

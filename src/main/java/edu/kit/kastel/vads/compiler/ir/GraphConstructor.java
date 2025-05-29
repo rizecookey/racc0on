@@ -1,17 +1,12 @@
 package edu.kit.kastel.vads.compiler.ir;
 
-import edu.kit.kastel.vads.compiler.ir.node.operation.binary.AddNode;
 import edu.kit.kastel.vads.compiler.ir.node.Block;
 import edu.kit.kastel.vads.compiler.ir.node.ConstIntNode;
-import edu.kit.kastel.vads.compiler.ir.node.operation.binary.DivNode;
-import edu.kit.kastel.vads.compiler.ir.node.operation.binary.ModNode;
-import edu.kit.kastel.vads.compiler.ir.node.operation.binary.MulNode;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
 import edu.kit.kastel.vads.compiler.ir.node.Phi;
 import edu.kit.kastel.vads.compiler.ir.node.ProjNode;
 import edu.kit.kastel.vads.compiler.ir.node.ReturnNode;
 import edu.kit.kastel.vads.compiler.ir.node.StartNode;
-import edu.kit.kastel.vads.compiler.ir.node.operation.binary.SubNode;
 import edu.kit.kastel.vads.compiler.ir.optimize.Optimizer;
 import edu.kit.kastel.vads.compiler.parser.symbol.Name;
 
@@ -19,6 +14,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BinaryOperator;
 
 class GraphConstructor {
 
@@ -44,23 +40,30 @@ class GraphConstructor {
         return new StartNode(currentBlock());
     }
 
-    public Node newAdd(Node left, Node right) {
-        return this.optimizer.transform(new AddNode(currentBlock(), left, right));
-    }
-    public Node newSub(Node left, Node right) {
-        return this.optimizer.transform(new SubNode(currentBlock(), left, right));
+    @FunctionalInterface
+    public interface BinaryOpConstr {
+        Node create(Block block, Node left, Node right);
     }
 
-    public Node newMul(Node left, Node right) {
-        return this.optimizer.transform(new MulNode(currentBlock(), left, right));
+    @FunctionalInterface
+    public interface BinarySideEffectOpConstr {
+        Node create(Block block, Node left, Node right, Node sideEffect);
     }
 
-    public Node newDiv(Node left, Node right) {
-        return this.optimizer.transform(new DivNode(currentBlock(), left, right, readCurrentSideEffect()));
+    public Node newBinaryOp(BinaryOpConstr constr, Node left, Node right) {
+        return this.optimizer.transform(constr.create(currentBlock(), left, right));
     }
 
-    public Node newMod(Node left, Node right) {
-        return this.optimizer.transform(new ModNode(currentBlock(), left, right, readCurrentSideEffect()));
+    public Node newBinarySideEffectOp(BinarySideEffectOpConstr constr, Node left, Node right) {
+        return this.optimizer.transform(constr.create(currentBlock(), left, right, readCurrentSideEffect()));
+    }
+
+    public BinaryOperator<Node> forBinaryOp(BinaryOpConstr constr) {
+        return (left, right) -> newBinaryOp(constr, left, right);
+    }
+
+    public BinaryOperator<Node> forBinarySideEffectOp(BinarySideEffectOpConstr constr) {
+        return (left, right) -> newBinarySideEffectOp(constr, left, right);
     }
 
     public Node newReturn(Node result) {

@@ -4,10 +4,10 @@ import edu.kit.kastel.vads.compiler.Position;
 import edu.kit.kastel.vads.compiler.lexer.BooleanLiteral;
 import edu.kit.kastel.vads.compiler.lexer.Identifier;
 import edu.kit.kastel.vads.compiler.lexer.Keyword;
+import edu.kit.kastel.vads.compiler.lexer.OperatorType;
 import edu.kit.kastel.vads.compiler.lexer.keyword.ControlKeywordType;
 import edu.kit.kastel.vads.compiler.lexer.NumberLiteral;
 import edu.kit.kastel.vads.compiler.lexer.Operator;
-import edu.kit.kastel.vads.compiler.lexer.Operator.*;
 import edu.kit.kastel.vads.compiler.lexer.Separator;
 import edu.kit.kastel.vads.compiler.lexer.Separator.SeparatorType;
 import edu.kit.kastel.vads.compiler.Span;
@@ -104,8 +104,8 @@ public class Parser {
         TypeKeywordType type = result.second();
         Identifier ident = this.tokenSource.expectIdentifier();
         ExpressionTree expr = null;
-        if (this.tokenSource.peek().isOperator(BinaryOperatorType.ASSIGN)) {
-            this.tokenSource.expectOperator(BinaryOperatorType.ASSIGN);
+        if (this.tokenSource.peek().isOperator(OperatorType.Assignment.DEFAULT)) {
+            this.tokenSource.expectOperator(OperatorType.Assignment.DEFAULT);
             expr = parseExpression();
         }
         return new DeclarationTree(new TypeTree(type.type(), keyword.span()), name(ident), expr);
@@ -199,10 +199,10 @@ public class Parser {
 
     private ExpressionTree parseExpression() {
         ExpressionTree current = parseExpression(0);
-        if (this.tokenSource.peek() instanceof Operator(OperatorType type, _) && type.equals(BinaryOperatorType.TERNARY_IF_BRANCH)) {
-            this.tokenSource.expectOperator(BinaryOperatorType.TERNARY_IF_BRANCH);
+        if (this.tokenSource.peek() instanceof Operator(OperatorType type, _) && type.equals(OperatorType.Ternary.IF_BRANCH)) {
+            this.tokenSource.expectOperator(OperatorType.Ternary.IF_BRANCH);
             ExpressionTree ifBranch = parseExpression();
-            this.tokenSource.expectOperator(BinaryOperatorType.TERNARY_ELSE_BRANCH);
+            this.tokenSource.expectOperator(OperatorType.Ternary.ELSE_BRANCH);
             ExpressionTree elseBranch = parseExpression();
             return new TernaryExpressionTree(current, ifBranch, elseBranch);
         } else {
@@ -211,15 +211,15 @@ public class Parser {
     }
 
     private ExpressionTree parseExpression(int level) {
-        if (level >= BinaryOperatorType.PRECEDENCE.size()) {
+        if (level >= OperatorType.Binary.PRECEDENCE.size()) {
             return parseFactor();
         }
 
         ExpressionTree lhs = parseExpression(level + 1);
         while (true) {
-            Optional<BinaryOperatorType> binary;
-            if (this.tokenSource.peek() instanceof Operator(OperatorType type, _) && (binary = type.as(BinaryOperatorType.class)).isPresent()
-                    && BinaryOperatorType.PRECEDENCE.get(level).contains(binary.get())) {
+            Optional<OperatorType.Binary> binary;
+            if (this.tokenSource.peek() instanceof Operator(OperatorType type, _) && (binary = type.as(OperatorType.Binary.class)).isPresent()
+                    && OperatorType.Binary.PRECEDENCE.get(level).contains(binary.get())) {
                 this.tokenSource.consume();
                 lhs = new BinaryOperationTree(lhs, parseExpression(level + 1), binary.get());
             } else {
@@ -236,13 +236,13 @@ public class Parser {
                 this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
                 yield expression;
             }
-            case Operator(UnaryOperatorType type, _) -> {
+            case Operator(OperatorType.Unary type, _) -> {
                 Span span = this.tokenSource.consume().span();
                 yield new UnaryOperationTree(type, parseFactor(), span);
             }
-            case Operator(AmbiguousOperatorType ambiguous, _) when ambiguous == AmbiguousOperatorType.MINUS -> {
+            case Operator(OperatorType.Ambiguous ambiguous, _) when ambiguous == OperatorType.Ambiguous.MINUS -> {
                 Span span = this.tokenSource.consume().span();
-                yield new UnaryOperationTree(UnaryOperatorType.NEGATION, parseFactor(), span);
+                yield new UnaryOperationTree(OperatorType.Unary.NEGATION, parseFactor(), span);
             }
             case Identifier ident -> {
                 this.tokenSource.consume();
