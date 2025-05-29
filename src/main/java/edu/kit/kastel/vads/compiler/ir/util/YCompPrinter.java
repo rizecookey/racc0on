@@ -10,6 +10,7 @@ import edu.kit.kastel.vads.compiler.ir.node.ProjNode;
 import edu.kit.kastel.vads.compiler.ir.node.ProjNode.SimpleProjectionInfo;
 import edu.kit.kastel.vads.compiler.ir.node.ReturnNode;
 import edu.kit.kastel.vads.compiler.ir.node.StartNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.unary.UnaryOperationNode;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -215,6 +216,7 @@ public class YCompPrinter {
     private VcgColor nodeColor(Node node) {
         return switch (node) {
             case BinaryOperationNode _ -> VcgColor.NORMAL;
+            case UnaryOperationNode _ -> VcgColor.NORMAL;
             case Block _ -> VcgColor.NORMAL;
             case ConstIntNode _ -> VcgColor.NORMAL;
             case Phi _ -> VcgColor.PHI;

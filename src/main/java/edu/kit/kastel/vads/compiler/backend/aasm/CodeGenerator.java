@@ -7,7 +7,15 @@ import edu.kit.kastel.vads.compiler.ir.node.operation.binary.AddNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.BinaryOperationNode;
 import edu.kit.kastel.vads.compiler.ir.node.Block;
 import edu.kit.kastel.vads.compiler.ir.node.ConstIntNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.BitwiseAndNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.BitwiseOrNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.BitwiseXorNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.DivNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.EqNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.GreaterNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.GreaterOrEqNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.LessNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.LessOrEqNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.ModNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.MulNode;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
@@ -15,7 +23,13 @@ import edu.kit.kastel.vads.compiler.ir.node.Phi;
 import edu.kit.kastel.vads.compiler.ir.node.ProjNode;
 import edu.kit.kastel.vads.compiler.ir.node.ReturnNode;
 import edu.kit.kastel.vads.compiler.ir.node.StartNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.NotEqNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.ShiftLeftNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.ShiftRightNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.SubNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.unary.BitwiseNotNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.unary.NotNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.unary.UnaryOperationNode;
 
 import java.util.HashSet;
 import java.util.List;
@@ -58,6 +72,19 @@ public class CodeGenerator {
             case MulNode mul -> binary(builder, registers, mul, "mul");
             case DivNode div -> binary(builder, registers, div, "div");
             case ModNode mod -> binary(builder, registers, mod, "mod");
+            case BitwiseAndNode bitwiseAnd -> binary(builder, registers, bitwiseAnd, "&");
+            case BitwiseOrNode bitwiseOr -> binary(builder, registers, bitwiseOr, "|");
+            case BitwiseXorNode bitwiseXor -> binary(builder, registers, bitwiseXor, "^");
+            case EqNode eq -> binary(builder, registers, eq, "==");
+            case GreaterNode greater -> binary(builder, registers, greater, ">");
+            case GreaterOrEqNode greaterOrEq -> binary(builder, registers, greaterOrEq, ">=");
+            case LessNode less -> binary(builder, registers, less, "<");
+            case LessOrEqNode lessOrEq -> binary(builder, registers, lessOrEq, "<=");
+            case NotEqNode notEq -> binary(builder, registers, notEq, "!=");
+            case ShiftLeftNode shiftLeft -> binary(builder, registers, shiftLeft, "<<");
+            case ShiftRightNode shiftRight -> binary(builder, registers, shiftRight, ">>");
+            case NotNode not -> unary(builder, registers, not, "!");
+            case BitwiseNotNode bitwiseNot -> unary(builder, registers, bitwiseNot, "~");
             case ReturnNode r -> builder.repeat(" ", 2).append("ret ")
                 .append(registers.get(predecessorSkipProj(r, ReturnNode.RESULT)));
             case ConstIntNode c -> builder.repeat(" ", 2)
@@ -71,6 +98,18 @@ public class CodeGenerator {
             }
         }
         builder.append("\n");
+    }
+
+    private static void unary(
+            StringBuilder builder,
+            Map<Node, Register> registers,
+            UnaryOperationNode node,
+            String opcode
+    ) {
+        builder.repeat(" ", 2).append(registers.get(node))
+                .append(" = ")
+                .append(opcode)
+                .append(registers.get(predecessorSkipProj(node, UnaryOperationNode.IN)));
     }
 
     private static void binary(
