@@ -9,6 +9,7 @@ import edu.kit.kastel.vads.compiler.ir.node.Phi;
 import edu.kit.kastel.vads.compiler.ir.node.ProjNode;
 import edu.kit.kastel.vads.compiler.ir.node.ReturnNode;
 import edu.kit.kastel.vads.compiler.ir.node.StartNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.unary.UnaryOperationNode;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -22,7 +23,7 @@ public final class NodeUtils {
 
     public static boolean providesValue(Node node) {
         return switch (node) {
-            case BinaryOperationNode _, ConstIntNode _, Phi _ -> true;
+            case BinaryOperationNode _, UnaryOperationNode _, ConstIntNode _, Phi _ -> true;
             case Block _, ReturnNode _, StartNode _, ProjNode _ -> false;
         };
     }
@@ -72,6 +73,9 @@ public final class NodeUtils {
                         .append(sequential.indexOf(bin.predecessor(BinaryOperationNode.LEFT)))
                         .append(" ")
                         .append(sequential.indexOf(bin.predecessor(BinaryOperationNode.RIGHT)));
+                case UnaryOperationNode un -> sb.append(un)
+                        .append(" ")
+                        .append(sequential.indexOf(un.predecessor(UnaryOperationNode.IN)));
                 case ConstIntNode con -> sb.append(con);
                 case ReturnNode ret -> sb.append(ret).append(" ").append(sequential.indexOf(ret));
                 case ProjNode projNode -> sb.append(projNode).append(" ").append(sequential.indexOf(projNode.predecessor(ProjNode.IN)));

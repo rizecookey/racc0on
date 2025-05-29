@@ -13,6 +13,7 @@ import edu.kit.kastel.vads.compiler.ir.node.ProjNode;
 import edu.kit.kastel.vads.compiler.ir.node.ReturnNode;
 import edu.kit.kastel.vads.compiler.ir.node.StartNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.SubNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.unary.UnaryOperationNode;
 import net.rizecookey.racc0on.backend.NodeUtils;
 import net.rizecookey.racc0on.backend.instruction.InstructionGenerator;
 import net.rizecookey.racc0on.backend.operand.Operands;
@@ -143,6 +144,8 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
             case MulNode mulNode -> new x8664IMulOp(extractOperands(mulNode));
             case DivNode divNode -> new x8664DivPhantomOp(extractOperands(divNode));
             case ModNode modNode -> new x8664ModPhantomOp(extractOperands(modNode));
+            case BinaryOperationNode _, UnaryOperationNode _
+                    -> throw new IllegalStateException("Operation not supported by x86 backend"); // TODO
             case ConstIntNode constIntNode -> new x8664LoadConstPhantomOp(constIntNode);
             case ReturnNode returnNode -> new x8664RetOp(NodeUtils.shortcutPredecessors(returnNode).get(ReturnNode.RESULT));
             case Phi _ -> throw new IllegalStateException("Phi node not supported");
