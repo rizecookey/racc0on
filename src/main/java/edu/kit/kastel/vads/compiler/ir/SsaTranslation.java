@@ -1,22 +1,9 @@
 package edu.kit.kastel.vads.compiler.ir;
 
 import edu.kit.kastel.vads.compiler.ir.node.Block;
-import edu.kit.kastel.vads.compiler.ir.node.operation.binary.AddNode;
-import edu.kit.kastel.vads.compiler.ir.node.operation.binary.BitwiseAndNode;
-import edu.kit.kastel.vads.compiler.ir.node.operation.binary.BitwiseOrNode;
-import edu.kit.kastel.vads.compiler.ir.node.operation.binary.BitwiseXorNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.DivNode;
-import edu.kit.kastel.vads.compiler.ir.node.operation.binary.EqNode;
-import edu.kit.kastel.vads.compiler.ir.node.operation.binary.GreaterNode;
-import edu.kit.kastel.vads.compiler.ir.node.operation.binary.GreaterOrEqNode;
-import edu.kit.kastel.vads.compiler.ir.node.operation.binary.LessNode;
-import edu.kit.kastel.vads.compiler.ir.node.operation.binary.LessOrEqNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.ModNode;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
-import edu.kit.kastel.vads.compiler.ir.node.operation.binary.MulNode;
-import edu.kit.kastel.vads.compiler.ir.node.operation.binary.NotEqNode;
-import edu.kit.kastel.vads.compiler.ir.node.operation.binary.ShiftLeftNode;
-import edu.kit.kastel.vads.compiler.ir.node.operation.binary.ShiftRightNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.SubNode;
 import edu.kit.kastel.vads.compiler.ir.optimize.Optimizer;
 import edu.kit.kastel.vads.compiler.ir.util.DebugInfo;
@@ -109,18 +96,18 @@ public class SsaTranslation {
                 throw new IllegalArgumentException("not an assignment operator " + op);
             }
             return switch (binType) {
-                case OperatorType.Assignment.MINUS -> data.constructor.forBinaryOp(SubNode::new);
-                case OperatorType.Assignment.PLUS -> data.constructor.forBinaryOp(AddNode::new);
-                case OperatorType.Assignment.MUL -> data.constructor.forBinaryOp(MulNode::new);
-                case OperatorType.Assignment.DIV -> (lhs, rhs) -> projResultDivMod(data, data.constructor.newBinarySideEffectOp(DivNode::new, lhs, rhs));
-                case OperatorType.Assignment.MOD -> (lhs, rhs) -> projResultDivMod(data, data.constructor.newBinarySideEffectOp(ModNode::new, lhs, rhs));
+                case OperatorType.Assignment.MINUS -> data.constructor::newSub;
+                case OperatorType.Assignment.PLUS -> data.constructor::newAdd;
+                case OperatorType.Assignment.MUL -> data.constructor::newMul;
+                case OperatorType.Assignment.DIV -> (lhs, rhs) -> projResultDivMod(data, data.constructor.newDiv(lhs, rhs));
+                case OperatorType.Assignment.MOD -> (lhs, rhs) -> projResultDivMod(data, data.constructor.newMod(lhs, rhs));
 
-                case OperatorType.Assignment.BITWISE_AND -> data.constructor.forBinaryOp(BitwiseAndNode::new);
-                case OperatorType.Assignment.BITWISE_XOR -> data.constructor.forBinaryOp(BitwiseXorNode::new);
-                case OperatorType.Assignment.BITWISE_OR -> data.constructor.forBinaryOp(BitwiseOrNode::new);
+                case OperatorType.Assignment.BITWISE_AND -> data.constructor::newBitwiseAnd;
+                case OperatorType.Assignment.BITWISE_XOR -> data.constructor::newBitwiseXor;
+                case OperatorType.Assignment.BITWISE_OR -> data.constructor::newBitwiseOr;
 
-                case OperatorType.Assignment.SHIFT_LEFT -> data.constructor.forBinaryOp(ShiftLeftNode::new);
-                case OperatorType.Assignment.SHIFT_RIGHT -> data.constructor.forBinaryOp(ShiftRightNode::new);
+                case OperatorType.Assignment.SHIFT_LEFT -> data.constructor::newShiftLeft;
+                case OperatorType.Assignment.SHIFT_RIGHT -> data.constructor::newShiftRight;
 
                 case OperatorType.Assignment.DEFAULT -> null;
             };
@@ -150,24 +137,24 @@ public class SsaTranslation {
             Node lhs = binaryOperationTree.lhs().accept(this, data).orElseThrow();
             Node rhs = binaryOperationTree.rhs().accept(this, data).orElseThrow();
             Node res = switch (binaryOperationTree.operatorType()) {
-                case MINUS -> data.constructor.newBinaryOp(SubNode::new, lhs, rhs);
-                case PLUS -> data.constructor.newBinaryOp(AddNode::new, lhs, rhs);
-                case MUL -> data.constructor.newBinaryOp(MulNode::new, lhs, rhs);
-                case DIV -> projResultDivMod(data, data.constructor.newBinarySideEffectOp(DivNode::new, lhs, rhs));
-                case MOD -> projResultDivMod(data, data.constructor.newBinarySideEffectOp(ModNode::new, lhs, rhs));
-                case BITWISE_AND -> data.constructor.newBinaryOp(BitwiseAndNode::new, lhs, rhs);
-                case BITWISE_XOR -> data.constructor.newBinaryOp(BitwiseXorNode::new, lhs, rhs);
-                case BITWISE_OR -> data.constructor.newBinaryOp(BitwiseOrNode::new, lhs, rhs);
-                case SHIFT_LEFT -> data.constructor.newBinaryOp(ShiftLeftNode::new, lhs, rhs);
-                case SHIFT_RIGHT -> data.constructor.newBinaryOp(ShiftRightNode::new, lhs, rhs);
-                case LESS_THAN -> data.constructor.newBinaryOp(LessNode::new, lhs, rhs);
-                case LESS_OR_EQUAL -> data.constructor.newBinaryOp(LessOrEqNode::new, lhs, rhs);
-                case GREATER_THAN -> data.constructor.newBinaryOp(GreaterNode::new, lhs, rhs);
-                case GREATER_OR_EQUAL -> data.constructor.newBinaryOp(GreaterOrEqNode::new, lhs, rhs);
-                case EQUAL -> data.constructor.newBinaryOp(EqNode::new, lhs, rhs);
-                case NOT_EQUAL -> data.constructor.newBinaryOp(NotEqNode::new, lhs, rhs);
-
-                case AND, OR -> throw new UnsupportedOperationException();
+                case MINUS -> data.constructor.newSub(lhs, rhs);
+                case PLUS -> data.constructor.newAdd(lhs, rhs);
+                case MUL -> data.constructor.newMul(lhs, rhs);
+                case DIV -> projResultDivMod(data, data.constructor.newDiv(lhs, rhs));
+                case MOD -> projResultDivMod(data, data.constructor.newMod(lhs, rhs));
+                case BITWISE_AND -> data.constructor.newBitwiseAnd(lhs, rhs);
+                case BITWISE_XOR -> data.constructor.newBitwiseXor(lhs, rhs);
+                case BITWISE_OR -> data.constructor.newBitwiseOr(lhs, rhs);
+                case SHIFT_LEFT -> data.constructor.newShiftLeft(lhs, rhs);
+                case SHIFT_RIGHT -> data.constructor.newShiftRight(lhs, rhs);
+                case LESS_THAN -> data.constructor.newLessThan(lhs, rhs);
+                case LESS_OR_EQUAL -> data.constructor.newLessOrEqual(lhs, rhs);
+                case GREATER_THAN -> data.constructor.newGreaterThan(lhs, rhs);
+                case GREATER_OR_EQUAL -> data.constructor.newGreaterOrEqual(lhs, rhs);
+                case EQUAL -> data.constructor.newEqual(lhs, rhs);
+                case NOT_EQUAL -> data.constructor.newNotEqual(lhs, rhs);
+                case AND -> data.constructor.newAnd(lhs, rhs);
+                case OR -> data.constructor.newOr(lhs, rhs);
             };
             popSpan();
             return Optional.of(res);

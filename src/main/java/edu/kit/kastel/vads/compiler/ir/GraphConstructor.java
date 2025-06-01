@@ -7,6 +7,22 @@ import edu.kit.kastel.vads.compiler.ir.node.Phi;
 import edu.kit.kastel.vads.compiler.ir.node.ProjNode;
 import edu.kit.kastel.vads.compiler.ir.node.ReturnNode;
 import edu.kit.kastel.vads.compiler.ir.node.StartNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.AddNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.BitwiseAndNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.BitwiseOrNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.BitwiseXorNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.DivNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.EqNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.GreaterNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.GreaterOrEqNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.LessNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.LessOrEqNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.ModNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.MulNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.NotEqNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.ShiftLeftNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.ShiftRightNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.SubNode;
 import edu.kit.kastel.vads.compiler.ir.optimize.Optimizer;
 import edu.kit.kastel.vads.compiler.parser.symbol.Name;
 
@@ -56,6 +72,80 @@ class GraphConstructor {
 
     public Node newBinarySideEffectOp(BinarySideEffectOpConstr constr, Node left, Node right) {
         return this.optimizer.transform(constr.create(currentBlock(), left, right, readCurrentSideEffect()));
+    }
+
+    public Node newSub(Node left, Node right) {
+        return newBinaryOp(SubNode::new, left, right);
+    }
+
+    public Node newAdd(Node left, Node right) {
+        return newBinaryOp(AddNode::new, left, right);
+    }
+
+    public Node newMul(Node left, Node right) {
+        return newBinaryOp(MulNode::new, left, right);
+    }
+
+    public Node newDiv(Node left, Node right) {
+        return newBinarySideEffectOp(DivNode::new, left, right);
+    }
+
+    public Node newMod(Node left, Node right) {
+        return newBinarySideEffectOp(ModNode::new, left, right);
+    }
+
+    public Node newBitwiseAnd(Node left, Node right) {
+        return newBinaryOp(BitwiseAndNode::new, left, right);
+    }
+
+    public Node newBitwiseXor(Node left, Node right) {
+        return newBinaryOp(BitwiseXorNode::new, left, right);
+    }
+
+    public Node newBitwiseOr(Node left, Node right) {
+        return newBinaryOp(BitwiseOrNode::new, left, right);
+    }
+
+    public Node newShiftLeft(Node left, Node right) {
+        return newBinaryOp(ShiftLeftNode::new, left, right);
+    }
+
+    public Node newShiftRight(Node left, Node right) {
+        return newBinaryOp(ShiftRightNode::new, left, right);
+    }
+
+    public Node newLessThan(Node left, Node right) {
+        return newBinaryOp(LessNode::new, left, right);
+    }
+
+    public Node newLessOrEqual(Node left, Node right) {
+        return newBinaryOp(LessOrEqNode::new, left, right);
+    }
+
+    public Node newGreaterThan(Node left, Node right) {
+        return newBinaryOp(GreaterNode::new, left, right);
+    }
+
+    public Node newGreaterOrEqual(Node left, Node right) {
+        return newBinaryOp(GreaterOrEqNode::new, left, right);
+    }
+
+    public Node newEqual(Node left, Node right) {
+        return newBinaryOp(EqNode::new, left, right);
+    }
+
+    public Node newNotEqual(Node left, Node right) {
+        return newBinaryOp(NotEqNode::new, left, right);
+    }
+
+    public Node newAnd(Node left, Node right) {
+        // TODO implement using ternary
+        throw new UnsupportedOperationException();
+    }
+
+    public Node newOr(Node left, Node right) {
+        // TODO implement using ternary
+        throw new UnsupportedOperationException();
     }
 
     public BinaryOperator<Node> forBinaryOp(BinaryOpConstr constr) {
