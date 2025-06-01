@@ -3,6 +3,8 @@ package edu.kit.kastel.vads.compiler.ir;
 import edu.kit.kastel.vads.compiler.ir.node.Block;
 import edu.kit.kastel.vads.compiler.ir.node.ConstBoolNode;
 import edu.kit.kastel.vads.compiler.ir.node.ConstIntNode;
+import edu.kit.kastel.vads.compiler.ir.node.IfNode;
+import edu.kit.kastel.vads.compiler.ir.node.JumpNode;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
 import edu.kit.kastel.vads.compiler.ir.node.Phi;
 import edu.kit.kastel.vads.compiler.ir.node.ProjNode;
@@ -174,8 +176,34 @@ class GraphConstructor {
         return new ProjNode(currentBlock(), node, ProjNode.SimpleProjectionInfo.RESULT);
     }
 
+    public Node newIfTrueProj(Node node) {
+        return new ProjNode(currentBlock(), node, ProjNode.SimpleProjectionInfo.IF_TRUE);
+    }
+
+    public Node newIfFalseProj(Node node) {
+        return new ProjNode(currentBlock(), node, ProjNode.SimpleProjectionInfo.IF_FALSE);
+    }
+
+    public Node newIf(Node condition) {
+        return this.optimizer.transform(new IfNode(currentBlock(), condition));
+    }
+
     public Node newTernary(Node condition, Node ifTrue, Node ifFalse) {
         return this.optimizer.transform(new TernaryNode(currentBlock(), condition, ifTrue, ifFalse));
+    }
+
+    public Node newJump() {
+        return new JumpNode(currentBlock());
+    }
+
+    public Block newBlock(Node... predecessors) {
+        sealBlock(currentBlock());
+        Block block = new Block(this.graph);
+        this.currentBlock = block;
+        for (var predecessor : predecessors) {
+            block.addPredecessor(predecessor);
+        }
+        return block;
     }
 
     public Block currentBlock() {

@@ -3,6 +3,10 @@ package edu.kit.kastel.vads.compiler.backend.aasm;
 import edu.kit.kastel.vads.compiler.backend.regalloc.Register;
 import edu.kit.kastel.vads.compiler.backend.regalloc.RegisterAllocator;
 import edu.kit.kastel.vads.compiler.ir.IrGraph;
+import edu.kit.kastel.vads.compiler.ir.node.ConstBoolNode;
+import edu.kit.kastel.vads.compiler.ir.node.IfNode;
+import edu.kit.kastel.vads.compiler.ir.node.JumpNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.TernaryNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.AddNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.BinaryOperationNode;
 import edu.kit.kastel.vads.compiler.ir.node.Block;
@@ -93,6 +97,10 @@ public class CodeGenerator {
                 .append(" = const ")
                 .append(c.value());
             case Phi _ -> throw new UnsupportedOperationException("phi");
+            case IfNode _ -> // TODO
+                    throw new UnsupportedOperationException();
+            case JumpNode _ -> // TODO
+                    throw new UnsupportedOperationException();
             case TernaryNode ternaryNode -> builder.repeat("  ", 2)
                 .append(registers.get(predecessorSkipProj(ternaryNode, TernaryNode.CONDITION)))
                 .append(" ? ")

@@ -190,6 +190,7 @@ public class SsaTranslation {
             Node start = data.constructor.newStart();
             data.constructor.writeCurrentSideEffect(data.constructor.newSideEffectProj(start));
             functionTree.body().accept(this, data);
+            data.constructor.sealBlock(data.constructor.currentBlock());
             popSpan();
             return NOT_AN_EXPRESSION;
         }
@@ -262,15 +263,27 @@ public class SsaTranslation {
         }
 
         @Override
-        public Optional<Node> visit(LoopControlTree loopControlTree, SsaTranslation data) {
-            // TODO
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
         public Optional<Node> visit(IfElseTree ifElseTree, SsaTranslation data) {
-            // TODO
-            throw new UnsupportedOperationException();
+            pushSpan(ifElseTree);
+
+            Node condition = ifElseTree.condition().accept(this, data).orElseThrow();
+            Node ifNode = data.constructor.newIf(condition);
+            Node trueProj = data.constructor.newIfTrueProj(ifNode);
+            Node falseProj = data.constructor.newIfFalseProj(ifNode);
+            data.constructor.newBlock(trueProj);
+            ifElseTree.thenBranch().accept(this, data);
+            Node trueJump = data.constructor.newJump();
+            Node falseJump = falseProj;
+            if (ifElseTree.elseBranch() != null) {
+                data.constructor.newBlock(falseProj);
+                ifElseTree.elseBranch().accept(this, data);
+                falseJump = data.constructor.newJump();
+            }
+
+            data.constructor.newBlock(trueJump, falseJump);
+
+            popSpan();
+            return NOT_AN_EXPRESSION;
         }
 
         @Override
@@ -281,6 +294,12 @@ public class SsaTranslation {
 
         @Override
         public Optional<Node> visit(ForTree forTree, SsaTranslation data) {
+            // TODO
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Optional<Node> visit(LoopControlTree loopControlTree, SsaTranslation data) {
             // TODO
             throw new UnsupportedOperationException();
         }

@@ -2,6 +2,8 @@ package edu.kit.kastel.vads.compiler.ir.util;
 
 import edu.kit.kastel.vads.compiler.ir.IrGraph;
 import edu.kit.kastel.vads.compiler.ir.node.ConstBoolNode;
+import edu.kit.kastel.vads.compiler.ir.node.IfNode;
+import edu.kit.kastel.vads.compiler.ir.node.JumpNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.TernaryNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.BinaryOperationNode;
 import edu.kit.kastel.vads.compiler.ir.node.Block;
@@ -170,7 +172,7 @@ public class YCompPrinter {
         StringJoiner result = new StringJoiner("\n");
         List<? extends Node> parents = block.predecessors();
         for (Node parent : parents) {
-            if (parent instanceof ReturnNode) {
+            if (parent instanceof ReturnNode || parent instanceof ProjNode || parent instanceof JumpNode) {
                 // Return needs no label
                 result.add(formatControlflowEdge(parent, block, ""));
             } else {
@@ -229,12 +231,16 @@ public class YCompPrinter {
                     yield VcgColor.MEMORY;
                 } else if (proj.projectionInfo() == SimpleProjectionInfo.RESULT) {
                     yield VcgColor.NORMAL;
-                } else {
-                    yield VcgColor.NORMAL;
+                } else if (proj.projectionInfo() == SimpleProjectionInfo.IF_FALSE
+                        || proj.projectionInfo() == SimpleProjectionInfo.IF_TRUE) {
+                    yield VcgColor.CONTROL_FLOW;
                 }
+                yield VcgColor.NORMAL;
             }
             case ReturnNode _ -> VcgColor.CONTROL_FLOW;
             case StartNode _ -> VcgColor.CONTROL_FLOW;
+            case IfNode _ -> VcgColor.CONTROL_FLOW;
+            case JumpNode _ -> VcgColor.CONTROL_FLOW;
         };
     }
 

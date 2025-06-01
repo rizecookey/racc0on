@@ -1,5 +1,6 @@
 package edu.kit.kastel.vads.compiler.ir.node;
 
+import edu.kit.kastel.vads.compiler.ir.node.operation.TernaryNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.BinaryOperationNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.unary.UnaryOperationNode;
 import edu.kit.kastel.vads.compiler.ir.util.DebugInfo;
@@ -13,7 +14,7 @@ import java.util.List;
         - control flow nodes... */
 
 /// The base class for all nodes.
-public sealed abstract class Node permits Block, ConstBoolNode, ConstIntNode, Phi, ProjNode, ReturnNode, StartNode, TernaryNode, BinaryOperationNode, UnaryOperationNode {
+public sealed abstract class Node permits Block, ConstBoolNode, ConstIntNode, IfNode, JumpNode, Phi, ProjNode, ReturnNode, StartNode, TernaryNode, BinaryOperationNode, UnaryOperationNode {
     private final IrGraph graph;
     private final Block block;
     private final List<Node> predecessors = new ArrayList<>();
