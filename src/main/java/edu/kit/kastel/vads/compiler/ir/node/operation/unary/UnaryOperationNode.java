@@ -3,7 +3,7 @@ package edu.kit.kastel.vads.compiler.ir.node.operation.unary;
 import edu.kit.kastel.vads.compiler.ir.node.Block;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
 
-public sealed abstract class UnaryOperationNode extends Node permits BitwiseNotNode, NotNode {
+public sealed abstract class UnaryOperationNode extends Node permits NotNode {
     public static final int IN = 0;
 
     protected UnaryOperationNode(Block block, Node in) {

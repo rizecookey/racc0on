@@ -13,7 +13,7 @@ import java.util.List;
         - control flow nodes... */
 
 /// The base class for all nodes.
-public sealed abstract class Node permits Block, ConstIntNode, Phi, ProjNode, ReturnNode, StartNode, BinaryOperationNode, UnaryOperationNode {
+public sealed abstract class Node permits Block, ConstBoolNode, ConstIntNode, Phi, ProjNode, ReturnNode, StartNode, TernaryNode, BinaryOperationNode, UnaryOperationNode {
     private final IrGraph graph;
     private final Block block;
     private final List<Node> predecessors = new ArrayList<>();

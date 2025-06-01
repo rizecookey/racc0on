@@ -3,6 +3,7 @@ package edu.kit.kastel.vads.compiler;
 import edu.kit.kastel.vads.compiler.ir.IrGraph;
 import edu.kit.kastel.vads.compiler.ir.SsaTranslation;
 import edu.kit.kastel.vads.compiler.ir.optimize.LocalValueNumbering;
+import edu.kit.kastel.vads.compiler.ir.util.GraphVizPrinter;
 import edu.kit.kastel.vads.compiler.ir.util.YCompPrinter;
 import edu.kit.kastel.vads.compiler.lexer.Lexer;
 import edu.kit.kastel.vads.compiler.parser.ParseException;
@@ -39,6 +40,11 @@ public class Main {
         Path output = Path.of(args[1]);
 
         ProgramTree program = lexAndParse(input);
+        if (DEBUG) {
+            String parsedProgram = Printer.print(program);
+            LOGGER.log("Parsed program: ", parsedProgram);
+            Files.writeString(getDebugInfoFile(output, ".parsed.l2"), parsedProgram);
+        }
         try {
             new SemanticAnalysis(program).analyze();
         } catch (SemanticException e) {
@@ -49,7 +55,15 @@ public class Main {
         List<IrGraph> graphs = new ArrayList<>();
         for (FunctionTree function : program.topLevelTrees()) {
             SsaTranslation translation = new SsaTranslation(function, new LocalValueNumbering());
-            graphs.add(translation.translate());
+            var graph = translation.translate();
+
+            if (DEBUG) {
+                String graphString = GraphVizPrinter.print(graph);
+                LOGGER.log("SSA Graph in GraphViz form for '" + function.name().name().asString() + "':", graphString);
+                Files.writeString(getDebugInfoFile(output, "." + graph.name() + ".dot"), graphString);
+            }
+
+            graphs.add(graph);
         }
 
         if ("vcg".equals(System.getenv("DUMP_GRAPHS")) || "vcg".equals(System.getProperty("dumpGraphs"))) {
@@ -63,7 +77,8 @@ public class Main {
         String s = new x8664CodeGenerator().generateCode(graphs);
 
         if (DEBUG) {
-            Files.writeString(output.getParent().resolve(output.getFileName().toString() + ".s"), s);
+            LOGGER.log("Generated assembly:", s);
+            Files.writeString(getDebugInfoFile(output, ".s"), s);
         }
 
         try {
@@ -77,19 +92,18 @@ public class Main {
         }
     }
 
+    private static Path getDebugInfoFile(Path outputBin, String ending) {
+        return outputBin.getParent().resolve(outputBin.getFileName().toString() + ending);
+    }
+
     private static ProgramTree lexAndParse(Path input) throws IOException {
         String programString = Files.readString(input);
         try {
             Lexer lexer = Lexer.forString(programString);
             TokenSource tokenSource = new TokenSource(lexer);
             Parser parser = new Parser(tokenSource);
-            ProgramTree result = parser.parseProgram();
 
-            if (DEBUG) {
-                LOGGER.log("Parsed program: ", Printer.print(result));
-            }
-
-            return result;
+            return parser.parseProgram();
         } catch (ParseException e) {
             printParserError(programString, e);
             System.exit(42);

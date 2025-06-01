@@ -4,7 +4,6 @@ import edu.kit.kastel.vads.compiler.ir.node.Block;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.DivNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.ModNode;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
-import edu.kit.kastel.vads.compiler.ir.node.operation.binary.SubNode;
 import edu.kit.kastel.vads.compiler.ir.optimize.Optimizer;
 import edu.kit.kastel.vads.compiler.ir.util.DebugInfo;
 import edu.kit.kastel.vads.compiler.ir.util.DebugInfoHelper;
@@ -213,8 +212,10 @@ public class SsaTranslation {
 
         @Override
         public Optional<Node> visit(BoolLiteralTree boolLiteralTree, SsaTranslation data) {
-            // TODO
-            throw new UnsupportedOperationException();
+            pushSpan(boolLiteralTree);
+            Node node = data.constructor.newConstBool(boolLiteralTree.value());
+            popSpan();
+            return Optional.of(node);
         }
 
         @Override
@@ -231,7 +232,11 @@ public class SsaTranslation {
         public Optional<Node> visit(UnaryOperationTree unaryOperationTree, SsaTranslation data) {
             pushSpan(unaryOperationTree);
             Node node = unaryOperationTree.expression().accept(this, data).orElseThrow();
-            Node res = data.constructor.newBinaryOp(SubNode::new, data.constructor.newConstInt(0), node);
+            Node res = switch (unaryOperationTree.type()) {
+                case NEGATION -> data.constructor.newSub(data.constructor.newConstInt(0), node);
+                case NOT -> data.constructor.newNot(node);
+                case BITWISE_NOT -> data.constructor.newBitwiseXor(data.constructor.newConstInt(0xFFFFFFFF), node);
+            };
             popSpan();
             return Optional.of(res);
         }
@@ -282,8 +287,15 @@ public class SsaTranslation {
 
         @Override
         public Optional<Node> visit(TernaryExpressionTree ternaryExpressionTree, SsaTranslation data) {
-            // TODO
-            throw new UnsupportedOperationException();
+            pushSpan(ternaryExpressionTree);
+
+            Node condition = ternaryExpressionTree.condition().accept(this, data).orElseThrow();
+            Node ifTrue = ternaryExpressionTree.ifBranch().accept(this, data).orElseThrow();
+            Node ifFalse = ternaryExpressionTree.elseBranch().accept(this, data).orElseThrow();
+            Node res = data.constructor.newTernary(condition, ifTrue, ifFalse);
+
+            popSpan();
+            return Optional.of(res);
         }
 
         private Node projResultDivMod(SsaTranslation data, Node divMod) {

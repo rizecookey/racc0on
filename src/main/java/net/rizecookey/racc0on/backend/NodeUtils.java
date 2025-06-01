@@ -25,6 +25,7 @@ public final class NodeUtils {
         return switch (node) {
             case BinaryOperationNode _, UnaryOperationNode _, ConstIntNode _, Phi _ -> true;
             case Block _, ReturnNode _, StartNode _, ProjNode _ -> false;
+            default -> throw new UnsupportedOperationException(); // TODO
         };
     }
 
@@ -80,6 +81,7 @@ public final class NodeUtils {
                 case ReturnNode ret -> sb.append(ret).append(" ").append(sequential.indexOf(ret));
                 case ProjNode projNode -> sb.append(projNode).append(" ").append(sequential.indexOf(projNode.predecessor(ProjNode.IN)));
                 case Phi _, StartNode _, Block _ -> sb.append(node);
+                default -> throw new UnsupportedOperationException(); // TODO
             }
 
             sb.append("\n");

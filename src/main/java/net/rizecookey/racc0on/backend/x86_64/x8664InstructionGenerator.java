@@ -150,6 +150,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
             case ReturnNode returnNode -> new x8664RetOp(NodeUtils.shortcutPredecessors(returnNode).get(ReturnNode.RESULT));
             case Phi _ -> throw new IllegalStateException("Phi node not supported");
             case Block _, ProjNode _, StartNode _ -> x8664EmptyOp.INSTANCE;
+            default -> throw new IllegalStateException(node + " not implemented by x86 backend"); //TODO
         };
     }
 

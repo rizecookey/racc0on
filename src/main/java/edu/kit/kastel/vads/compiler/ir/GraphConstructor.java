@@ -1,12 +1,14 @@
 package edu.kit.kastel.vads.compiler.ir;
 
 import edu.kit.kastel.vads.compiler.ir.node.Block;
+import edu.kit.kastel.vads.compiler.ir.node.ConstBoolNode;
 import edu.kit.kastel.vads.compiler.ir.node.ConstIntNode;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
 import edu.kit.kastel.vads.compiler.ir.node.Phi;
 import edu.kit.kastel.vads.compiler.ir.node.ProjNode;
 import edu.kit.kastel.vads.compiler.ir.node.ReturnNode;
 import edu.kit.kastel.vads.compiler.ir.node.StartNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.TernaryNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.AddNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.BitwiseAndNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.BitwiseOrNode;
@@ -23,6 +25,7 @@ import edu.kit.kastel.vads.compiler.ir.node.operation.binary.NotEqNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.ShiftLeftNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.ShiftRightNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.SubNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.unary.NotNode;
 import edu.kit.kastel.vads.compiler.ir.optimize.Optimizer;
 import edu.kit.kastel.vads.compiler.parser.symbol.Name;
 
@@ -30,7 +33,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BinaryOperator;
 
 class GraphConstructor {
 
@@ -139,21 +141,15 @@ class GraphConstructor {
     }
 
     public Node newAnd(Node left, Node right) {
-        // TODO implement using ternary
-        throw new UnsupportedOperationException();
+        return optimizer.transform(new TernaryNode(currentBlock(), left, right, new ConstBoolNode(currentBlock(), false)));
     }
 
     public Node newOr(Node left, Node right) {
-        // TODO implement using ternary
-        throw new UnsupportedOperationException();
+        return optimizer.transform(new TernaryNode(currentBlock(), left, new ConstBoolNode(currentBlock(), true), right));
     }
 
-    public BinaryOperator<Node> forBinaryOp(BinaryOpConstr constr) {
-        return (left, right) -> newBinaryOp(constr, left, right);
-    }
-
-    public BinaryOperator<Node> forBinarySideEffectOp(BinarySideEffectOpConstr constr) {
-        return (left, right) -> newBinarySideEffectOp(constr, left, right);
+    public Node newNot(Node in) {
+        return optimizer.transform(new NotNode(currentBlock(), in));
     }
 
     public Node newReturn(Node result) {
@@ -166,12 +162,20 @@ class GraphConstructor {
         return this.optimizer.transform(new ConstIntNode(this.graph.startBlock(), value));
     }
 
+    public Node newConstBool(boolean value) {
+        return this.optimizer.transform(new ConstBoolNode(this.graph.startBlock(), value));
+    }
+
     public Node newSideEffectProj(Node node) {
         return new ProjNode(currentBlock(), node, ProjNode.SimpleProjectionInfo.SIDE_EFFECT);
     }
 
     public Node newResultProj(Node node) {
         return new ProjNode(currentBlock(), node, ProjNode.SimpleProjectionInfo.RESULT);
+    }
+
+    public Node newTernary(Node condition, Node ifTrue, Node ifFalse) {
+        return this.optimizer.transform(new TernaryNode(currentBlock(), condition, ifTrue, ifFalse));
     }
 
     public Block currentBlock() {

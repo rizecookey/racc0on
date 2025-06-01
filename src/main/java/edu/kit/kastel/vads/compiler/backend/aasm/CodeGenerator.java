@@ -27,7 +27,6 @@ import edu.kit.kastel.vads.compiler.ir.node.operation.binary.NotEqNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.ShiftLeftNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.ShiftRightNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.SubNode;
-import edu.kit.kastel.vads.compiler.ir.node.operation.unary.BitwiseNotNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.unary.NotNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.unary.UnaryOperationNode;
 
@@ -84,14 +83,22 @@ public class CodeGenerator {
             case ShiftLeftNode shiftLeft -> binary(builder, registers, shiftLeft, "<<");
             case ShiftRightNode shiftRight -> binary(builder, registers, shiftRight, ">>");
             case NotNode not -> unary(builder, registers, not, "!");
-            case BitwiseNotNode bitwiseNot -> unary(builder, registers, bitwiseNot, "~");
             case ReturnNode r -> builder.repeat(" ", 2).append("ret ")
                 .append(registers.get(predecessorSkipProj(r, ReturnNode.RESULT)));
             case ConstIntNode c -> builder.repeat(" ", 2)
                 .append(registers.get(c))
                 .append(" = const ")
                 .append(c.value());
+            case ConstBoolNode c -> builder.repeat(" ", 2)
+                .append(" = const ")
+                .append(c.value());
             case Phi _ -> throw new UnsupportedOperationException("phi");
+            case TernaryNode ternaryNode -> builder.repeat("  ", 2)
+                .append(registers.get(predecessorSkipProj(ternaryNode, TernaryNode.CONDITION)))
+                .append(" ? ")
+                .append(registers.get(predecessorSkipProj(ternaryNode, TernaryNode.IF_TRUE)))
+                .append(" : ")
+                .append(registers.get(predecessorSkipProj(ternaryNode, TernaryNode.IF_FALSE)));
             case Block _, ProjNode _, StartNode _ -> {
                 // do nothing, skip line break
                 return;
