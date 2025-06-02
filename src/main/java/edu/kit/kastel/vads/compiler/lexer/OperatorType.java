@@ -119,17 +119,17 @@ public sealed interface OperatorType permits OperatorType.Ambiguous, OperatorTyp
     }
 
     enum Assignment implements OperatorType {
-        MINUS("-"),
-        PLUS("+"),
-        MUL("*"),
-        DIV("/"),
-        MOD("%"),
+        MINUS("-="),
+        PLUS("+="),
+        MUL("*="),
+        DIV("/="),
+        MOD("%="),
         DEFAULT("="),
-        BITWISE_AND("&"),
-        BITWISE_XOR("^"),
+        BITWISE_AND("&="),
+        BITWISE_XOR("^="),
         BITWISE_OR("|="),
-        SHIFT_LEFT("<<"),
-        SHIFT_RIGHT(">>"),
+        SHIFT_LEFT("<<="),
+        SHIFT_RIGHT(">>="),
         ;
 
         private final String value;
