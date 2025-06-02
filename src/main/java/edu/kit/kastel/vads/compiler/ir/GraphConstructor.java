@@ -34,6 +34,7 @@ import edu.kit.kastel.vads.compiler.parser.symbol.Name;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 class GraphConstructor {
@@ -44,6 +45,7 @@ class GraphConstructor {
     private final Map<Block, Map<Name, Phi>> incompletePhis = new HashMap<>();
     private final Map<Block, Node> currentSideEffect = new HashMap<>();
     private final Map<Block, Phi> incompleteSideEffectPhis = new HashMap<>();
+    private final Map<Block, JumpNode> jumps = new HashMap<>();
     private final Set<Block> sealedBlocks = new HashSet<>();
     private Block currentBlock;
 
@@ -193,7 +195,13 @@ class GraphConstructor {
     }
 
     public Node newJump() {
-        return new JumpNode(currentBlock());
+        JumpNode jumpNode = new JumpNode(currentBlock());
+        jumps.put(currentBlock(), jumpNode);
+        return jumpNode;
+    }
+
+    public Optional<Node> getUnconditionalJump() {
+        return jumps.containsKey(currentBlock()) ? Optional.of(jumps.get(currentBlock())) : Optional.empty();
     }
 
     public Block newBlock(Node... predecessors) {

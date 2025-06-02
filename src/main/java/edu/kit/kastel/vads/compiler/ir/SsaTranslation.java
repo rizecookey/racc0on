@@ -275,13 +275,13 @@ public class SsaTranslation {
             Node falseProj = data.constructor.newIfFalseProj(ifNode);
             Block trueBranch = data.constructor.newBlock(trueProj);
             ifElseTree.thenBranch().accept(this, data);
-            Node trueJump = data.constructor.newJump();
+            Node trueJump = data.constructor.getUnconditionalJump().orElseGet(data.constructor::newJump);
             data.constructor.sealBlock(trueBranch);
             Node falseJump = falseProj;
             if (ifElseTree.elseBranch() != null) {
                 Block falseBranch = data.constructor.newBlock(falseProj);
                 ifElseTree.elseBranch().accept(this, data);
-                falseJump = data.constructor.newJump();
+                falseJump = data.constructor.getUnconditionalJump().orElseGet(data.constructor::newJump);
                 data.constructor.sealBlock(falseBranch);
             }
 
@@ -327,7 +327,7 @@ public class SsaTranslation {
             transformerStack.push(new LoopInfo(stepBlock, followingBlock));
             forTree.body().accept(this, data);
             transformerStack.pop();
-            Node jump = data.constructor.newJump();
+            Node jump = data.constructor.getUnconditionalJump().orElseGet(data.constructor::newJump);
             stepBlock.addPredecessor(jump);
 
             data.constructor.sealBlock(bodyBlock);
