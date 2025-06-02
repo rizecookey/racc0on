@@ -185,9 +185,13 @@ public class Parser {
                 StatementTree body = parseStatement();
                 yield new ForTree(initializer, condition, body, step, start);
             }
-            case BREAK, CONTINUE -> {
+            case BREAK -> {
                 this.tokenSource.expectSeparator(SeparatorType.SEMICOLON);
-                yield new LoopControlTree(keyword.type(), keyword.span());
+                yield new LoopControlTree(LoopControlTree.Type.BREAK, keyword.span());
+            }
+            case CONTINUE -> {
+                this.tokenSource.expectSeparator(SeparatorType.SEMICOLON);
+                yield new LoopControlTree(LoopControlTree.Type.CONTINUE, keyword.span());
             }
             case RETURN -> {
                 ExpressionTree expression = parseExpression();

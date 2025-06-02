@@ -122,7 +122,7 @@ public class Printer {
             case LValueIdentTree(var name) -> printTree(name);
             case IdentExpressionTree(var name) -> printTree(name);
             case LoopControlTree(var keywordType, _) -> {
-                print(keywordType.keyword());
+                print(keywordType.keyword().keyword());
                 semicolon();
             }
             case ForTree forTree -> {

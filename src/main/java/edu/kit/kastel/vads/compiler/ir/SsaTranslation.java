@@ -31,6 +31,7 @@ import edu.kit.kastel.vads.compiler.parser.ast.Tree;
 import edu.kit.kastel.vads.compiler.parser.ast.TypeTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.WhileTree;
 import edu.kit.kastel.vads.compiler.parser.symbol.Name;
+import edu.kit.kastel.vads.compiler.parser.visitor.NoOpVisitor;
 import edu.kit.kastel.vads.compiler.parser.visitor.Visitor;
 import org.jspecify.annotations.Nullable;
 
@@ -79,6 +80,7 @@ public class SsaTranslation {
         private static final Optional<Node> NOT_AN_EXPRESSION = Optional.empty();
 
         private final Deque<DebugInfo> debugStack = new ArrayDeque<>();
+        private final Deque<LoopInfo> transformerStack = new ArrayDeque<>();
 
         private void pushSpan(Tree tree) {
             this.debugStack.push(DebugInfoHelper.getDebugInfo());
@@ -98,8 +100,10 @@ public class SsaTranslation {
                 case OperatorType.Assignment.MINUS -> data.constructor::newSub;
                 case OperatorType.Assignment.PLUS -> data.constructor::newAdd;
                 case OperatorType.Assignment.MUL -> data.constructor::newMul;
-                case OperatorType.Assignment.DIV -> (lhs, rhs) -> projResultDivMod(data, data.constructor.newDiv(lhs, rhs));
-                case OperatorType.Assignment.MOD -> (lhs, rhs) -> projResultDivMod(data, data.constructor.newMod(lhs, rhs));
+                case OperatorType.Assignment.DIV ->
+                        (lhs, rhs) -> projResultDivMod(data, data.constructor.newDiv(lhs, rhs));
+                case OperatorType.Assignment.MOD ->
+                        (lhs, rhs) -> projResultDivMod(data, data.constructor.newMod(lhs, rhs));
 
                 case OperatorType.Assignment.BITWISE_AND -> data.constructor::newBitwiseAnd;
                 case OperatorType.Assignment.BITWISE_XOR -> data.constructor::newBitwiseXor;
@@ -164,8 +168,8 @@ public class SsaTranslation {
             pushSpan(blockTree);
             for (StatementTree statement : blockTree.statements()) {
                 statement.accept(this, data);
-                // skip everything after a return in a block
-                if (statement instanceof ReturnTree) {
+                // skip everything after a return, continue or break in a block
+                if (statement instanceof ReturnTree || statement instanceof LoopControlTree) {
                     break;
                 }
             }
@@ -190,7 +194,7 @@ public class SsaTranslation {
             Node start = data.constructor.newStart();
             data.constructor.writeCurrentSideEffect(data.constructor.newSideEffectProj(start));
             functionTree.body().accept(this, data);
-            data.constructor.sealBlock(data.constructor.currentBlock());
+            data.constructor.sealBlock(data.currentBlock());
             popSpan();
             return NOT_AN_EXPRESSION;
         }
@@ -270,14 +274,17 @@ public class SsaTranslation {
             Node ifNode = data.constructor.newIf(condition);
             Node trueProj = data.constructor.newIfTrueProj(ifNode);
             Node falseProj = data.constructor.newIfFalseProj(ifNode);
-            data.constructor.newBlock(trueProj);
+            data.constructor.sealBlock(data.currentBlock());
+            Block trueBranch = data.constructor.newBlock(trueProj);
             ifElseTree.thenBranch().accept(this, data);
             Node trueJump = data.constructor.newJump();
+            data.constructor.sealBlock(trueBranch);
             Node falseJump = falseProj;
             if (ifElseTree.elseBranch() != null) {
-                data.constructor.newBlock(falseProj);
+                Block falseBranch = data.constructor.newBlock(falseProj);
                 ifElseTree.elseBranch().accept(this, data);
                 falseJump = data.constructor.newJump();
+                data.constructor.sealBlock(falseBranch);
             }
 
             data.constructor.newBlock(trueJump, falseJump);
@@ -288,20 +295,72 @@ public class SsaTranslation {
 
         @Override
         public Optional<Node> visit(WhileTree whileTree, SsaTranslation data) {
-            // TODO
-            throw new UnsupportedOperationException();
+            ForTree transformed = new ForTree(null, whileTree.condition(), whileTree.body(), null, whileTree.start());
+            return visit(transformed, data);
         }
 
         @Override
         public Optional<Node> visit(ForTree forTree, SsaTranslation data) {
-            // TODO
-            throw new UnsupportedOperationException();
+            pushSpan(forTree);
+
+            if (forTree.initializer() != null) {
+                forTree.initializer().accept(this, data);
+            }
+            Node jumpFromPrevious = data.constructor.newJump();
+            data.constructor.sealBlock(data.currentBlock());
+
+            Block conditionBlock = data.constructor.newBlock(jumpFromPrevious);
+            Node ifNode = data.constructor.newIf(forTree.condition().accept(this, data).orElseThrow());
+            Node ifTrue = data.constructor.newIfTrueProj(ifNode);
+            Node ifFalse = data.constructor.newIfFalseProj(ifNode);
+
+            Block stepBlock = conditionBlock;
+            if (forTree.step() != null) {
+                stepBlock = data.constructor.newBlock();
+                forTree.step().accept(this, data);
+                Node jump = data.constructor.newJump();
+                conditionBlock.addPredecessor(jump);
+            }
+
+            Block followingBlock = data.constructor.newBlock(ifFalse);
+
+            Block bodyBlock = data.constructor.newBlock(ifTrue);
+            transformerStack.push(new LoopInfo(stepBlock, followingBlock));
+            forTree.body().accept(this, data);
+            transformerStack.pop();
+            if (forTree.step() != null) {
+                forTree.step().accept(this, data);
+            }
+            Node jump = data.constructor.newJump();
+            stepBlock.addPredecessor(jump);
+
+            data.constructor.sealBlock(conditionBlock);
+            data.constructor.sealBlock(bodyBlock);
+            if (stepBlock != conditionBlock) {
+                data.constructor.sealBlock(stepBlock);
+            }
+            data.constructor.setCurrentBlock(followingBlock);
+
+            popSpan();
+            return NOT_AN_EXPRESSION;
         }
 
         @Override
         public Optional<Node> visit(LoopControlTree loopControlTree, SsaTranslation data) {
-            // TODO
-            throw new UnsupportedOperationException();
+            if (transformerStack.isEmpty()) {
+                throw new IllegalStateException("no corresponding loop statement for " + loopControlTree.type().keyword());
+            }
+            LoopInfo loop = transformerStack.peek();
+            Node jump = data.constructor.newJump();
+            Node target = switch (loopControlTree.type()) {
+                case CONTINUE -> loop.continueTarget();
+                case BREAK -> loop.breakTarget();
+            };
+            target.addPredecessor(jump);
+            data.constructor.sealBlock(data.currentBlock());
+            data.constructor.newBlock();
+
+            return NOT_AN_EXPRESSION;
         }
 
         @Override
@@ -329,5 +388,6 @@ public class SsaTranslation {
         }
     }
 
-
+    private record LoopInfo(Node continueTarget, Node breakTarget) implements NoOpVisitor<SsaTranslation> {
+    }
 }

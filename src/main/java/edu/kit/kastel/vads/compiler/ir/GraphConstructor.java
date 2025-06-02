@@ -197,7 +197,6 @@ class GraphConstructor {
     }
 
     public Block newBlock(Node... predecessors) {
-        sealBlock(currentBlock());
         Block block = new Block(this.graph);
         this.currentBlock = block;
         for (var predecessor : predecessors) {
@@ -208,6 +207,10 @@ class GraphConstructor {
 
     public Block currentBlock() {
         return this.currentBlock;
+    }
+
+    void setCurrentBlock(Block currentBlock) {
+        this.currentBlock = currentBlock;
     }
 
     public Phi newPhi() {

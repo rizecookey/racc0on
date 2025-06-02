@@ -1,0 +1,13 @@
+int main() {
+  int a = 1;
+  for (int i = 1; i <= 10; i += 1) {
+    a *= i;
+  }
+
+  int c = 15;
+  while (c > 0) {
+    c -= 1;
+  }
+
+  return a + c;
+}
