@@ -38,12 +38,13 @@ public class Main {
         }
         Path input = Path.of(args[0]);
         Path output = Path.of(args[1]);
+        String outputFileName = output.getFileName().toString();
 
         ProgramTree program = lexAndParse(input);
         if (DEBUG) {
             String parsedProgram = Printer.print(program);
             LOGGER.log("Parsed program: ", parsedProgram);
-            Files.writeString(getDebugInfoFile(output, ".parsed.l2"), parsedProgram);
+            writeDebugFile(output, outputFileName + "/" + outputFileName + ".parsed.l2", parsedProgram);
         }
         try {
             new SemanticAnalysis(program).analyze();
@@ -59,26 +60,20 @@ public class Main {
 
             if (DEBUG) {
                 String graphString = GraphVizPrinter.print(graph);
-                LOGGER.log("SSA Graph in GraphViz form for '" + function.name().name().asString() + "':", graphString);
-                Files.writeString(getDebugInfoFile(output, "." + graph.name() + ".dot"), graphString);
+                writeDebugFile(output, outputFileName + "/graphs/" + graph.name() + ".dot", graphString);
+
+                String vcgString = YCompPrinter.print(graph);
+                writeDebugFile(output, outputFileName + "/graphs/" + graph.name() + ".vcg", vcgString);
             }
 
             graphs.add(graph);
-        }
-
-        if ("vcg".equals(System.getenv("DUMP_GRAPHS")) || "vcg".equals(System.getProperty("dumpGraphs"))) {
-            Path tmp = output.toAbsolutePath().resolveSibling("graphs");
-            Files.createDirectory(tmp);
-            for (IrGraph graph : graphs) {
-                dumpGraph(graph, tmp, "before-codegen");
-            }
         }
 
         String s = new x8664CodeGenerator().generateCode(graphs);
 
         if (DEBUG) {
             LOGGER.log("Generated assembly:", s);
-            Files.writeString(getDebugInfoFile(output, ".s"), s);
+            writeDebugFile(output, outputFileName + "/" + outputFileName + ".s", s);
         }
 
         try {
@@ -92,8 +87,13 @@ public class Main {
         }
     }
 
-    private static Path getDebugInfoFile(Path outputBin, String ending) {
-        return outputBin.getParent().resolve(outputBin.getFileName().toString() + ending);
+    private static void writeDebugFile(Path outputBin, String name, String content) throws IOException {
+        Path file = outputBin.getParent().resolve(name);
+        Path dir = file.getParent();
+        if (!Files.exists(dir)) {
+            Files.createDirectories(dir);
+        }
+        Files.writeString(file, content);
     }
 
     private static ProgramTree lexAndParse(Path input) throws IOException {
@@ -175,12 +175,5 @@ public class Main {
             reader.close();
             throw new AssemblerException(gcc.exitValue(), errorLines.toString());
         }
-    }
-
-    private static void dumpGraph(IrGraph graph, Path path, String key) throws IOException {
-        Files.writeString(
-            path.resolve(graph.name() + "-" + key + ".vcg"),
-            YCompPrinter.print(graph)
-        );
     }
 }
