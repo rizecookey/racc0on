@@ -194,7 +194,6 @@ public class SsaTranslation {
             Node start = data.constructor.newStart();
             data.constructor.writeCurrentSideEffect(data.constructor.newSideEffectProj(start));
             functionTree.body().accept(this, data);
-            data.constructor.sealBlock(data.currentBlock());
             popSpan();
             return NOT_AN_EXPRESSION;
         }
@@ -274,7 +273,6 @@ public class SsaTranslation {
             Node ifNode = data.constructor.newIf(condition);
             Node trueProj = data.constructor.newIfTrueProj(ifNode);
             Node falseProj = data.constructor.newIfFalseProj(ifNode);
-            data.constructor.sealBlock(data.currentBlock());
             Block trueBranch = data.constructor.newBlock(trueProj);
             ifElseTree.thenBranch().accept(this, data);
             Node trueJump = data.constructor.newJump();
@@ -287,7 +285,8 @@ public class SsaTranslation {
                 data.constructor.sealBlock(falseBranch);
             }
 
-            data.constructor.newBlock(trueJump, falseJump);
+            Block followingBlock = data.constructor.newBlock(trueJump, falseJump);
+            data.constructor.sealBlock(followingBlock);
 
             popSpan();
             return NOT_AN_EXPRESSION;
@@ -307,7 +306,6 @@ public class SsaTranslation {
                 forTree.initializer().accept(this, data);
             }
             Node jumpFromPrevious = data.constructor.newJump();
-            data.constructor.sealBlock(data.currentBlock());
 
             Block conditionBlock = data.constructor.newBlock(jumpFromPrevious);
             Node ifNode = data.constructor.newIf(forTree.condition().accept(this, data).orElseThrow());
@@ -320,6 +318,7 @@ public class SsaTranslation {
                 forTree.step().accept(this, data);
                 Node jump = data.constructor.newJump();
                 conditionBlock.addPredecessor(jump);
+                data.constructor.sealBlock(conditionBlock);
             }
 
             Block followingBlock = data.constructor.newBlock(ifFalse);
@@ -331,12 +330,11 @@ public class SsaTranslation {
             Node jump = data.constructor.newJump();
             stepBlock.addPredecessor(jump);
 
-            data.constructor.sealBlock(conditionBlock);
             data.constructor.sealBlock(bodyBlock);
-            if (stepBlock != conditionBlock) {
-                data.constructor.sealBlock(stepBlock);
-            }
+            data.constructor.sealBlock(stepBlock);
+
             data.constructor.setCurrentBlock(followingBlock);
+            data.constructor.sealBlock(followingBlock);
 
             popSpan();
             return NOT_AN_EXPRESSION;
@@ -354,8 +352,6 @@ public class SsaTranslation {
                 case BREAK -> loop.breakTarget();
             };
             target.addPredecessor(jump);
-            data.constructor.sealBlock(data.currentBlock());
-            data.constructor.newBlock();
 
             return NOT_AN_EXPRESSION;
         }
