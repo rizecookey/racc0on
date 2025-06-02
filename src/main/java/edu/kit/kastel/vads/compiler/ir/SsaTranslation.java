@@ -328,9 +328,6 @@ public class SsaTranslation {
             transformerStack.push(new LoopInfo(stepBlock, followingBlock));
             forTree.body().accept(this, data);
             transformerStack.pop();
-            if (forTree.step() != null) {
-                forTree.step().accept(this, data);
-            }
             Node jump = data.constructor.newJump();
             stepBlock.addPredecessor(jump);
 
@@ -388,6 +385,5 @@ public class SsaTranslation {
         }
     }
 
-    private record LoopInfo(Node continueTarget, Node breakTarget) implements NoOpVisitor<SsaTranslation> {
-    }
+    private record LoopInfo(Node continueTarget, Node breakTarget) implements NoOpVisitor<SsaTranslation> {}
 }
