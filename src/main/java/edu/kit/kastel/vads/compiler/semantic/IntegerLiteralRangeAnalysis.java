@@ -10,7 +10,7 @@ public class IntegerLiteralRangeAnalysis implements NoOpVisitor<Namespace<Void>>
     public Unit visit(IntLiteralTree intLiteralTree, Namespace<Void> data) {
       intLiteralTree.parseValue()
           .orElseThrow(
-              () -> new SemanticException("invalid integer literal " + intLiteralTree.value())
+              () -> new SemanticException(intLiteralTree.span(), "invalid integer literal " + intLiteralTree.value())
           );
         return NoOpVisitor.super.visit(intLiteralTree, data);
     }

@@ -40,19 +40,19 @@ class VariableStatusAnalysis implements NoOpVisitor<Namespace<VariableStatusAnal
 
     private static void checkDeclared(NameTree name, @Nullable VariableStatus status) {
         if (status == null) {
-            throw new SemanticException("Variable " + name + " must be declared before assignment");
+            throw new SemanticException(name.span(), "variable " + name.name().asString() + " must be declared before assignment");
         }
     }
 
     private static void checkInitialized(NameTree name, @Nullable VariableStatus status) {
         if (status == null || status == VariableStatus.DECLARED) {
-            throw new SemanticException("Variable " + name + " must be initialized before use");
+            throw new SemanticException(name.span(), "variable " + name.name().asString() + " must be initialized before use");
         }
     }
 
     private static void checkUndeclared(NameTree name, @Nullable VariableStatus status) {
         if (status != null) {
-            throw new SemanticException("Variable " + name + " is already declared");
+            throw new SemanticException(name.span(), "variable " + name.name().asString() + " is already declared");
         }
     }
 
@@ -69,7 +69,7 @@ class VariableStatusAnalysis implements NoOpVisitor<Namespace<VariableStatusAnal
     private static void updateStatus(Namespace<VariableStatus> data, VariableStatus status, NameTree name) {
         data.put(name, status, (existing, replacement) -> {
             if (existing.ordinal() >= replacement.ordinal()) {
-                throw new SemanticException("variable is already " + existing + ". Cannot be " + replacement + " here.");
+                throw new SemanticException(name.span(), "variable is already " + existing + ", cannot be " + replacement + " here.");
             }
             return replacement;
         });

@@ -1,16 +1,10 @@
 package edu.kit.kastel.vads.compiler.parser;
 
 import edu.kit.kastel.vads.compiler.Span;
+import edu.kit.kastel.vads.compiler.util.InputErrorException;
 
-public class ParseException extends RuntimeException {
-    private final Span span;
-
+public class ParseException extends InputErrorException {
     public ParseException(Span span, String message) {
-        super(message);
-        this.span = span;
-    }
-
-    public Span getSpan() {
-        return span;
+        super(span, message);
     }
 }

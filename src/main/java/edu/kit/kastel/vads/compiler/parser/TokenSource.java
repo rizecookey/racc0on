@@ -41,7 +41,7 @@ public class TokenSource {
     public Pair<Keyword, TypeKeywordType> expectType() {
         Token token = peek();
         if (!(token instanceof Keyword kw) || !kw.isTypeKeyword()) {
-            throw new ParseException(token.span(), "expected one of " + Arrays.toString(TypeKeywordType.values()) + " but got " + token);
+            throw new ParseException(token.span(), "expected one of " + Arrays.toString(TypeKeywordType.values()) + " but got " + token.asString());
         }
 
         this.idx++;
@@ -51,7 +51,7 @@ public class TokenSource {
     public Pair<Keyword, ControlKeywordType> expectControl() {
         Token token = peek();
         if (!(token instanceof Keyword kw) || !kw.isControlKeyword()) {
-            throw new ParseException(token.span(), "expected one of " + Arrays.toString(ControlKeywordType.values()) + " but got " + token);
+            throw new ParseException(token.span(), "expected one of " + Arrays.toString(ControlKeywordType.values()) + " but got " + token.asString());
         }
 
         this.idx++;
@@ -61,7 +61,7 @@ public class TokenSource {
     public Keyword expectKeyword(KeywordType type) {
         Token token = peek();
         if (!(token instanceof Keyword kw) || !kw.type().equals(type)) {
-            throw new ParseException(token.span(), "expected keyword '" + type + "' but got " + token);
+            throw new ParseException(token.span(), "expected keyword '" + type + "' but got " + token.asString());
         }
         this.idx++;
         return kw;
@@ -70,7 +70,7 @@ public class TokenSource {
     public Separator expectSeparator(SeparatorType type) {
         Token token = peek();
         if (!(token instanceof Separator sep) || sep.type() != type) {
-            throw new ParseException(token.span(), "expected separator '" + type + "' but got " + token);
+            throw new ParseException(token.span(), "expected separator '" + type + "' but got " + token.asString());
         }
         this.idx++;
         return sep;
@@ -79,7 +79,7 @@ public class TokenSource {
     public Operator expectOperator(OperatorType type) {
         Token token = peek();
         if (!(token instanceof Operator op) || op.type() != type) {
-            throw new ParseException(token.span(), "expected operator '" + type + "' but got " + token);
+            throw new ParseException(token.span(), "expected operator '" + type + "' but got " + token.asString());
         }
         this.idx++;
         return op;
@@ -88,7 +88,7 @@ public class TokenSource {
     public Identifier expectIdentifier() {
         Token token = peek();
         if (!(token instanceof Identifier ident)) {
-            throw new ParseException(token.span(), "expected identifier but got " + token);
+            throw new ParseException(token.span(), "expected identifier but got " + token.asString());
         }
         this.idx++;
         return ident;

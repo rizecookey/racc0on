@@ -14,6 +14,7 @@ import edu.kit.kastel.vads.compiler.parser.ast.FunctionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
 import edu.kit.kastel.vads.compiler.semantic.SemanticAnalysis;
 import edu.kit.kastel.vads.compiler.semantic.SemanticException;
+import edu.kit.kastel.vads.compiler.util.InputErrorException;
 import net.rizecookey.racc0on.backend.AssemblerException;
 import net.rizecookey.racc0on.backend.x86_64.x8664CodeGenerator;
 import net.rizecookey.racc0on.utils.ConsoleColors;
@@ -40,7 +41,8 @@ public class Main {
         Path output = Path.of(args[1]);
         String outputFileName = output.getFileName().toString();
 
-        ProgramTree program = lexAndParse(input);
+        String inputString = Files.readString(input);
+        ProgramTree program = lexAndParse(inputString);
         if (DEBUG) {
             String parsedProgram = Printer.print(program);
             LOGGER.log("Parsed program: ", parsedProgram);
@@ -49,7 +51,7 @@ public class Main {
         try {
             new SemanticAnalysis(program).analyze();
         } catch (SemanticException e) {
-            e.printStackTrace();
+            printInputError(inputString, e);
             System.exit(7);
             return;
         }
@@ -96,8 +98,7 @@ public class Main {
         Files.writeString(file, content);
     }
 
-    private static ProgramTree lexAndParse(Path input) throws IOException {
-        String programString = Files.readString(input);
+    private static ProgramTree lexAndParse(String programString) {
         try {
             Lexer lexer = Lexer.forString(programString);
             TokenSource tokenSource = new TokenSource(lexer);
@@ -105,21 +106,30 @@ public class Main {
 
             return parser.parseProgram();
         } catch (ParseException e) {
-            printParserError(programString, e);
+            printInputError(programString, e);
             System.exit(42);
             throw new AssertionError("unreachable");
         }
     }
 
-    private static void printParserError(String program, ParseException e) {
+    private static void printInputError(String program, InputErrorException e) {
         Span span = e.getSpan();
         List<String> lines = Arrays.asList(program.split("(\\r\\n|\\r|\\n)"));
 
-        LOGGER.prefixedError(String.format("line %s, column %s: %s%n", span.start().line() + 1, span.start().column() + 1, e.getMessage()));
+        LOGGER.prefixedError(String.format("line %s, column %s: %s", span.start().line() + 1, span.start().column() + 1, e.getMessage()));
 
-        for (int i = span.start().line(); i <= span.end().line(); i++) {
+        if (span.start().line() - 1 > 0) {
+            LOGGER.errorContext("...");
+        }
+
+        for (int i = Math.max(0, span.start().line() - 1); i <= Math.min(lines.size() - 1, span.end().line()); i++) {
             String line = lines.get(i);
             LOGGER.errorContext(line);
+
+            if (i < span.start().line() || i > span.end().line()) {
+                continue;
+            }
+
             StringBuilder positionMarker = new StringBuilder();
             int startMarking = span.start().line() == i ? span.start().column() : 0;
             int stopMarking = span.end().line() == i ? span.end().column() : line.length() - 1;
@@ -131,6 +141,9 @@ public class Main {
                     .append(ConsoleColors.RESET);
 
             LOGGER.errorContext(positionMarker.toString());
+        }
+        if (span.end().line() + 1 < lines.size() - 1) {
+            LOGGER.errorContext("...");
         }
         LOGGER.errorNewline();
 

@@ -54,7 +54,8 @@ public class Parser {
     public ProgramTree parseProgram() {
         ProgramTree programTree = new ProgramTree(List.of(parseFunction()));
         if (this.tokenSource.hasMore()) {
-            throw new ParseException(this.tokenSource.peek().span(), "expected end of input but got " + this.tokenSource.peek());
+            Token token = this.tokenSource.peek();
+            throw new ParseException(token.span(), "expected end of input but got " + token.asString());
         }
         return programTree;
     }
@@ -63,7 +64,7 @@ public class Parser {
         Keyword returnType = this.tokenSource.expectKeyword(TypeKeywordType.INT);
         Identifier identifier = this.tokenSource.expectIdentifier();
         if (!identifier.value().equals("main")) {
-            throw new ParseException(identifier.span(), "expected main function but got " + identifier);
+            throw new ParseException(identifier.span(), "expected main function but got " + identifier.value());
         }
         this.tokenSource.expectSeparator(SeparatorType.PAREN_OPEN);
         this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
@@ -127,7 +128,8 @@ public class Parser {
             this.tokenSource.consume();
             return op;
         }
-        throw new ParseException(this.tokenSource.peek().span(), "expected assignment but got " + this.tokenSource.peek());
+        Token token = this.tokenSource.peek();
+        throw new ParseException(token.span(), "expected assignment but got " + token.asString());
     }
 
     private LValueTree parseLValue() {
@@ -260,7 +262,7 @@ public class Parser {
                 this.tokenSource.consume();
                 yield new BoolLiteralTree(value, span);
             }
-            case Token t -> throw new ParseException(t.span(), "invalid factor " + t);
+            case Token t -> throw new ParseException(t.span(), "invalid factor " + t.asString());
         };
     }
 
