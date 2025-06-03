@@ -227,15 +227,17 @@ public class YCompPrinter {
             case ConstBoolNode _ -> VcgColor.NORMAL;
             case Phi _ -> VcgColor.PHI;
             case ProjNode proj -> {
-                if (proj.projectionInfo() == SimpleProjectionInfo.SIDE_EFFECT) {
-                    yield VcgColor.MEMORY;
-                } else if (proj.projectionInfo() == SimpleProjectionInfo.RESULT) {
-                    yield VcgColor.NORMAL;
-                } else if (proj.projectionInfo() == SimpleProjectionInfo.IF_FALSE
-                        || proj.projectionInfo() == SimpleProjectionInfo.IF_TRUE) {
-                    yield VcgColor.CONTROL_FLOW;
+                switch (proj.projectionInfo()) {
+                    case SimpleProjectionInfo.SIDE_EFFECT -> {
+                        yield VcgColor.MEMORY;
+                    }
+                    case SimpleProjectionInfo.RESULT -> {
+                        yield VcgColor.NORMAL;
+                    }
+                    case SimpleProjectionInfo.IF_FALSE, SimpleProjectionInfo.IF_TRUE -> {
+                        yield VcgColor.CONTROL_FLOW;
+                    }
                 }
-                yield VcgColor.NORMAL;
             }
             case ReturnNode _ -> VcgColor.CONTROL_FLOW;
             case StartNode _ -> VcgColor.CONTROL_FLOW;
