@@ -10,9 +10,6 @@ import edu.kit.kastel.vads.compiler.ir.util.DebugInfoHelper;
 import java.util.ArrayList;
 import java.util.List;
 
-/* TODO - ternary operator
-        - control flow nodes... */
-
 /// The base class for all nodes.
 public sealed abstract class Node permits Block, ConstBoolNode, ConstIntNode, IfNode, JumpNode, Phi, ProjNode, ReturnNode, StartNode, TernaryNode, BinaryOperationNode, UnaryOperationNode {
     private final IrGraph graph;

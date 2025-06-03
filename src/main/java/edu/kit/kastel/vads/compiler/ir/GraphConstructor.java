@@ -31,10 +31,12 @@ import edu.kit.kastel.vads.compiler.ir.node.operation.unary.NotNode;
 import edu.kit.kastel.vads.compiler.ir.optimize.Optimizer;
 import edu.kit.kastel.vads.compiler.parser.symbol.Name;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -272,11 +274,39 @@ class GraphConstructor {
     }
 
     Node tryRemoveTrivialPhi(Phi phi) {
-        // TODO: the paper shows how to remove trivial phis.
-        // as this is not a problem in Lab 1 and it is just
-        // a simplification, we recommend to implement this
-        // part yourself.
-        return phi;
+        Node same = null;
+        for (var op : phi.predecessors()) {
+            if (op.equals(same) || op.equals(phi)) {
+                continue;
+            }
+            if (same != null) {
+                return phi;
+            }
+            same = op;
+        }
+
+
+        List<Node> users = new ArrayList<>();
+        if (same == null) {
+            same = phi;
+        } else {
+            for (Node user : graph.successors(phi)) {
+                if (user.equals(phi)) {
+                    continue;
+                }
+
+                users.add(user);
+                user.setPredecessor(user.predecessors().indexOf(phi), same);
+            }
+        }
+
+        for (var use : users) {
+            if (use instanceof Phi other) {
+                tryRemoveTrivialPhi(other);
+            }
+        }
+
+        return same;
     }
 
     void sealBlock(Block block) {
