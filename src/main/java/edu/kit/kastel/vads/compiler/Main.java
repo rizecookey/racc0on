@@ -44,7 +44,7 @@ public class Main {
         if (DEBUG) {
             String parsedProgram = Printer.print(program);
             LOGGER.log("Parsed program: ", parsedProgram);
-            writeDebugFile(output, outputFileName + "/" + outputFileName + ".parsed.l2", parsedProgram);
+            writeDebugFile(output, outputFileName + ".parsed.l2", parsedProgram);
         }
         try {
             new SemanticAnalysis(program).analyze();
@@ -60,10 +60,10 @@ public class Main {
 
             if (DEBUG) {
                 String graphString = GraphVizPrinter.print(graph);
-                writeDebugFile(output, outputFileName + "/graphs/" + graph.name() + ".dot", graphString);
+                writeDebugFile(output, "graphs/" + outputFileName + "." + graph.name() + ".dot", graphString);
 
                 String vcgString = YCompPrinter.print(graph);
-                writeDebugFile(output, outputFileName + "/graphs/" + graph.name() + ".vcg", vcgString);
+                writeDebugFile(output, "graphs/" + outputFileName + "." + graph.name() + ".vcg", vcgString);
             }
 
             graphs.add(graph);
@@ -73,7 +73,7 @@ public class Main {
 
         if (DEBUG) {
             LOGGER.log("Generated assembly:", s);
-            writeDebugFile(output, outputFileName + "/" + outputFileName + ".s", s);
+            writeDebugFile(output, outputFileName + ".s", s);
         }
 
         try {
