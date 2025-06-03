@@ -12,7 +12,7 @@ public class SemanticAnalysis {
     }
 
     public void analyze() {
-        this.program.accept(new RecursivePostorderVisitor<>(new IntegerLiteralRangeAnalysis()), new Namespace<>());
+        this.program.accept(new IntegerLiteralRangeAnalysis(), new Namespace<>());
         this.program.accept(new RecursivePostorderVisitor<>(new VariableStatusAnalysis()), new Namespace<>());
         this.program.accept(new ReturnAnalysis(), new ReturnAnalysis.ReturnState());
     }
