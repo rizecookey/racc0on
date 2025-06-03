@@ -37,8 +37,10 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
+import java.util.stream.Stream;
 
 /// SSA translation as described in
 /// [`Simple and Efficient Construction of Static Single Assignment Form`](https://compilers.cs.uni-saarland.de/papers/bbhlmz13cc.pdf).
@@ -275,17 +277,17 @@ public class SsaTranslation {
             Node falseProj = data.constructor.newIfFalseProj(ifNode);
             Block trueBranch = data.constructor.newBlock(trueProj);
             ifElseTree.thenBranch().accept(this, data);
-            Node trueJump = data.constructor.getUnconditionalJump().orElseGet(data.constructor::newJump);
+            Node trueJump = data.constructor.hasUnconditionalJump() ? null : data.constructor.newJump();
             data.constructor.sealBlock(trueBranch);
             Node falseJump = falseProj;
             if (ifElseTree.elseBranch() != null) {
                 Block falseBranch = data.constructor.newBlock(falseProj);
                 ifElseTree.elseBranch().accept(this, data);
-                falseJump = data.constructor.getUnconditionalJump().orElseGet(data.constructor::newJump);
+                falseJump = data.constructor.hasUnconditionalJump() ? null : data.constructor.newJump();
                 data.constructor.sealBlock(falseBranch);
             }
 
-            Block followingBlock = data.constructor.newBlock(trueJump, falseJump);
+            Block followingBlock = data.constructor.newBlock(Stream.of(trueJump, falseJump).filter(Objects::nonNull).toList());
             data.constructor.sealBlock(followingBlock);
 
             popSpan();
@@ -327,8 +329,10 @@ public class SsaTranslation {
             transformerStack.push(new LoopInfo(stepBlock, followingBlock));
             forTree.body().accept(this, data);
             transformerStack.pop();
-            Node jump = data.constructor.getUnconditionalJump().orElseGet(data.constructor::newJump);
-            stepBlock.addPredecessor(jump);
+            if (!data.constructor.hasUnconditionalJump()) {
+                Node jump = data.constructor.newJump();
+                stepBlock.addPredecessor(jump);
+            }
 
             data.constructor.sealBlock(bodyBlock);
             data.constructor.sealBlock(stepBlock);

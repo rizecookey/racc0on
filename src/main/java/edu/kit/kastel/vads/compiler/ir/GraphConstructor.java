@@ -31,10 +31,11 @@ import edu.kit.kastel.vads.compiler.ir.node.operation.unary.NotNode;
 import edu.kit.kastel.vads.compiler.ir.optimize.Optimizer;
 import edu.kit.kastel.vads.compiler.parser.symbol.Name;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 class GraphConstructor {
@@ -200,11 +201,15 @@ class GraphConstructor {
         return jumpNode;
     }
 
-    public Optional<Node> getUnconditionalJump() {
-        return jumps.containsKey(currentBlock()) ? Optional.of(jumps.get(currentBlock())) : Optional.empty();
+    public boolean hasUnconditionalJump() {
+        return jumps.containsKey(currentBlock());
     }
 
     public Block newBlock(Node... predecessors) {
+        return newBlock(Arrays.asList(predecessors));
+    }
+
+    public Block newBlock(Collection<Node> predecessors) {
         Block block = new Block(this.graph);
         this.currentBlock = block;
         for (var predecessor : predecessors) {
