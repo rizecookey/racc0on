@@ -29,6 +29,9 @@ public sealed abstract class BinaryOperationNode extends Node permits Commutativ
         if (a.getClass() != b.getClass()) {
             return false;
         }
+        if (a.block() != b.block()) {
+            return false;
+        }
         if (a.predecessor(LEFT) == b.predecessor(LEFT) && a.predecessor(RIGHT) == b.predecessor(RIGHT)) {
             return true;
         }
@@ -42,12 +45,13 @@ public sealed abstract class BinaryOperationNode extends Node permits Commutativ
             return false;
         }
         return obj.getClass() == this.getClass()
+            && this.block() == binOp.block()
             && this.predecessor(LEFT) == binOp.predecessor(LEFT)
             && this.predecessor(RIGHT) == binOp.predecessor(RIGHT);
     }
 
     @Override
     public int hashCode() {
-        return (predecessorHash(this, LEFT) * 31 + predecessorHash(this, RIGHT)) ^ this.getClass().hashCode();
+        return block().hashCode() + (predecessorHash(this, LEFT) * 31 + predecessorHash(this, RIGHT)) ^ this.getClass().hashCode();
     }
 }
