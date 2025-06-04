@@ -180,7 +180,8 @@ class VariableStatusAnalysis extends RecursivePostorderVisitor<Namespace<Variabl
             if (data.get(name) == null) {
                 continue;
             }
-            if (scopes.stream().anyMatch(scope -> scope.get(name).ordinal() < VariableStatus.INITIALIZED.ordinal())) {
+            if (scopes.stream().anyMatch(scope -> !scope.containsKey(name)
+                    || scope.get(name).ordinal() < VariableStatus.INITIALIZED.ordinal())) {
                 continue;
             }
 
