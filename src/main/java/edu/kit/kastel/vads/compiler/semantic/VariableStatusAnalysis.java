@@ -96,7 +96,7 @@ class VariableStatusAnalysis extends RecursivePostorderVisitor<Namespace<Variabl
         switch (assignmentTree.lValue()) {
             case LValueIdentTree(var name) -> {
                 VariableStatus status = data.get(name);
-                if (assignmentTree.operator().type() == OperatorType.Assignment.DEFAULT) {
+                if (assignmentTree.type() == OperatorType.Assignment.DEFAULT) {
                     checkDeclared(name, status);
                 } else {
                     checkInitialized(name, status);

@@ -119,8 +119,9 @@ public class Parser {
 
         LValueTree lValue = parseLValue();
         Operator assignmentOperator = parseAssignmentOperator();
+        OperatorType.Assignment assignment = assignmentOperator.type().as(OperatorType.Assignment.class).orElseThrow();
         ExpressionTree expression = parseExpression();
-        return new AssignmentTree(lValue, assignmentOperator, expression);
+        return new AssignmentTree(lValue, expression, assignment);
     }
 
     private Operator parseAssignmentOperator() {

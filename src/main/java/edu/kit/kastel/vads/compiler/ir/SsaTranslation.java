@@ -7,7 +7,6 @@ import edu.kit.kastel.vads.compiler.ir.node.Node;
 import edu.kit.kastel.vads.compiler.ir.optimize.Optimizer;
 import edu.kit.kastel.vads.compiler.ir.util.DebugInfo;
 import edu.kit.kastel.vads.compiler.ir.util.DebugInfoHelper;
-import edu.kit.kastel.vads.compiler.lexer.Operator;
 import edu.kit.kastel.vads.compiler.lexer.OperatorType;
 import edu.kit.kastel.vads.compiler.parser.ast.AssignmentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.BinaryOperationTree;
@@ -93,10 +92,9 @@ public class SsaTranslation {
             DebugInfoHelper.setDebugInfo(this.debugStack.pop());
         }
 
-        private @Nullable BinaryOperator<Node> desugarer(SsaTranslation data, Operator op) {
-            OperatorType type = op.type();
+        private @Nullable BinaryOperator<Node> desugarer(SsaTranslation data, OperatorType type) {
             if (!(type instanceof OperatorType.Assignment binType)) {
-                throw new IllegalArgumentException("not an assignment operator " + op);
+                throw new IllegalArgumentException("not an assignment operator " + type);
             }
             return switch (binType) {
                 case OperatorType.Assignment.MINUS -> data.constructor::newSub;
@@ -121,7 +119,7 @@ public class SsaTranslation {
         @Override
         public Optional<Node> visit(AssignmentTree assignmentTree, SsaTranslation data) {
             pushSpan(assignmentTree);
-            BinaryOperator<Node> desugar = desugarer(data, assignmentTree.operator());
+            BinaryOperator<Node> desugar = desugarer(data, assignmentTree.type());
 
             switch (assignmentTree.lValue()) {
                 case LValueIdentTree(var name) -> {

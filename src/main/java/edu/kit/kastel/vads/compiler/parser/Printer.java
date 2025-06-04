@@ -98,10 +98,10 @@ public class Printer {
                 printTree(expression);
                 print(")");
             }
-            case AssignmentTree(var lValue, var op, var expression) -> {
+            case AssignmentTree(var lValue, var expression, var op) -> {
                 printTree(lValue);
                 space();
-                this.builder.append(op.type());
+                this.builder.append(op);
                 space();
                 printTree(expression);
             }
