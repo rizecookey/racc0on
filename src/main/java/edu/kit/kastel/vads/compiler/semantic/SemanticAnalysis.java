@@ -14,8 +14,8 @@ public class SemanticAnalysis {
         this.program.accept(new IntegerLiteralRangeAnalysis(), new Namespace<>());
         this.program.accept(new VariableStatusAnalysis(), new Namespace<>());
         this.program.accept(new ReturnAnalysis(), new ReturnAnalysis.ReturnState());
-        /* TODO missing: - type checking
-                         - control flow analysis */
+        this.program.accept(new TypeAnalysis(), new Namespace<>());
+        /* TODO missing: - control flow analysis */
     }
 
 }
