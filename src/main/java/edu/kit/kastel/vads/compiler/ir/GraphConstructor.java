@@ -31,7 +31,6 @@ import edu.kit.kastel.vads.compiler.ir.node.operation.unary.NotNode;
 import edu.kit.kastel.vads.compiler.ir.optimize.Optimizer;
 import edu.kit.kastel.vads.compiler.parser.symbol.Name;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -276,7 +275,7 @@ class GraphConstructor {
     Node tryRemoveTrivialPhi(Phi phi) {
         Node same = null;
         for (var op : phi.predecessors()) {
-            if (op.equals(same) || op.equals(phi)) {
+            if (op == same || op == phi) {
                 continue;
             }
             if (same != null) {
@@ -285,13 +284,11 @@ class GraphConstructor {
             same = op;
         }
 
-
-        List<Node> users = new ArrayList<>();
+        List<Node> users = List.of();
         if (same == null) {
             same = phi;
         } else {
-            users.addAll(graph.successors(phi));
-            users.remove(phi);
+            users = graph.successors(phi).stream().filter(user -> user != phi).toList();
             phi.replaceBy(same);
         }
 
