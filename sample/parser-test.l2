@@ -31,7 +31,7 @@ int main() {
     continue;
   }
 
-  for (int e = 2; e; ) {}
+  for (bool e = false; e; ) {}
 
   return 9 > 3 ? 7 < 3 ? 5 : 13 : 28;
 }

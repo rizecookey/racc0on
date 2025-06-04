@@ -290,14 +290,9 @@ class GraphConstructor {
         if (same == null) {
             same = phi;
         } else {
-            for (Node user : graph.successors(phi)) {
-                if (user.equals(phi)) {
-                    continue;
-                }
-
-                users.add(user);
-                user.setPredecessor(user.predecessors().indexOf(phi), same);
-            }
+            users.addAll(graph.successors(phi));
+            users.remove(phi);
+            phi.replaceBy(same);
         }
 
         for (var use : users) {
