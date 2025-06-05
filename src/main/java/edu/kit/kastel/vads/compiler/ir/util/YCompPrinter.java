@@ -15,7 +15,9 @@ import edu.kit.kastel.vads.compiler.ir.node.ProjNode.SimpleProjectionInfo;
 import edu.kit.kastel.vads.compiler.ir.node.ReturnNode;
 import edu.kit.kastel.vads.compiler.ir.node.StartNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.unary.UnaryOperationNode;
+import net.rizecookey.racc0on.ir.SsaSchedule;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,6 +29,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class YCompPrinter {
@@ -36,6 +39,7 @@ public class YCompPrinter {
     private final IrGraph graph;
     private int nodeCounter = 0;
     private int blockCounter = 0;
+    private SsaSchedule schedule = new SsaSchedule(List.of(), Map.of());
 
     public YCompPrinter(IrGraph graph) {
         this.graph = graph;
@@ -60,6 +64,8 @@ public class YCompPrinter {
         if (node == this.graph.endBlock()) {
             this.clusters.put(this.graph.endBlock(), Set.of());
         }
+
+        schedule = SsaSchedule.generate(graph);
     }
 
     public static String print(IrGraph graph) {
@@ -213,7 +219,26 @@ public class YCompPrinter {
 
     private String formatSchedule(Block block) {
         // Once you have a schedule, you might want to also emit it :)
-        return formatEdges(List.of(), "\n  color: " + VcgColor.SCHEDULE.id());
+        List<Node> blockSchedule = schedule.blockSchedules().get(block).stream()
+                .filter(node -> !block.getExits().contains(node))
+                .toList();
+        List<Edge> edges = List.of();
+        if (!blockSchedule.isEmpty()) {
+            Node last = blockSchedule.getLast();
+            edges = IntStream.range(0, blockSchedule.size() - 1)
+                    .mapToObj(i -> {
+                        Node first = blockSchedule.get(i);
+                        Node second = blockSchedule.get(i + 1);
+                        return new Edge(first, second, i + first.predecessors().size(), Optional.of(VcgColor.SCHEDULE));
+                    })
+                    .collect(Collectors.toCollection(ArrayList::new));
+            int idx = 1;
+            for (Node exit : block.getExits()) {
+                edges.add(new Edge(last, exit, last.predecessors().size() + idx++, Optional.of(VcgColor.SCHEDULE)));
+            }
+
+        }
+        return formatEdges(edges, "\n  color: " + VcgColor.SCHEDULE.id());
     }
 
     @SuppressWarnings("DuplicateBranchesInSwitch")

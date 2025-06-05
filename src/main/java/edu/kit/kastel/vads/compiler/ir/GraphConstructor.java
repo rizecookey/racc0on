@@ -181,11 +181,15 @@ class GraphConstructor {
     }
 
     public Node newIfTrueProj(Node node) {
-        return new ProjNode(currentBlock(), node, ProjNode.SimpleProjectionInfo.IF_TRUE);
+        ProjNode proj = new ProjNode(currentBlock(), node, ProjNode.SimpleProjectionInfo.IF_TRUE);
+        currentBlock().addExit(proj);
+        return proj;
     }
 
     public Node newIfFalseProj(Node node) {
-        return new ProjNode(currentBlock(), node, ProjNode.SimpleProjectionInfo.IF_FALSE);
+        ProjNode proj = new ProjNode(currentBlock(), node, ProjNode.SimpleProjectionInfo.IF_FALSE);
+        currentBlock().addExit(proj);
+        return proj;
     }
 
     public Node newIf(Node condition) {
@@ -199,6 +203,7 @@ class GraphConstructor {
     public Node newJump() {
         JumpNode jumpNode = new JumpNode(currentBlock());
         jumps.put(currentBlock(), jumpNode);
+        currentBlock().addExit(jumpNode);
         return jumpNode;
     }
 
