@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.SequencedSet;
 
+/* TODO: handle loops! */
 public class LivenessMap<T extends Operation<?, U>, U extends VariableStore> {
     private final Map<T, SequencedSet<StoreReference<U>>> map;
 
