@@ -19,7 +19,9 @@ public enum x8664InstrType implements InstructionType<x8664Instr, x8664Store> {
     MOV("mov", operand(0)),
     RET("ret"),
     ENTER("enter", specific(x8664Register.RSP), specific(x8664Register.RBP)),
-    LEAVE("leave", specific(x8664Register.RSP), specific(x8664Register.RBP)),;
+    LEAVE("leave", specific(x8664Register.RSP), specific(x8664Register.RBP)),
+    JMP("jmp")
+    ;
 
     private final String name;
     private final List<OverriddenStoreGetter> overriddenStoreGetters;

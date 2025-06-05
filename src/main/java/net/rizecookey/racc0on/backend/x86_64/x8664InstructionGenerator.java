@@ -1,5 +1,7 @@
 package net.rizecookey.racc0on.backend.x86_64;
 
+import edu.kit.kastel.vads.compiler.ir.node.ConstBoolNode;
+import edu.kit.kastel.vads.compiler.ir.node.JumpNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.AddNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.BinaryOperationNode;
 import edu.kit.kastel.vads.compiler.ir.node.Block;
@@ -32,14 +34,19 @@ import net.rizecookey.racc0on.backend.x86_64.operation.x8664DivPhantomOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664EmptyOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664EnterOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664IMulOp;
+import net.rizecookey.racc0on.backend.x86_64.operation.x8664JumpOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664LoadConstPhantomOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664ModPhantomOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664MovOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664Op;
+import net.rizecookey.racc0on.backend.x86_64.operation.x8664PhiMoveOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664RetOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664SubOp;
 import net.rizecookey.racc0on.backend.x86_64.optimization.x8664AsmOptimization;
 import net.rizecookey.racc0on.backend.x86_64.store.x8664StoreAllocator;
+import net.rizecookey.racc0on.ir.xir.node.PhiSupportXNode;
+import net.rizecookey.racc0on.ir.xir.node.SsaXNode;
+import net.rizecookey.racc0on.ir.xir.node.XNode;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -51,14 +58,14 @@ import java.util.SequencedSet;
 import java.util.stream.Collectors;
 
 public class x8664InstructionGenerator implements InstructionGenerator<x8664Instr> {
-    private final List<Node> statements;
+    private final List<XNode> statements;
     private final List<x8664Instr> instructions;
     private final x8664CodeGenerator codeGenerator;
     private final Map<StoreReference<x8664Store>, x8664Store> locations;
     private int stackSize;
     private LivenessMap<x8664Op, x8664Store> livenessMap;
 
-    public x8664InstructionGenerator(x8664CodeGenerator codeGenerator, List<Node> statements) {
+    public x8664InstructionGenerator(x8664CodeGenerator codeGenerator, List<XNode> statements) {
         this.statements = statements;
         this.codeGenerator = codeGenerator;
         this.locations = new HashMap<>();
@@ -68,11 +75,15 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         this.livenessMap = new LivenessMap<>();
     }
 
+    public x8664CodeGenerator codeGenerator() {
+        return codeGenerator;
+    }
+
     public List<x8664Instr> generateInstructions() {
         List<x8664Op> selectedOperations = new ArrayList<>();
         StoreRequests<x8664Op, x8664Store> storeRequests = new StoreRequests<>();
         selectedOperations.add(new x8664EnterOp());
-        for (Node node : statements) {
+        for (XNode node : statements) {
             x8664Op operation = selectOperation(node);
             operation.makeStoreRequests(storeRequests);
             selectedOperations.add(operation);
@@ -137,21 +148,31 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         write(x8664InstrType.LEAVE);
     }
 
-    public x8664Op selectOperation(Node node) {
-        return switch (node) {
-            case AddNode addNode -> new x8664AddOp(extractOperands(addNode));
-            case SubNode subNode -> new x8664SubOp(extractOperands(subNode));
-            case MulNode mulNode -> new x8664IMulOp(extractOperands(mulNode));
-            case DivNode divNode -> new x8664DivPhantomOp(extractOperands(divNode));
-            case ModNode modNode -> new x8664ModPhantomOp(extractOperands(modNode));
-            case BinaryOperationNode _, UnaryOperationNode _
-                    -> throw new IllegalStateException("Operation not supported by x86 backend"); // TODO
-            case ConstIntNode constIntNode -> new x8664LoadConstPhantomOp(constIntNode);
-            case ReturnNode returnNode -> new x8664RetOp(NodeUtils.shortcutPredecessors(returnNode).get(ReturnNode.RESULT));
-            case Phi _ -> throw new IllegalStateException("Phi node not supported");
-            case Block _, ProjNode _, StartNode _ -> x8664EmptyOp.INSTANCE;
-            default -> throw new IllegalStateException(node + " not implemented by x86 backend"); //TODO
-        };
+    public x8664Op selectOperation(XNode xNode) {
+        switch (xNode) {
+            case SsaXNode(Node node) -> {
+                return switch (node) {
+                    case AddNode addNode -> new x8664AddOp(extractOperands(addNode));
+                    case SubNode subNode -> new x8664SubOp(extractOperands(subNode));
+                    case MulNode mulNode -> new x8664IMulOp(extractOperands(mulNode));
+                    case DivNode divNode -> new x8664DivPhantomOp(extractOperands(divNode));
+                    case ModNode modNode -> new x8664ModPhantomOp(extractOperands(modNode));
+                    case BinaryOperationNode _, UnaryOperationNode _ ->
+                            throw new IllegalStateException("Operation not supported by x86 backend"); // TODO
+                    case ConstIntNode constIntNode -> new x8664LoadConstPhantomOp(constIntNode);
+                    case ConstBoolNode constBoolNode -> new x8664LoadConstPhantomOp(constBoolNode);
+                    case ReturnNode returnNode ->
+                            new x8664RetOp(NodeUtils.shortcutPredecessors(returnNode).get(ReturnNode.RESULT));
+                    case JumpNode jumpNode -> new x8664JumpOp(jumpNode);
+                    case Phi _, Block _, ProjNode _, StartNode _ -> x8664EmptyOp.INSTANCE;
+                    default -> throw new IllegalStateException(node + " not implemented by x86 backend"); //TODO
+                };
+            }
+
+            case PhiSupportXNode phiSupport -> {
+                return new x8664PhiMoveOp(phiSupport);
+            }
+        }
     }
 
     private Operands.Binary<Node> extractOperands(BinaryOperationNode node) {
