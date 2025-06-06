@@ -13,12 +13,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public record SsaSchedule(List<Block> blockOrder, Map<Block, List<Node>> blockSchedules) {
+public record SsaSchedule(List<Block> blockOrder, Map<Block, List<Node>> blockSchedules, IrGraph programGraph) {
     public static SsaSchedule generate(IrGraph program) {
         Map<Block, List<Node>> blockSchedules = scheduleWithinBlocks(program);
         List<Block> blockOrder = scheduleControlFlow(program, blockSchedules);
 
-        return new SsaSchedule(List.copyOf(blockOrder), Map.copyOf(blockSchedules));
+        return new SsaSchedule(List.copyOf(blockOrder), Map.copyOf(blockSchedules), program);
     }
 
     private static Map<Block, List<Node>> scheduleWithinBlocks(IrGraph program) {

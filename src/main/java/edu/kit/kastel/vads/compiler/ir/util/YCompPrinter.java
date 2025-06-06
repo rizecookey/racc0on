@@ -39,10 +39,11 @@ public class YCompPrinter {
     private final IrGraph graph;
     private int nodeCounter = 0;
     private int blockCounter = 0;
-    private SsaSchedule schedule = new SsaSchedule(List.of(), Map.of());
+    private SsaSchedule schedule;
 
     public YCompPrinter(IrGraph graph) {
         this.graph = graph;
+        this.schedule = new SsaSchedule(List.of(), Map.of(), graph);
     }
 
     private void prepare(Node node, Set<Node> seen) {
