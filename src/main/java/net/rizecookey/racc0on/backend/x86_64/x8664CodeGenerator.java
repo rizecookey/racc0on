@@ -5,7 +5,6 @@ import edu.kit.kastel.vads.compiler.ir.node.Block;
 import net.rizecookey.racc0on.backend.CodeGenerator;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664Instr;
 import net.rizecookey.racc0on.ir.SsaSchedule;
-import net.rizecookey.racc0on.ir.xir.XIrSchedule;
 
 import java.util.HashMap;
 import java.util.List;
@@ -36,7 +35,7 @@ public class x8664CodeGenerator implements CodeGenerator {
         initializeTextSegment();
 
         for (IrGraph graph : program) {
-            XIrSchedule schedule = XIrSchedule.extend(SsaSchedule.generate(graph));
+            SsaSchedule schedule = SsaSchedule.generate(graph);
             generateProcedure(graph, schedule);
         }
 
@@ -59,7 +58,7 @@ public class x8664CodeGenerator implements CodeGenerator {
         appendLine(BOILERPLATE_ENTRY);
     }
 
-    public void generateProcedure(IrGraph program, XIrSchedule schedule) {
+    public void generateProcedure(IrGraph program, SsaSchedule schedule) {
         int idx = 0;
         for (var block : schedule.blockOrder()) {
             if (block == program.endBlock()) {
