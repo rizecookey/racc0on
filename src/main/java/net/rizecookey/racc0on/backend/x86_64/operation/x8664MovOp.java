@@ -9,7 +9,15 @@ import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
 import net.rizecookey.racc0on.backend.x86_64.store.x8664StoreRefResolver;
 import net.rizecookey.racc0on.backend.x86_64.x8664InstructionGenerator;
 
-public record x8664MovOp(x8664Store to, x8664Operand from) implements x8664Op {
+public class x8664MovOp implements x8664Op {
+    private final x8664Store to;
+    private final x8664Operand from;
+
+    public x8664MovOp(x8664Store to, x8664Operand from) {
+        this.to = to;
+        this.from = from;
+    }
+
     @Override
     public void makeStoreRequests(StoreRequestService<x8664Op, x8664Store> service) {
     }
