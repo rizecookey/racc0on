@@ -212,7 +212,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         String procedureName = schedule.programGraph().name();
         int index = 0;
         for (Block block : schedule.blockSchedules().keySet()) {
-            String label = block == schedule.programGraph().startBlock() ? procedureName : procedureName + "#" + index++;
+            String label = block == schedule.programGraph().startBlock() ? procedureName : procedureName + "$" + index++;
             blockLabels.put(block, label);
         }
     }
