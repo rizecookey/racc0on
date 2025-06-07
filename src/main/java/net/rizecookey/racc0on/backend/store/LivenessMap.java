@@ -2,6 +2,8 @@ package net.rizecookey.racc0on.backend.store;
 
 import net.rizecookey.racc0on.backend.operand.stored.VariableStore;
 import net.rizecookey.racc0on.backend.operation.Operation;
+import net.rizecookey.racc0on.backend.operation.OperationBlock;
+import net.rizecookey.racc0on.backend.operation.OperationSchedule;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -10,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.SequencedSet;
 
-/* TODO: handle loops! */
 public class LivenessMap<T extends Operation<?, U>, U extends VariableStore> {
     private final Map<T, SequencedSet<StoreReference<U>>> map;
 
@@ -30,20 +31,20 @@ public class LivenessMap<T extends Operation<?, U>, U extends VariableStore> {
         return getLiveAt(at).contains(other);
     }
 
-    public void addLiveAt(T at, StoreReference<U> other) {
-        map.computeIfAbsent(at, _ -> new LinkedHashSet<>()).add(other);
+    public boolean addLiveAt(T at, StoreReference<U> other) {
+        return map.computeIfAbsent(at, _ -> new LinkedHashSet<>()).add(other);
     }
 
-    public void addLiveAt(T at, Collection<? extends StoreReference<U>> others) {
-        map.computeIfAbsent(at, _ -> new LinkedHashSet<>()).addAll(others);
+    public boolean addLiveAt(T at, Collection<? extends StoreReference<U>> others) {
+        return map.computeIfAbsent(at, _ -> new LinkedHashSet<>()).addAll(others);
     }
 
-    public void removeLiveAt(T at, StoreReference<U> other) {
-        map.computeIfAbsent(at, _ -> new LinkedHashSet<>()).remove(other);
+    public boolean removeLiveAt(T at, StoreReference<U> other) {
+        return map.computeIfAbsent(at, _ -> new LinkedHashSet<>()).remove(other);
     }
 
-    public void removeLiveAt(T at, Collection<? extends StoreReference<U>> others) {
-        map.computeIfAbsent(at, _ -> new LinkedHashSet<>()).removeAll(others);
+    public boolean removeLiveAt(T at, Collection<? extends StoreReference<U>> others) {
+        return map.computeIfAbsent(at, _ -> new LinkedHashSet<>()).removeAll(others);
     }
 
     /**
@@ -53,19 +54,42 @@ public class LivenessMap<T extends Operation<?, U>, U extends VariableStore> {
      * @param from the operation from which to propagate the liveness
      * @param to   the operation whose liveness is to be set
      */
-    public void propagateLiveness(T from, T to, StoreRequests<T, U> requests) {
+    public boolean propagateLiveness(T from, T to, StoreRequests<T, U> requests) {
+        boolean changed = false;
         for (StoreReference<U> liveInFrom : getLiveAt(from)) {
             if (liveInFrom.equals(requests.getOutputStore(to))) {
                 continue;
             }
 
-            addLiveAt(to, liveInFrom);
+            changed |= addLiveAt(to, liveInFrom);
         }
+
+        return changed;
     }
 
-    public static <T extends Operation<?, U>, U extends VariableStore> LivenessMap<T, U> calculateFor(Map<String, List<T>> operations, StoreRequests<T, U> requests) {
+    public static <T extends Operation<?, U>, U extends VariableStore> LivenessMap<T, U> calculateFor(OperationSchedule<T> schedule, StoreRequests<T, U> requests) {
         LivenessMap<T, U> liveness = new LivenessMap<>();
 
-        throw new UnsupportedOperationException(); // TODO
+        boolean changed;
+        do {
+            changed = false;
+            for (OperationBlock<T> block : List.copyOf(schedule.blocks().values()).reversed()) {
+                for (int i = block.operations().size() - 1; i >= 0; i--) {
+                    T op = block.operations().get(i);
+                    changed |= liveness.addLiveAt(op, requests.getInputStores(op));
+
+                    if (i < block.operations().size() - 1) {
+                        changed |= liveness.propagateLiveness(block.operations().get(i + 1), op, requests);
+                    }
+
+                    for (var target : op.targetLabels()) {
+                        T opTarget = schedule.blocks().get(target).operations().getFirst();
+                        changed |= liveness.propagateLiveness(opTarget, op, requests);
+                    }
+                }
+            }
+        } while (changed);
+
+        return liveness;
     }
 }

@@ -2,6 +2,8 @@ package net.rizecookey.racc0on.backend.store;
 
 import net.rizecookey.racc0on.backend.operand.stored.VariableStore;
 import net.rizecookey.racc0on.backend.operation.Operation;
+import net.rizecookey.racc0on.backend.operation.OperationBlock;
+import net.rizecookey.racc0on.backend.operation.OperationSchedule;
 import net.rizecookey.racc0on.utils.Graph;
 import net.rizecookey.racc0on.utils.Weighted;
 
@@ -118,10 +120,39 @@ public class InterferenceGraph<T extends Operation<?, U>, U extends VariableStor
                 .findFirst();
     }
 
-    public static <T extends Operation<?, U>, U extends VariableStore> InterferenceGraph<T, U> createFrom(Map<String, List<T>> operations, LivenessMap<T, U> livenessMap, StoreRequests<T, U> requests) {
-        InterferenceGraph<T, U> graph = new InterferenceGraph<>(operations.values().stream()
-                .flatMap(List::stream).toList(), livenessMap, requests);
+    public static <T extends Operation<?, U>, U extends VariableStore> InterferenceGraph<T, U> createFrom(OperationSchedule<T> schedule, LivenessMap<T, U> livenessMap, StoreRequests<T, U> requests) {
+        InterferenceGraph<T, U> graph = new InterferenceGraph<>(schedule.blocks().values().stream()
+                .flatMap(coll -> coll.operations().stream()).toList(), livenessMap, requests);
 
-        throw new UnsupportedOperationException(); // TODO
+        for (OperationBlock<T> block : schedule.blocks().values()) {
+            for (int i = 0; i < block.operations().size(); i++) {
+                T operation = block.operations().get(i);
+                if (!requests.requiresOutputStore(operation)) {
+                    continue;
+                }
+
+                var outStore = requests.getOutputStore(operation);
+                graph.addNode(outStore);
+
+                List<T> successors = new ArrayList<>();
+                if (i < block.operations().size() - 1) {
+                    successors.add(block.operations().get(i + 1));
+                }
+                operation.targetLabels().stream()
+                        .map(label -> schedule.blocks().get(label).operations().getFirst())
+                        .forEach(successors::add);
+                for (var successor : successors) {
+                    for (var live : livenessMap.getLiveAt(successor)) {
+                        if (live.equals(outStore)) {
+                            continue;
+                        }
+
+                        graph.addEdge(outStore, live);
+                    }
+                }
+            }
+        }
+
+        return graph;
     }
 }

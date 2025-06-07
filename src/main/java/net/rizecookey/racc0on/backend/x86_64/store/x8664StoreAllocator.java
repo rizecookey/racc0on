@@ -1,5 +1,6 @@
 package net.rizecookey.racc0on.backend.x86_64.store;
 
+import net.rizecookey.racc0on.backend.operation.OperationSchedule;
 import net.rizecookey.racc0on.backend.store.InterferenceGraph;
 import net.rizecookey.racc0on.backend.store.LivenessMap;
 import net.rizecookey.racc0on.backend.store.StoreReference;
@@ -20,9 +21,9 @@ public class x8664StoreAllocator {
 
     public record Allocation(LivenessMap<x8664Op, x8664Store> livenessMap, Map<StoreReference<x8664Store>, x8664Store> allocations, int stackSize) {}
 
-    public Allocation allocate(Map<String, List<x8664Op>> operations, StoreRequests<x8664Op, x8664Store> storeRequests) {
-        LivenessMap<x8664Op, x8664Store> liveness = LivenessMap.calculateFor(operations, storeRequests);
-        InterferenceGraph<x8664Op, x8664Store> interference = InterferenceGraph.createFrom(operations, liveness, storeRequests);
+    public Allocation allocate(OperationSchedule<x8664Op> schedule, StoreRequests<x8664Op, x8664Store> storeRequests) {
+        LivenessMap<x8664Op, x8664Store> liveness = LivenessMap.calculateFor(schedule, storeRequests);
+        InterferenceGraph<x8664Op, x8664Store> interference = InterferenceGraph.createFrom(schedule, liveness, storeRequests);
         List<x8664Store> availableLocations = new ArrayList<>(x8664Register.getRegisterSet()
                 .stream()
                 .filter(x8664Register::isGeneralPurpose)

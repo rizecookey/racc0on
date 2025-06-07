@@ -97,7 +97,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         OperationSchedule<x8664Op> opSchedule = scheduleBlocks(operations);
 
         x8664StoreAllocator allocator = new x8664StoreAllocator();
-        x8664StoreAllocator.Allocation allocation = allocator.allocate(operations, requestService);
+        x8664StoreAllocator.Allocation allocation = allocator.allocate(opSchedule, requestService);
         locations.putAll(allocation.allocations());
         stackSize = allocation.stackSize();
         livenessMap = allocation.livenessMap();
