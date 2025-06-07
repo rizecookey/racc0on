@@ -69,6 +69,10 @@ public class StoreRequests<T extends Operation<?, U>, U extends VariableStore> i
     @Override
     public StoreReference<U> resolveOutputIfAllocated(T location, Node node) {
         RegularStore<U> nodeStore = new RegularStore<>(node);
+        if (storeConditions.containsKey(nodeStore)) {
+            outputStores.put(location, nodeStore);
+            return nodeStore;
+        }
         pendingStores.put(nodeStore, location);
         return nodeStore;
     }
