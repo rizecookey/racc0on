@@ -1,6 +1,5 @@
 package net.rizecookey.racc0on.backend.x86_64.operation;
 
-import edu.kit.kastel.vads.compiler.ir.node.Block;
 import net.rizecookey.racc0on.backend.store.StoreRequestService;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664InstrType;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Store;
@@ -8,10 +7,12 @@ import net.rizecookey.racc0on.backend.x86_64.operand.x8664Immediate;
 import net.rizecookey.racc0on.backend.x86_64.store.x8664StoreRefResolver;
 import net.rizecookey.racc0on.backend.x86_64.x8664InstructionGenerator;
 
-public class x8664JumpOp implements x8664Op {
-    private final Block target;
+import java.util.List;
 
-    public x8664JumpOp(Block target) {
+public class x8664JumpOp implements x8664Op {
+    private final String target;
+
+    public x8664JumpOp(String target) {
         this.target = target;
     }
 
@@ -20,8 +21,12 @@ public class x8664JumpOp implements x8664Op {
     }
 
     @Override
-    public void write(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {
-        String targetLabel = generator.label(target);
-        generator.write(x8664InstrType.JMP, new x8664Immediate(targetLabel));
+    public List<String> targetLabels() {
+        return List.of(target);
+    }
+
+    @Override
+    public void write(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {;
+        generator.write(x8664InstrType.JMP, new x8664Immediate(target));
     }
 }

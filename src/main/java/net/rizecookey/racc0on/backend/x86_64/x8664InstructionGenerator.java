@@ -253,14 +253,14 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
             case ConstBoolNode constBoolNode -> List.of(new x8664LoadConstPhantomOp(constBoolNode));
             case ReturnNode returnNode ->
                     List.of(new x8664RetOp(NodeUtils.shortcutPredecessors(returnNode).get(ReturnNode.RESULT)));
-            case JumpNode jumpNode -> List.of(new x8664JumpOp(jumpNode.target()));
+            case JumpNode jumpNode -> List.of(new x8664JumpOp(label(jumpNode.target())));
             case IfNode ifNode -> {
                 Map<Boolean, Block> targets = ifNode.targets();
                 Block trueTarget = targets.get(true);
                 Block falseTarget = targets.get(false);
 
-                yield List.of(new x8664ConditionalJumpOp(ifNode.predecessor(IfNode.CONDITION), true, falseTarget),
-                        new x8664JumpOp(trueTarget));
+                yield List.of(new x8664ConditionalJumpOp(ifNode.predecessor(IfNode.CONDITION), true, label(falseTarget)),
+                        new x8664JumpOp(label(trueTarget)));
             }
             case Phi _, Block _, ProjNode _ -> List.of();
             case BinaryOperationNode _, UnaryOperationNode _ ->
