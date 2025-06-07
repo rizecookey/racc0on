@@ -185,6 +185,11 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         for (Block block : ssaBlockSchedule) {
             String label = label(block);
             List<x8664Op> blockOps = List.copyOf(operations.getOrDefault(label, List.of()));
+
+            if (blockOps.isEmpty()) {
+                continue;
+            }
+
             var opBlock = new OperationBlock<>(label, blockOps);
             blocks.put(label, opBlock);
 
