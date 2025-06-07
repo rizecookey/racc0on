@@ -3,11 +3,20 @@ package net.rizecookey.racc0on.backend.x86_64;
 import edu.kit.kastel.vads.compiler.ir.node.ConstBoolNode;
 import edu.kit.kastel.vads.compiler.ir.node.IfNode;
 import edu.kit.kastel.vads.compiler.ir.node.JumpNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.TernaryNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.AddNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.BinaryOperationNode;
 import edu.kit.kastel.vads.compiler.ir.node.Block;
 import edu.kit.kastel.vads.compiler.ir.node.ConstIntNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.BitwiseAndNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.BitwiseOrNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.BitwiseXorNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.DivNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.EqNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.GreaterNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.GreaterOrEqNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.LessNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.LessOrEqNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.ModNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.MulNode;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
@@ -15,8 +24,11 @@ import edu.kit.kastel.vads.compiler.ir.node.Phi;
 import edu.kit.kastel.vads.compiler.ir.node.ProjNode;
 import edu.kit.kastel.vads.compiler.ir.node.ReturnNode;
 import edu.kit.kastel.vads.compiler.ir.node.StartNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.NotEqNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.ShiftLeftNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.binary.ShiftRightNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.SubNode;
-import edu.kit.kastel.vads.compiler.ir.node.operation.unary.UnaryOperationNode;
+import edu.kit.kastel.vads.compiler.ir.node.operation.unary.NotNode;
 import net.rizecookey.racc0on.backend.NodeUtils;
 import net.rizecookey.racc0on.backend.instruction.InstructionBlock;
 import net.rizecookey.racc0on.backend.instruction.InstructionGenerator;
@@ -30,22 +42,33 @@ import net.rizecookey.racc0on.backend.x86_64.instruction.x8664Instr;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664InstrType;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664InstructionStream;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Register;
+import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664StackStore;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Store;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Immediate;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
-import net.rizecookey.racc0on.backend.x86_64.operation.x8664AddOp;
+import net.rizecookey.racc0on.backend.x86_64.operation.arithmetic.x8664AddOp;
+import net.rizecookey.racc0on.backend.x86_64.operation.compare.x8664EqOp;
+import net.rizecookey.racc0on.backend.x86_64.operation.compare.x8664GreaterEqOp;
+import net.rizecookey.racc0on.backend.x86_64.operation.compare.x8664GreaterOp;
+import net.rizecookey.racc0on.backend.x86_64.operation.compare.x8664LessEqOp;
+import net.rizecookey.racc0on.backend.x86_64.operation.compare.x8664LessOp;
+import net.rizecookey.racc0on.backend.x86_64.operation.compare.x8664NotEqOp;
+import net.rizecookey.racc0on.backend.x86_64.operation.logic.x8664AndOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664ConditionalJumpOp;
-import net.rizecookey.racc0on.backend.x86_64.operation.x8664DivPhantomOp;
+import net.rizecookey.racc0on.backend.x86_64.operation.arithmetic.x8664DivPhantomOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664EnterOp;
-import net.rizecookey.racc0on.backend.x86_64.operation.x8664IMulOp;
+import net.rizecookey.racc0on.backend.x86_64.operation.arithmetic.x8664IMulOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664JumpOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664LoadConstPhantomOp;
-import net.rizecookey.racc0on.backend.x86_64.operation.x8664ModPhantomOp;
-import net.rizecookey.racc0on.backend.x86_64.operation.x8664MovOp;
+import net.rizecookey.racc0on.backend.x86_64.operation.arithmetic.x8664ModPhantomOp;
+import net.rizecookey.racc0on.backend.x86_64.operation.logic.x8664NotOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664Op;
+import net.rizecookey.racc0on.backend.x86_64.operation.logic.x8664OrOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664PhiMoveOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664RetOp;
-import net.rizecookey.racc0on.backend.x86_64.operation.x8664SubOp;
+import net.rizecookey.racc0on.backend.x86_64.operation.arithmetic.x8664SubOp;
+import net.rizecookey.racc0on.backend.x86_64.operation.x8664TernaryOp;
+import net.rizecookey.racc0on.backend.x86_64.operation.logic.x8664XorOp;
 import net.rizecookey.racc0on.backend.x86_64.optimization.x8664AsmOptimization;
 import net.rizecookey.racc0on.backend.x86_64.store.x8664StoreAllocator;
 import net.rizecookey.racc0on.ir.IrGraphTraverser;
@@ -262,10 +285,19 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
                 yield List.of(new x8664ConditionalJumpOp(ifNode.predecessor(IfNode.CONDITION), true, label(falseTarget)),
                         new x8664JumpOp(label(trueTarget)));
             }
+            case BitwiseAndNode bitwiseAndNode -> List.of(new x8664AndOp(extractOperands(bitwiseAndNode)));
+            case BitwiseOrNode bitwiseOrNode -> List.of(new x8664OrOp(extractOperands(bitwiseOrNode)));
+            case BitwiseXorNode bitwiseXorNode -> List.of(new x8664XorOp(extractOperands(bitwiseXorNode)));
+            case NotNode notNode -> List.of(new x8664NotOp(notNode, notNode.predecessor(NotNode.IN)));
+            case EqNode eqNode -> List.of(new x8664EqOp(extractOperands(eqNode)));
+            case NotEqNode notEqNode -> List.of(new x8664NotEqOp(extractOperands(notEqNode)));
+            case GreaterNode greaterNode -> List.of(new x8664GreaterOp(extractOperands(greaterNode)));
+            case GreaterOrEqNode greaterOrEqNode -> List.of(new x8664GreaterEqOp(extractOperands(greaterOrEqNode)));
+            case LessNode lessNode -> List.of(new x8664LessOp(extractOperands(lessNode)));
+            case LessOrEqNode lessOrEqNode -> List.of(new x8664LessEqOp(extractOperands(lessOrEqNode)));
+            case TernaryNode ternaryNode -> List.of(new x8664TernaryOp(ternaryNode));
             case Phi _, Block _, ProjNode _ -> List.of();
-            case BinaryOperationNode _, UnaryOperationNode _ ->
-                    throw new IllegalStateException("Operation not supported by x86 backend"); // TODO
-            default -> throw new IllegalStateException(node + " not implemented by x86 backend"); //TODO
+            case ShiftLeftNode _, ShiftRightNode _ -> throw new UnsupportedOperationException(); // TODO
         };
 
         Set<Phi> phiSuccessors = schedule.programGraph().successors(node).stream()
@@ -314,7 +346,22 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
     }
 
     public void move(x8664Store to, x8664Operand from) {
-        new x8664MovOp(to, from).write(this, ref -> Optional.ofNullable(locations.get(ref)));
+        x8664Operand actualFrom = from;
+        if (to instanceof x8664StackStore && from instanceof x8664StackStore) {
+            actualFrom = x8664Register.MEMORY_ACCESS_RESERVE;
+            write(x8664InstrType.MOV, x8664Register.MEMORY_ACCESS_RESERVE, from);
+        }
+
+        write(x8664InstrType.MOV, to, actualFrom);
+    }
+
+    public void test(x8664Store first, x8664Store second) {
+        if (second instanceof x8664StackStore stackStore) {
+            second = x8664Register.MEMORY_ACCESS_RESERVE;
+            move(second, stackStore);
+        }
+
+        write(x8664InstrType.TEST, first, second);
     }
 
     public void push(x8664Operand operand) {

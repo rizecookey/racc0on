@@ -23,7 +23,20 @@ public enum x8664InstrType implements InstructionType<x8664Instr, x8664Store> {
     JMP("jmp"),
     TEST("test"),
     JNZ("jnz"),
-    JZ("jz")
+    JZ("jz"),
+    SETZ("setz", operand(0)),
+    SETE("sete", operand(0)),
+    SETNE("setne", operand(0)),
+    SETG("setg", operand(0)),
+    SETGE("setge", operand(0)),
+    SETL("setl", operand(0)),
+    SETLE("setle", operand(0)),
+    CMOVZ("cmovz", operand(0)),
+    CMOVNZ("comvnz", operand(0)),
+    AND("and", operand(0)),
+    OR("or", operand(0)),
+    XOR("xor", operand(0)),
+    CMP("cmp"),
     ;
 
     private final String name;

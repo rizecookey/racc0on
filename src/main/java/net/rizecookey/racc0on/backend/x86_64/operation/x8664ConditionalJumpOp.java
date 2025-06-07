@@ -37,7 +37,7 @@ public class x8664ConditionalJumpOp implements x8664Op {
     @Override
     public void write(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {
         x8664Store in = storeSupplier.resolve(inRef).orElseThrow();
-        generator.write(x8664InstrType.TEST, in, in);
+        generator.test(in, in);
         generator.write(negate ? x8664InstrType.JZ : x8664InstrType.JNZ, new x8664Immediate(target));
     }
 }
