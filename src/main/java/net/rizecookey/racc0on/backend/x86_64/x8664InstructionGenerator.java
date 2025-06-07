@@ -78,14 +78,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.NavigableMap;
 import java.util.Optional;
+import java.util.SequencedMap;
 import java.util.SequencedSet;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 public class x8664InstructionGenerator implements InstructionGenerator<x8664Instr> {
@@ -113,11 +113,12 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
     }
 
     public List<InstructionBlock<x8664Instr>> generateInstructions() {
-        labelBlocks();
+        List<Block> ssaBlockSchedule = scheduleSsaBlocks();
+        labelBlocks(ssaBlockSchedule);
 
         StoreRequests<x8664Op, x8664Store> requestService = new StoreRequests<>();
         Map<String, List<x8664Op>> operations = generateOperations(requestService);
-        OperationSchedule<x8664Op> opSchedule = scheduleBlocks(operations);
+        OperationSchedule<x8664Op> opSchedule = createOperationSchedule(operations, ssaBlockSchedule);
 
         x8664StoreAllocator allocator = new x8664StoreAllocator();
         x8664StoreAllocator.Allocation allocation = allocator.allocate(opSchedule, requestService);
@@ -147,7 +148,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
 
         @Override
         public Collection<? extends Node> getPredecessors(Node node) {
-            return node.predecessors().stream().map(Node::block).collect(Collectors.toSet());
+            return node.predecessors().stream().map(Node::block).toList();
         }
 
         @Override
@@ -177,9 +178,8 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         return operations;
     }
 
-    private OperationSchedule<x8664Op> scheduleBlocks(Map<String, List<x8664Op>> operations) {
-        List<Block> ssaBlockSchedule = scheduleSsaBlocks();
-        NavigableMap<String, OperationBlock<x8664Op>> blocks = new TreeMap<>();
+    private OperationSchedule<x8664Op> createOperationSchedule(Map<String, List<x8664Op>> operations, List<Block> ssaBlockSchedule) {
+        SequencedMap<String, OperationBlock<x8664Op>> blocks = new LinkedHashMap<>();
         OperationBlock<x8664Op> entry = null;
         Set<OperationBlock<x8664Op>> exits = new HashSet<>();
         for (Block block : ssaBlockSchedule) {
@@ -213,10 +213,10 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         return new OperationSchedule<>(blocks, entry, Set.copyOf(exits));
     }
 
-    private void labelBlocks() {
+    private void labelBlocks(List<Block> ssaBlockSchedule) {
         String procedureName = schedule.programGraph().name();
         int index = 0;
-        for (Block block : schedule.blockSchedules().keySet()) {
+        for (Block block : ssaBlockSchedule) {
             String label = block == schedule.programGraph().startBlock() ? procedureName : procedureName + "$" + index++;
             blockLabels.put(block, label);
         }
@@ -305,10 +305,10 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
             case ShiftLeftNode _, ShiftRightNode _ -> throw new UnsupportedOperationException(); // TODO
         };
 
-        Set<Phi> phiSuccessors = schedule.programGraph().successors(node).stream()
+        List<Phi> phiSuccessors = schedule.programGraph().successors(node).stream()
                 .filter(succ -> succ instanceof Phi)
                 .map(succ -> (Phi) succ)
-                .collect(Collectors.toSet());
+                .toList();
 
         if (phiSuccessors.isEmpty()) {
             return base;
