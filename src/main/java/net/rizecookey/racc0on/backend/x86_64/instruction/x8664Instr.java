@@ -3,6 +3,7 @@ package net.rizecookey.racc0on.backend.x86_64.instruction;
 import net.rizecookey.racc0on.backend.instruction.Instruction;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Register;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Store;
+import net.rizecookey.racc0on.backend.x86_64.operand.x8664Label;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
 import org.jspecify.annotations.Nullable;
 
@@ -20,7 +21,8 @@ public sealed interface x8664Instr extends Instruction<x8664Instr, x8664Operand,
         if (size == null) {
             size = x8664Operand.Size.DOUBLE_WORD;
         }
-        boolean typeImplicitlyGiven = operands().isEmpty() || operands().stream().anyMatch(operand -> operand instanceof x8664Register);
+        List<? extends x8664Operand> operands = operands().stream().filter(operand -> !(operand instanceof x8664Label)).toList();
+        boolean typeImplicitlyGiven = operands.isEmpty() || operands.stream().anyMatch(operand -> operand instanceof x8664Register);
         if (!typeImplicitlyGiven) {
             result.append(" ").append(size.getPrefix());
         }
