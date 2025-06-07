@@ -5,9 +5,8 @@ import edu.kit.kastel.vads.compiler.ir.node.Block;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
 import edu.kit.kastel.vads.compiler.ir.node.StartNode;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -18,26 +17,27 @@ import java.util.stream.Collectors;
 public record SsaSchedule(Map<Block, List<Node>> blockSchedules, IrGraph programGraph) {
     public static SsaSchedule generate(IrGraph program) {
         Map<Block, List<Node>> blockSchedules = new HashMap<>();
-        scheduleDataflow(program, blockSchedules);
-        scheduleControlFlow(program, blockSchedules);
+        new DataflowTraverser(blockSchedules).traverse(program);
+        new ControlFlowTraverser(blockSchedules).traverse(program);
 
         return new SsaSchedule(Map.copyOf(blockSchedules), program);
     }
 
-    private static void scheduleDataflow(IrGraph program, Map<Block, List<Node>> blockSchedules) {
-        Deque<Node> stack = new ArrayDeque<>();
-        Set<Node> seen = new HashSet<>();
-        stack.add(program.endBlock());
-        while (!stack.isEmpty()) {
-            Node node = stack.peek();
-            if (seen.add(node)) {
-                node.predecessors().forEach(stack::push);
-                continue;
-            }
+    private static class DataflowTraverser extends IrGraphTraverser {
+        private final Map<Block, List<Node>> schedulesReference;
+        private DataflowTraverser(Map<Block, List<Node>> schedulesReference) {
+            this.schedulesReference = schedulesReference;
+        }
 
-            stack.pop();
 
-            List<Node> blockSchedule = blockSchedules.computeIfAbsent(node.block(), _ -> new ArrayList<>());
+        @Override
+        public Collection<? extends Node> getPredecessors(Node node) {
+            return node.predecessors();
+        }
+
+        @Override
+        public void consume(Node node) {
+            List<Node> blockSchedule = schedulesReference.computeIfAbsent(node.block(), _ -> new ArrayList<>());
             if (!blockSchedule.contains(node)) {
                 if (node instanceof StartNode) {
                     blockSchedule.addFirst(node);
@@ -48,29 +48,33 @@ public record SsaSchedule(Map<Block, List<Node>> blockSchedules, IrGraph program
         }
     }
 
-    private static void scheduleControlFlow(IrGraph program, Map<Block, List<Node>> blockSchedules) {
-        Deque<Node> stack = new ArrayDeque<>();
-        Set<Node> visited = blockSchedules.values().stream().flatMap(List::stream).collect(Collectors.toCollection(HashSet::new));
-        Set<Node> seen = new HashSet<>();
+    private static class ControlFlowTraverser extends IrGraphTraverser {
+        private final Map<Block, List<Node>> schedulesReference;
+        private final Set<Node> visited;
 
-        stack.add(program.endBlock());
-        while (!stack.isEmpty()) {
-            Node node = stack.peek();
+        private ControlFlowTraverser(Map<Block, List<Node>> schedulesReference) {
+            this.schedulesReference = schedulesReference;
+            visited = schedulesReference.values().stream().flatMap(List::stream).collect(Collectors.toCollection(HashSet::new));
+        }
 
-            if (seen.add(node)) {
-                node.predecessors().forEach(stack::push);
-                if (seen.add(node.block())) {
-                    node.block().predecessors().forEach(stack::push);
-                }
-                continue;
+        @Override
+        public Collection<? extends Node> getPredecessors(Node node) {
+            List<Node> predecessors = new ArrayList<>();
+
+            if (addSeen(node.block())) {
+                predecessors.addAll(node.block().predecessors());
             }
+            predecessors.addAll(node.predecessors());
 
-            stack.pop();
+            return predecessors;
+        }
 
+        @Override
+        public void consume(Node node) {
             if (!visited.add(node) || node instanceof Block) {
-                continue;
+                return;
             }
-            blockSchedules.computeIfAbsent(node.block(), _ -> new ArrayList<>()).add(node);
+            schedulesReference.computeIfAbsent(node.block(), _ -> new ArrayList<>()).add(node);
         }
     }
 }
