@@ -7,6 +7,7 @@ import net.rizecookey.racc0on.backend.x86_64.instruction.x8664Instr;
 import net.rizecookey.racc0on.ir.SsaSchedule;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class x8664CodeGenerator implements CodeGenerator {
     public static final String ENTRYPOINT_NAME = "_entry";
@@ -60,7 +61,9 @@ public class x8664CodeGenerator implements CodeGenerator {
 
         List<InstructionBlock<x8664Instr>> codeBlocks = instrGenerator.generateInstructions();
         appendLine(String.join("\n", codeBlocks.stream()
-                .map(block -> block.label() + ":\n" + block.instructions().stream().map(x8664Instr::toAssembly))
+                .map(block -> "\n" + block.label() + ":\n" + block.instructions().stream()
+                        .map(x8664Instr::toAssembly)
+                        .collect(Collectors.joining("\n")))
                 .toList()));
     }
 
