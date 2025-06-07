@@ -32,7 +32,7 @@ public enum x8664InstrType implements InstructionType<x8664Instr, x8664Store> {
     SETL("setl", operand(0)),
     SETLE("setle", operand(0)),
     CMOVZ("cmovz", operand(0)),
-    CMOVNZ("comvnz", operand(0)),
+    CMOVNZ("cmovnz", operand(0)),
     AND("and", operand(0)),
     OR("or", operand(0)),
     XOR("xor", operand(0)),
