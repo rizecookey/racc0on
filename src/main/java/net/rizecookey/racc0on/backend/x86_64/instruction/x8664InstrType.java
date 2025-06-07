@@ -20,7 +20,10 @@ public enum x8664InstrType implements InstructionType<x8664Instr, x8664Store> {
     RET("ret"),
     ENTER("enter", specific(x8664Register.RSP), specific(x8664Register.RBP)),
     LEAVE("leave", specific(x8664Register.RSP), specific(x8664Register.RBP)),
-    JMP("jmp")
+    JMP("jmp"),
+    TEST("test"),
+    JNZ("jnz"),
+    JZ("jz")
     ;
 
     private final String name;

@@ -1,6 +1,8 @@
 package net.rizecookey.racc0on.backend.x86_64.operation;
 
 import edu.kit.kastel.vads.compiler.ir.node.Block;
+import edu.kit.kastel.vads.compiler.ir.node.Node;
+import net.rizecookey.racc0on.backend.store.StoreReference;
 import net.rizecookey.racc0on.backend.store.StoreRequestService;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664InstrType;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Store;
@@ -8,20 +10,28 @@ import net.rizecookey.racc0on.backend.x86_64.operand.x8664Immediate;
 import net.rizecookey.racc0on.backend.x86_64.store.x8664StoreRefResolver;
 import net.rizecookey.racc0on.backend.x86_64.x8664InstructionGenerator;
 
-public class x8664JumpOp implements x8664Op {
+public class x8664ConditionalJumpOp implements x8664Op {
+    private final Node condition;
+    private final boolean negate;
     private final Block target;
+    private StoreReference<x8664Store> inRef;
 
-    public x8664JumpOp(Block target) {
+    public x8664ConditionalJumpOp(Node condition, boolean negate, Block target) {
+        this.condition = condition;
+        this.negate = negate;
         this.target = target;
+        inRef = new StoreReference.Null<>();
     }
 
     @Override
     public void makeStoreRequests(StoreRequestService<x8664Op, x8664Store> service) {
+        inRef = service.requestInputStore(this, condition);
     }
 
     @Override
     public void write(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {
-        String targetLabel = generator.label(target);
-        generator.write(x8664InstrType.JMP, new x8664Immediate(targetLabel));
+        x8664Store in = storeSupplier.resolve(inRef).orElseThrow();
+        generator.write(x8664InstrType.TEST, in, in);
+        generator.write(negate ? x8664InstrType.JZ : x8664InstrType.JNZ, new x8664Immediate(generator.label(target)));
     }
 }
