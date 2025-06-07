@@ -26,7 +26,7 @@ public class x8664JumpOp implements x8664Op {
     }
 
     @Override
-    public void write(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {;
+    public void write(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {
         generator.write(x8664InstrType.JMP, new x8664Label(target));
     }
 }
