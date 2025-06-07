@@ -346,6 +346,9 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
     }
 
     public void move(x8664Store to, x8664Operand from) {
+        if (to.equals(from)) {
+            return;
+        }
         x8664Operand actualFrom = from;
         if (to instanceof x8664StackStore && from instanceof x8664StackStore) {
             actualFrom = x8664Register.MEMORY_ACCESS_RESERVE;
