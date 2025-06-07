@@ -17,6 +17,7 @@ import edu.kit.kastel.vads.compiler.ir.node.StartNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.binary.SubNode;
 import edu.kit.kastel.vads.compiler.ir.node.operation.unary.UnaryOperationNode;
 import net.rizecookey.racc0on.backend.NodeUtils;
+import net.rizecookey.racc0on.backend.instruction.InstructionBlock;
 import net.rizecookey.racc0on.backend.instruction.InstructionGenerator;
 import net.rizecookey.racc0on.backend.operand.Operands;
 import net.rizecookey.racc0on.backend.store.LivenessMap;
@@ -39,10 +40,13 @@ import net.rizecookey.racc0on.backend.x86_64.operation.x8664LoadConstPhantomOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664ModPhantomOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664MovOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664Op;
+import net.rizecookey.racc0on.backend.x86_64.operation.x8664OperationSequence;
+import net.rizecookey.racc0on.backend.x86_64.operation.x8664PhiMoveOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664RetOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664SubOp;
 import net.rizecookey.racc0on.backend.x86_64.optimization.x8664AsmOptimization;
 import net.rizecookey.racc0on.backend.x86_64.store.x8664StoreAllocator;
+import net.rizecookey.racc0on.ir.SsaSchedule;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -51,23 +55,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SequencedSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class x8664InstructionGenerator implements InstructionGenerator<x8664Instr> {
-    private final List<Node> statements;
+    private final SsaSchedule schedule;
     private final List<x8664Instr> instructions;
     private final x8664CodeGenerator codeGenerator;
     private final Map<StoreReference<x8664Store>, x8664Store> locations;
+    private final Map<Block, String> blockLabels;
     private int stackSize;
     private LivenessMap<x8664Op, x8664Store> livenessMap;
 
-    public x8664InstructionGenerator(x8664CodeGenerator codeGenerator, List<Node> statements) {
-        this.statements = statements;
+    public x8664InstructionGenerator(x8664CodeGenerator codeGenerator, SsaSchedule schedule) {
+        this.schedule = schedule;
         this.codeGenerator = codeGenerator;
         this.locations = new HashMap<>();
         this.stackSize = 0;
 
         this.instructions = new ArrayList<>();
+        this.blockLabels = new HashMap<>();
         this.livenessMap = new LivenessMap<>();
     }
 
@@ -75,26 +82,45 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         return codeGenerator;
     }
 
-    public List<x8664Instr> generateInstructions() {
-        List<x8664Op> selectedOperations = new ArrayList<>();
+    public List<InstructionBlock<x8664Instr>> generateInstructions() {
+        labelBlocks();
+        Map<String, List<x8664Op>> operations = new HashMap<>();
         StoreRequests<x8664Op, x8664Store> storeRequests = new StoreRequests<>();
-        selectedOperations.add(new x8664EnterOp());
-        for (Node node : statements) {
-            x8664Op operation = selectOperation(node);
-            operation.makeStoreRequests(storeRequests);
-            selectedOperations.add(operation);
+        for (Block block : schedule.blockSchedules().keySet()) {
+            String label = blockLabels.get(block);
+            List<x8664Op> blockOperations = new ArrayList<>();
+            for (Node node : schedule.blockSchedules().get(block)) {
+                x8664Op operation = selectOperation(node);
+                operation.makeStoreRequests(storeRequests);
+                blockOperations.add(operation);
+            }
+
+            operations.put(label, blockOperations);
         }
 
         x8664StoreAllocator allocator = new x8664StoreAllocator();
-        x8664StoreAllocator.Allocation allocation = allocator.allocate(selectedOperations, storeRequests);
+        x8664StoreAllocator.Allocation allocation = allocator.allocate(operations, storeRequests);
         locations.putAll(allocation.allocations());
         stackSize = allocation.stackSize();
         livenessMap = allocation.livenessMap();
-        for (var op : selectedOperations) {
-            op.write(this, ref -> Optional.ofNullable(locations.get(ref)));
+
+        List<InstructionBlock<x8664Instr>> blocks = new ArrayList<>();
+        for (String label : operations.keySet()) { // TODO better ordering?
+            operations.get(label).forEach(op -> op.write(this, ref -> Optional.ofNullable(locations.get(ref))));
+            blocks.add(new InstructionBlock<>(label, List.copyOf(performOptimizations())));
+            instructions.clear();
         }
 
-        return performOptimizations();
+        return blocks;
+    }
+
+    private void labelBlocks() {
+        String procedureName = schedule.programGraph().name();
+        int index = 0;
+        for (Block block : schedule.blockSchedules().keySet()) {
+            String label = block == schedule.programGraph().startBlock() ? procedureName : procedureName + "#" + index++;
+            blockLabels.put(block, label);
+        }
     }
 
     public SequencedSet<StoreReference<x8664Store>> getReferencesLiveAt(x8664Op at) {
@@ -145,7 +171,8 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
     }
 
     public x8664Op selectOperation(Node node) {
-        return switch (node) {
+        x8664Op baseOperation = switch (node) {
+            case StartNode _ -> new x8664EnterOp();
             case AddNode addNode -> new x8664AddOp(extractOperands(addNode));
             case SubNode subNode -> new x8664SubOp(extractOperands(subNode));
             case MulNode mulNode -> new x8664IMulOp(extractOperands(mulNode));
@@ -158,14 +185,34 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
             case ReturnNode returnNode ->
                     new x8664RetOp(NodeUtils.shortcutPredecessors(returnNode).get(ReturnNode.RESULT));
             case JumpNode jumpNode -> new x8664JumpOp(jumpNode);
-            case Phi _, Block _, ProjNode _, StartNode _ -> x8664EmptyOp.INSTANCE;
+            case Phi _, Block _, ProjNode _ -> x8664EmptyOp.INSTANCE;
             default -> throw new IllegalStateException(node + " not implemented by x86 backend"); //TODO
         };
+
+        Set<Phi> phiSuccessors = schedule.programGraph().successors(node).stream()
+                .filter(succ -> succ instanceof Phi)
+                .map(succ -> (Phi) succ)
+                .collect(Collectors.toSet());
+
+        if (phiSuccessors.isEmpty()) {
+            return baseOperation;
+        }
+
+        List<x8664Op> seq = new ArrayList<>();
+        seq.add(baseOperation);
+        for (Phi phiSuccessor : phiSuccessors) {
+            seq.add(new x8664PhiMoveOp(phiSuccessor, node));
+        }
+        return new x8664OperationSequence(seq);
     }
 
     private Operands.Binary<Node> extractOperands(BinaryOperationNode node) {
         List<Node> realPreds = NodeUtils.shortcutPredecessors(node);
         return new Operands.Binary<>(node, realPreds.get(BinaryOperationNode.LEFT), realPreds.get(BinaryOperationNode.RIGHT));
+    }
+
+    public String label(Block block) {
+        return blockLabels.get(block);
     }
 
     public void write(x8664InstrType type) {

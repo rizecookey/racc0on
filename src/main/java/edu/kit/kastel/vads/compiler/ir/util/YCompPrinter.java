@@ -43,7 +43,7 @@ public class YCompPrinter {
 
     public YCompPrinter(IrGraph graph) {
         this.graph = graph;
-        this.schedule = new SsaSchedule(List.of(), Map.of(), graph);
+        this.schedule = new SsaSchedule(Map.of(), graph);
     }
 
     private void prepare(Node node, Set<Node> seen) {

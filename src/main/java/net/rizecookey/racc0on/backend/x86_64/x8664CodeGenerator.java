@@ -1,14 +1,12 @@
 package net.rizecookey.racc0on.backend.x86_64;
 
 import edu.kit.kastel.vads.compiler.ir.IrGraph;
-import edu.kit.kastel.vads.compiler.ir.node.Block;
 import net.rizecookey.racc0on.backend.CodeGenerator;
+import net.rizecookey.racc0on.backend.instruction.InstructionBlock;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664Instr;
 import net.rizecookey.racc0on.ir.SsaSchedule;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class x8664CodeGenerator implements CodeGenerator {
     public static final String ENTRYPOINT_NAME = "_entry";
@@ -22,7 +20,6 @@ public class x8664CodeGenerator implements CodeGenerator {
             """;
 
     private final StringBuilder builder = new StringBuilder();
-    private final Map<Block, String> labels = new HashMap<>();
 
     @Override
     public String generateCode(List<IrGraph> program) {
@@ -36,7 +33,7 @@ public class x8664CodeGenerator implements CodeGenerator {
 
         for (IrGraph graph : program) {
             SsaSchedule schedule = SsaSchedule.generate(graph);
-            generateProcedure(graph, schedule);
+            generateProcedure(schedule);
         }
 
         return builder.toString();
@@ -58,22 +55,13 @@ public class x8664CodeGenerator implements CodeGenerator {
         appendLine(BOILERPLATE_ENTRY);
     }
 
-    public void generateProcedure(IrGraph program, SsaSchedule schedule) {
-        int idx = 0;
-        for (var block : schedule.blockOrder()) {
-            if (block == program.endBlock()) {
-                labels.put(block, program.name());
-                continue;
-            }
+    public void generateProcedure(SsaSchedule schedule) {
+        var instrGenerator = new x8664InstructionGenerator(this, schedule);
 
-            labels.put(block, program.name() + "#" + idx++);
-        }
-        for (var block : schedule.blockOrder()) {
-            generateLabel(labels.get(block));
-            var instrGenerator = new x8664InstructionGenerator(this, schedule.blockSchedules().get(block));
-            List<x8664Instr> instructions = instrGenerator.generateInstructions();
-            appendLine(String.join("\n", instructions.stream().map(x8664Instr::toAssembly).toList()));
-        }
+        List<InstructionBlock<x8664Instr>> codeBlocks = instrGenerator.generateInstructions();
+        appendLine(String.join("\n", codeBlocks.stream()
+                .map(block -> block.label() + ":\n" + block.instructions().stream().map(x8664Instr::toAssembly))
+                .toList()));
     }
 
     public void appendNewline() {
@@ -82,13 +70,5 @@ public class x8664CodeGenerator implements CodeGenerator {
 
     public void declareGlobal(String symbolName) {
         append(".globl ").appendLine(symbolName);
-    }
-
-    public String getLabel(Block block) {
-        return labels.get(block);
-    }
-
-    public void generateLabel(String label) {
-        append(label).appendLine(":");
     }
 }

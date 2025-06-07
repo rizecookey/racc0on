@@ -63,19 +63,9 @@ public class LivenessMap<T extends Operation<?, U>, U extends VariableStore> {
         }
     }
 
-    public static <T extends Operation<?, U>, U extends VariableStore> LivenessMap<T, U> calculateFor(List<T> program, StoreRequests<T, U> requests) {
+    public static <T extends Operation<?, U>, U extends VariableStore> LivenessMap<T, U> calculateFor(Map<String, List<T>> operations, StoreRequests<T, U> requests) {
         LivenessMap<T, U> liveness = new LivenessMap<>();
 
-        for (int i = program.size() - 1; i >= 0; i--) {
-            T op = program.get(i);
-
-            liveness.addLiveAt(op, requests.getInputStores(op));
-
-            if (i > 0) {
-                liveness.propagateLiveness(op, program.get(i - 1), requests);
-            }
-        }
-
-        return liveness;
+        throw new UnsupportedOperationException(); // TODO
     }
 }

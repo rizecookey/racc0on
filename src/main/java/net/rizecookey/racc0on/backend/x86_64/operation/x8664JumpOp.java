@@ -32,7 +32,7 @@ public class x8664JumpOp implements x8664Op {
             throw new IllegalStateException("Jump operation requires exactly one successor");
         }
 
-        String targetLabel = generator.codeGenerator().getLabel(blockSuccessor.getFirst());
+        String targetLabel = generator.label(blockSuccessor.getFirst());
         generator.write(x8664InstrType.JMP, new x8664Immediate(targetLabel));
     }
 }

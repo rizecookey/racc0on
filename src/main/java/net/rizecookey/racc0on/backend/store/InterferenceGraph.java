@@ -118,26 +118,10 @@ public class InterferenceGraph<T extends Operation<?, U>, U extends VariableStor
                 .findFirst();
     }
 
-    public static <T extends Operation<?, U>, U extends VariableStore> InterferenceGraph<T, U> createFrom(List<T> operations, LivenessMap<T, U> livenessMap, StoreRequests<T, U> requests) {
-        InterferenceGraph<T, U> graph = new InterferenceGraph<>(operations, livenessMap, requests);
+    public static <T extends Operation<?, U>, U extends VariableStore> InterferenceGraph<T, U> createFrom(Map<String, List<T>> operations, LivenessMap<T, U> livenessMap, StoreRequests<T, U> requests) {
+        InterferenceGraph<T, U> graph = new InterferenceGraph<>(operations.values().stream()
+                .flatMap(List::stream).toList(), livenessMap, requests);
 
-        for (int i = operations.size() - 2; i >= 0; i--) {
-            T operation = operations.get(i);
-            if (!requests.requiresOutputStore(operation)) {
-                continue;
-            }
-            var outStore = requests.getOutputStore(operation);
-            graph.addNode(outStore);
-
-            for (var live : livenessMap.getLiveAt(operations.get(i + 1))) {
-                if (live.equals(outStore)) {
-                    continue;
-                }
-
-                graph.addEdge(outStore, live);
-            }
-        }
-
-        return graph;
+        throw new UnsupportedOperationException(); // TODO
     }
 }

@@ -3,6 +3,7 @@ package net.rizecookey.racc0on.ir;
 import edu.kit.kastel.vads.compiler.ir.IrGraph;
 import edu.kit.kastel.vads.compiler.ir.node.Block;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
+import edu.kit.kastel.vads.compiler.ir.node.StartNode;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -12,20 +13,20 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-public record SsaSchedule(List<Block> blockOrder, Map<Block, List<Node>> blockSchedules, IrGraph programGraph) {
+public record SsaSchedule(Map<Block, List<Node>> blockSchedules, IrGraph programGraph) {
     public static SsaSchedule generate(IrGraph program) {
-        Map<Block, List<Node>> blockSchedules = scheduleWithinBlocks(program);
-        List<Block> blockOrder = scheduleControlFlow(program, blockSchedules);
+        Map<Block, List<Node>> blockSchedules = new HashMap<>();
+        scheduleDataflow(program, blockSchedules);
+        scheduleControlFlow(program, blockSchedules);
 
-        return new SsaSchedule(List.copyOf(blockOrder), Map.copyOf(blockSchedules), program);
+        return new SsaSchedule(Map.copyOf(blockSchedules), program);
     }
 
-    private static Map<Block, List<Node>> scheduleWithinBlocks(IrGraph program) {
-        Set<Node> seen = new HashSet<>();
-        Map<Block, List<Node>> blockSchedules = new HashMap<>();
-
+    private static void scheduleDataflow(IrGraph program, Map<Block, List<Node>> blockSchedules) {
         Deque<Node> stack = new ArrayDeque<>();
+        Set<Node> seen = new HashSet<>();
         stack.add(program.endBlock());
         while (!stack.isEmpty()) {
             Node node = stack.peek();
@@ -38,34 +39,38 @@ public record SsaSchedule(List<Block> blockOrder, Map<Block, List<Node>> blockSc
 
             List<Node> blockSchedule = blockSchedules.computeIfAbsent(node.block(), _ -> new ArrayList<>());
             if (!blockSchedule.contains(node)) {
-                blockSchedule.add(node);
+                if (node instanceof StartNode) {
+                    blockSchedule.addFirst(node);
+                } else {
+                    blockSchedule.add(node);
+                }
             }
         }
-
-        return blockSchedules;
     }
 
-    private static List<Block> scheduleControlFlow(IrGraph program, Map<Block, List<Node>> blockSchedules) {
+    private static void scheduleControlFlow(IrGraph program, Map<Block, List<Node>> blockSchedules) {
+        Deque<Node> stack = new ArrayDeque<>();
+        Set<Node> visited = blockSchedules.values().stream().flatMap(List::stream).collect(Collectors.toCollection(HashSet::new));
         Set<Node> seen = new HashSet<>();
-        List<Block> blockOrder = new ArrayList<>();
-        Deque<Block> blockStack = new ArrayDeque<>();
-        blockStack.add(program.endBlock());
 
-        while (!blockStack.isEmpty()) {
-            Block block = blockStack.peek();
+        stack.add(program.endBlock());
+        while (!stack.isEmpty()) {
+            Node node = stack.peek();
 
-            if (seen.add(block)) {
-                block.predecessors().stream().map(Node::block).forEach(blockStack::push);
+            if (seen.add(node)) {
+                node.predecessors().forEach(stack::push);
+                if (seen.add(node.block())) {
+                    node.block().predecessors().forEach(stack::push);
+                }
                 continue;
             }
 
-            blockStack.pop();
-            if (!blockOrder.contains(block)) {
-                blockOrder.add(block);
-                blockSchedules.computeIfAbsent(block, _ -> new ArrayList<>()).addAll(block.getExits());
-            }
-        }
+            stack.pop();
 
-        return blockOrder;
+            if (!visited.add(node) || node instanceof Block) {
+                continue;
+            }
+            blockSchedules.computeIfAbsent(node.block(), _ -> new ArrayList<>()).add(node);
+        }
     }
 }
