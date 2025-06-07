@@ -8,6 +8,7 @@ import net.rizecookey.racc0on.backend.x86_64.instruction.x8664InstrType;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Register;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664StackStore;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Store;
+import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664Op;
 import net.rizecookey.racc0on.backend.x86_64.store.x8664StoreRefResolver;
 import net.rizecookey.racc0on.backend.x86_64.x8664InstructionGenerator;
@@ -46,6 +47,6 @@ public abstract class x8664CmpOp implements x8664Op {
         }
 
         generator.write(x8664InstrType.CMP, inLeft, actualInRight);
-        generator.write(setInstr, out);
+        generator.write(setInstr, x8664Operand.Size.BYTE, out);
     }
 }
