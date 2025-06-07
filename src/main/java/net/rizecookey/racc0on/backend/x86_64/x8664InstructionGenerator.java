@@ -192,7 +192,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
                 entry = opBlock;
             }
 
-            if (blockOps.stream().anyMatch(op -> op instanceof x8664JumpOp || op instanceof x8664ConditionalJumpOp)) {
+            if (blockOps.stream().anyMatch(op -> op instanceof x8664RetOp)) {
                 exits.add(opBlock);
             }
         }
