@@ -304,6 +304,10 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
             case ShiftLeftNode _, ShiftRightNode _ -> throw new UnsupportedOperationException(); // TODO
         };
 
+        if (!NodeUtils.providesValue(node)) {
+            return base;
+        }
+
         List<Phi> phiSuccessors = schedule.programGraph().successors(node).stream()
                 .filter(succ -> succ instanceof Phi)
                 .map(succ -> (Phi) succ)
