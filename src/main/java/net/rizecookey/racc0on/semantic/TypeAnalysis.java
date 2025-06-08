@@ -1,7 +1,7 @@
 package net.rizecookey.racc0on.semantic;
 
-import net.rizecookey.racc0on.Position;
-import net.rizecookey.racc0on.Span;
+import net.rizecookey.racc0on.utils.Position;
+import net.rizecookey.racc0on.utils.Span;
 import net.rizecookey.racc0on.parser.ast.AssignmentTree;
 import net.rizecookey.racc0on.parser.ast.BinaryOperationTree;
 import net.rizecookey.racc0on.parser.ast.BlockTree;

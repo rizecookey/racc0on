@@ -1,6 +1,6 @@
 package net.rizecookey.racc0on.lexer;
 
-import net.rizecookey.racc0on.Span;
+import net.rizecookey.racc0on.utils.Span;
 
 public record ErrorToken(String value, Span span) implements Token {
     @Override

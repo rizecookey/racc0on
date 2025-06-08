@@ -1,6 +1,6 @@
 package net.rizecookey.racc0on.parser;
 
-import net.rizecookey.racc0on.Position;
+import net.rizecookey.racc0on.utils.Position;
 import net.rizecookey.racc0on.lexer.BooleanLiteral;
 import net.rizecookey.racc0on.lexer.Identifier;
 import net.rizecookey.racc0on.lexer.Keyword;
@@ -10,7 +10,7 @@ import net.rizecookey.racc0on.lexer.NumberLiteral;
 import net.rizecookey.racc0on.lexer.Operator;
 import net.rizecookey.racc0on.lexer.Separator;
 import net.rizecookey.racc0on.lexer.Separator.SeparatorType;
-import net.rizecookey.racc0on.Span;
+import net.rizecookey.racc0on.utils.Span;
 import net.rizecookey.racc0on.lexer.Token;
 import net.rizecookey.racc0on.lexer.keyword.TypeKeywordType;
 import net.rizecookey.racc0on.parser.ast.AssignmentTree;

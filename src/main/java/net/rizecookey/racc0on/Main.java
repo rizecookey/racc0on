@@ -1,30 +1,23 @@
 package net.rizecookey.racc0on;
 
-import net.rizecookey.racc0on.ir.IrGraph;
-import net.rizecookey.racc0on.ir.SsaTranslation;
-import net.rizecookey.racc0on.ir.optimize.LocalValueNumbering;
-import net.rizecookey.racc0on.ir.util.GraphVizPrinter;
-import net.rizecookey.racc0on.ir.util.YCompPrinter;
-import net.rizecookey.racc0on.lexer.Lexer;
+import net.rizecookey.racc0on.assembler.Assembler;
+import net.rizecookey.racc0on.assembler.ExternalGcc;
+import net.rizecookey.racc0on.compilation.Racc0onCompilation;
+import net.rizecookey.racc0on.debug.DebugConsumer;
+import net.rizecookey.racc0on.debug.DefaultDebugConsumer;
 import net.rizecookey.racc0on.parser.ParseException;
-import net.rizecookey.racc0on.parser.Parser;
-import net.rizecookey.racc0on.parser.Printer;
-import net.rizecookey.racc0on.parser.TokenSource;
-import net.rizecookey.racc0on.parser.ast.FunctionTree;
-import net.rizecookey.racc0on.parser.ast.ProgramTree;
-import net.rizecookey.racc0on.semantic.SemanticAnalysis;
 import net.rizecookey.racc0on.semantic.SemanticException;
-import net.rizecookey.racc0on.util.InputErrorException;
-import net.rizecookey.racc0on.backend.AssemblerException;
-import net.rizecookey.racc0on.backend.x86_64.x8664CodeGenerator;
+import net.rizecookey.racc0on.compilation.CompilerException;
+import net.rizecookey.racc0on.compilation.InputErrorException;
+import net.rizecookey.racc0on.assembler.AssemblerException;
 import net.rizecookey.racc0on.utils.ConsoleColors;
 import net.rizecookey.racc0on.utils.Logger;
+import net.rizecookey.racc0on.utils.Span;
 
-import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -32,83 +25,57 @@ public class Main {
     public static final Logger LOGGER = new Logger();
     public static final boolean DEBUG = Boolean.parseBoolean(System.getenv("RACC0ON_DEBUG"));
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         if (args.length != 2) {
             LOGGER.prefixedError("invalid arguments: expected one input file and one output file");
             System.exit(3);
         }
         Path input = Path.of(args[0]);
         Path output = Path.of(args[1]);
-        String outputFileName = output.getFileName().toString();
-
-        String inputString = Files.readString(input);
-        ProgramTree program = lexAndParse(inputString);
-        if (DEBUG) {
-            String parsedProgram = Printer.print(program);
-            LOGGER.log("Parsed program: ", parsedProgram);
-            writeDebugFile(output, outputFileName + ".parsed.l2", parsedProgram);
-        }
+        String inputString;
         try {
-            new SemanticAnalysis(program).analyze();
-        } catch (SemanticException e) {
-            printInputError(inputString, e);
-            System.exit(7);
-            return;
-        }
-        List<IrGraph> graphs = new ArrayList<>();
-        for (FunctionTree function : program.topLevelTrees()) {
-            SsaTranslation translation = new SsaTranslation(function, new LocalValueNumbering());
-            var graph = translation.translate();
-
-            if (DEBUG) {
-                String graphString = GraphVizPrinter.print(graph);
-                writeDebugFile(output, "graphs/" + outputFileName + "." + graph.name() + ".dot", graphString);
-
-                String vcgString = YCompPrinter.print(graph);
-                writeDebugFile(output, "graphs/" + outputFileName + "." + graph.name() + ".vcg", vcgString);
-            }
-
-            graphs.add(graph);
-        }
-
-        String s = new x8664CodeGenerator().generateCode(graphs);
-
-        if (DEBUG) {
-            LOGGER.log("Generated assembly:", s);
-            writeDebugFile(output, outputFileName + ".s", s);
-        }
-
-        try {
-            callAssembler(s, output);
+            inputString = Files.readString(input);
         } catch (IOException e) {
-            LOGGER.prefixedError("could not call gcc:", e);
-            System.exit(1);
-        } catch (AssemblerException e) {
-            LOGGER.prefixedError("assembler failed with error code " + e.getExitCode() + ":", e.getMessage());
-            System.exit(1);
+            LOGGER.prefixedError("failed to read from input file:", e);
+            System.exit(3);
+            throw new IllegalStateException();
         }
-    }
 
-    private static void writeDebugFile(Path outputBin, String name, String content) throws IOException {
-        Path file = outputBin.getParent().resolve(name);
-        Path dir = file.getParent();
-        if (!Files.exists(dir)) {
-            Files.createDirectories(dir);
-        }
-        Files.writeString(file, content);
-    }
+        DebugConsumer debugConsumer = new DefaultDebugConsumer(output, LOGGER);
+        Racc0onCompilation compilation = new Racc0onCompilation(inputString, debugConsumer);
 
-    private static ProgramTree lexAndParse(String programString) {
+        String asmString;
         try {
-            Lexer lexer = Lexer.forString(programString);
-            TokenSource tokenSource = new TokenSource(lexer);
-            Parser parser = new Parser(tokenSource);
+            asmString = compilation.compile();
+        } catch (CompilerException e) {
+            printInputError(e.input(), e.cause());
+            int exitCode = switch (e.cause()) {
+                case ParseException _ -> 42;
+                case SemanticException _ -> 7;
+            };
+            System.exit(exitCode);
+            throw new IllegalStateException();
+        }
 
-            return parser.parseProgram();
-        } catch (ParseException e) {
-            printInputError(programString, e);
-            System.exit(42);
-            throw new AssertionError("unreachable");
+        Assembler assembler = new ExternalGcc();
+        byte[] binary;
+        try {
+            binary = assembler.assemble(asmString);
+        } catch (AssemblerException e) {
+            LOGGER.prefixedError("error while assembling: " + e.getMessage());
+            if (e.getContext() != null) {
+                LOGGER.errorContext(e.getContext());
+            }
+            System.exit(1);
+            throw new IllegalStateException();
+        }
+
+        try {
+            Files.write(output, binary);
+            new File(output.toString()).setExecutable(true);
+        } catch (IOException e) {
+            LOGGER.prefixedError("could not write to output file:", e);
+            System.exit(3);
         }
     }
 
@@ -151,42 +118,6 @@ public class Main {
             LOGGER.error(ConsoleColors.RED + "Stacktrace:");
             LOGGER.errorContext(e);
             LOGGER.error(ConsoleColors.RESET);
-        }
-    }
-
-    private static void callAssembler(String assembly, Path output) throws IOException, AssemblerException {
-        Process gcc = Runtime.getRuntime().exec(new String[] {"gcc",
-                "-Wl,--entry=" + x8664CodeGenerator.ENTRYPOINT_NAME,
-                "-o", output.toString(),
-                "-x", "assembler",
-                "-m64",
-                "-"});
-
-        if (gcc.isAlive()) {
-            var writer = gcc.outputWriter();
-            writer.write(assembly);
-            writer.close();
-        }
-
-        while (gcc.isAlive()) {
-            try {
-                gcc.waitFor();
-            } catch (InterruptedException _) {}
-        }
-
-        if (gcc.exitValue() != 0) {
-            StringBuilder errorLines = new StringBuilder();
-            BufferedReader reader = gcc.errorReader();
-
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (!errorLines.isEmpty()) {
-                    errorLines.append("\n");
-                }
-                errorLines.append("  ").append(line);
-            }
-            reader.close();
-            throw new AssemblerException(gcc.exitValue(), errorLines.toString());
         }
     }
 }

@@ -1,6 +1,6 @@
 package net.rizecookey.racc0on.lexer;
 
-import net.rizecookey.racc0on.Span;
+import net.rizecookey.racc0on.utils.Span;
 import net.rizecookey.racc0on.lexer.keyword.ControlKeywordType;
 import net.rizecookey.racc0on.lexer.keyword.KeywordType;
 import net.rizecookey.racc0on.lexer.keyword.TypeKeywordType;

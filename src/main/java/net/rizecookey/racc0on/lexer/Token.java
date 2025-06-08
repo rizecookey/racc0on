@@ -1,6 +1,6 @@
 package net.rizecookey.racc0on.lexer;
 
-import net.rizecookey.racc0on.Span;
+import net.rizecookey.racc0on.utils.Span;
 import net.rizecookey.racc0on.lexer.keyword.KeywordType;
 
 public sealed interface Token permits ErrorToken, Identifier, Keyword, NumberLiteral, BooleanLiteral, Operator, Separator {

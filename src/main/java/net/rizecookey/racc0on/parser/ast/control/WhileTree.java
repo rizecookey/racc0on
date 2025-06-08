@@ -1,7 +1,7 @@
 package net.rizecookey.racc0on.parser.ast.control;
 
-import net.rizecookey.racc0on.Position;
-import net.rizecookey.racc0on.Span;
+import net.rizecookey.racc0on.utils.Position;
+import net.rizecookey.racc0on.utils.Span;
 import net.rizecookey.racc0on.parser.ast.ControlTree;
 import net.rizecookey.racc0on.parser.ast.ExpressionTree;
 import net.rizecookey.racc0on.parser.ast.StatementTree;

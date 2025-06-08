@@ -1,6 +1,6 @@
 package net.rizecookey.racc0on.parser.ast;
 
-import net.rizecookey.racc0on.Span;
+import net.rizecookey.racc0on.utils.Span;
 import net.rizecookey.racc0on.parser.type.Type;
 import net.rizecookey.racc0on.parser.visitor.Visitor;
 

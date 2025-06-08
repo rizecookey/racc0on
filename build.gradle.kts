@@ -8,7 +8,7 @@ version = "1.0-SNAPSHOT"
 
 application {
     mainModule = "net.rizecookey.racc0on"
-    mainClass = "edu.kit.kastel.vads.compiler.Main"
+    mainClass = "net.rizecookey.racc0on.Main"
 }
 
 repositories {

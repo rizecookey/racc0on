@@ -1,7 +1,7 @@
 package net.rizecookey.racc0on.lexer;
 
-import net.rizecookey.racc0on.Position;
-import net.rizecookey.racc0on.Span;
+import net.rizecookey.racc0on.utils.Position;
+import net.rizecookey.racc0on.utils.Span;
 import net.rizecookey.racc0on.lexer.Separator.SeparatorType;
 import net.rizecookey.racc0on.lexer.keyword.KeywordType;
 import org.jspecify.annotations.Nullable;

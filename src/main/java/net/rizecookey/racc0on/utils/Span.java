@@ -1,4 +1,4 @@
-package net.rizecookey.racc0on;
+package net.rizecookey.racc0on.utils;
 
 public sealed interface Span {
     Position start();

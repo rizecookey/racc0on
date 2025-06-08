@@ -1,4 +1,4 @@
-package net.rizecookey.racc0on;
+package net.rizecookey.racc0on.utils;
 
 public sealed interface Position extends Comparable<Position> {
   int line();
