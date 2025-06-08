@@ -17,6 +17,7 @@ import edu.kit.kastel.vads.compiler.parser.ast.FunctionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.IdentExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.LValueIdentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.IntLiteralTree;
+import edu.kit.kastel.vads.compiler.parser.ast.SimpleStatementTree;
 import edu.kit.kastel.vads.compiler.parser.ast.TernaryExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.ForTree;
 import edu.kit.kastel.vads.compiler.parser.ast.control.IfElseTree;
@@ -312,28 +313,19 @@ public class SsaTranslation {
             Node ifTrue = data.constructor.newIfTrueProj(ifNode);
             Node ifFalse = data.constructor.newIfFalseProj(ifNode);
 
-            Block stepBlock = conditionBlock;
-            if (forTree.step() != null) {
-                stepBlock = data.constructor.newBlock();
-                forTree.step().accept(this, data);
-                Node jump = data.constructor.newJump();
-                conditionBlock.addPredecessor(jump);
-                data.constructor.sealBlock(conditionBlock);
-            }
-
             Block followingBlock = data.constructor.newBlock(ifFalse);
 
             Block bodyBlock = data.constructor.newBlock(ifTrue);
-            transformerStack.push(new LoopInfo(stepBlock, followingBlock));
+            data.constructor.sealBlock(bodyBlock);
+            transformerStack.push(new LoopInfo(conditionBlock, followingBlock, forTree.step()));
             forTree.body().accept(this, data);
             transformerStack.pop();
             if (!data.constructor.hasUnconditionalJump()) {
                 Node jump = data.constructor.newJump();
-                stepBlock.addPredecessor(jump);
+                conditionBlock.addPredecessor(jump);
             }
 
-            data.constructor.sealBlock(bodyBlock);
-            data.constructor.sealBlock(stepBlock);
+            data.constructor.sealBlock(conditionBlock);
 
             data.constructor.setCurrentBlock(followingBlock);
             data.constructor.sealBlock(followingBlock);
@@ -348,6 +340,11 @@ public class SsaTranslation {
                 throw new IllegalStateException("no corresponding loop statement for " + loopControlTree.type().keyword());
             }
             LoopInfo loop = transformerStack.peek();
+
+            if (loop.step() != null) {
+                loop.step().accept(this, data);
+            }
+
             Node jump = data.constructor.newJump();
             Node target = switch (loopControlTree.type()) {
                 case CONTINUE -> loop.continueTarget();
@@ -383,5 +380,5 @@ public class SsaTranslation {
         }
     }
 
-    private record LoopInfo(Node continueTarget, Node breakTarget) implements NoOpVisitor<SsaTranslation> {}
+    private record LoopInfo(Node continueTarget, Node breakTarget, @Nullable SimpleStatementTree step) implements NoOpVisitor<SsaTranslation> {}
 }
