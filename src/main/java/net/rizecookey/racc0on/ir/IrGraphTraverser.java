@@ -4,9 +4,9 @@ import edu.kit.kastel.vads.compiler.ir.IrGraph;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
 
 import java.util.ArrayDeque;
-import java.util.Collection;
 import java.util.Deque;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public abstract class IrGraphTraverser {
@@ -21,7 +21,7 @@ public abstract class IrGraphTraverser {
             Node node = stack.peek();
 
             if (addSeen(node)) {
-                getPredecessors(node).forEach(stack::push);
+                getPredecessors(node).reversed().forEach(stack::push);
                 continue;
             }
 
@@ -43,7 +43,7 @@ public abstract class IrGraphTraverser {
         return seen.add(node);
     }
 
-    public abstract Collection<? extends Node> getPredecessors(Node node);
+    public abstract List<? extends Node> getPredecessors(Node node);
 
     public abstract void consume(Node node);
 }

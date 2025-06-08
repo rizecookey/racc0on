@@ -75,7 +75,6 @@ import net.rizecookey.racc0on.ir.IrGraphTraverser;
 import net.rizecookey.racc0on.ir.SsaSchedule;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -147,7 +146,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         private final List<Block> result = new ArrayList<>();
 
         @Override
-        public Collection<? extends Node> getPredecessors(Node node) {
+        public List<? extends Node> getPredecessors(Node node) {
             return node.predecessors().stream().map(Node::block).toList();
         }
 

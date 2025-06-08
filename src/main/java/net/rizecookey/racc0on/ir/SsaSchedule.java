@@ -6,7 +6,6 @@ import edu.kit.kastel.vads.compiler.ir.node.Node;
 import edu.kit.kastel.vads.compiler.ir.node.StartNode;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -31,7 +30,7 @@ public record SsaSchedule(Map<Block, List<Node>> blockSchedules, IrGraph program
 
 
         @Override
-        public Collection<? extends Node> getPredecessors(Node node) {
+        public List<? extends Node> getPredecessors(Node node) {
             return node.predecessors();
         }
 
@@ -58,7 +57,7 @@ public record SsaSchedule(Map<Block, List<Node>> blockSchedules, IrGraph program
         }
 
         @Override
-        public Collection<? extends Node> getPredecessors(Node node) {
+        public List<? extends Node> getPredecessors(Node node) {
             List<Node> predecessors = new ArrayList<>();
 
             if (addSeen(node.block())) {
