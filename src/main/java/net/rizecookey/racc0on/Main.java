@@ -84,35 +84,36 @@ public class Main {
         List<String> lines = Arrays.asList(program.split("(\\r\\n|\\r|\\n)"));
 
         LOGGER.prefixedError(String.format("line %s, column %s: %s", span.start().line() + 1, span.start().column() + 1, e.getMessage()));
-
-        if (span.start().line() - 1 > 0) {
-            LOGGER.errorContext("...");
-        }
-
-        for (int i = Math.max(0, span.start().line() - 1); i <= Math.min(lines.size() - 1, span.end().line()); i++) {
-            String line = lines.get(i);
-            LOGGER.errorContext(line);
-
-            if (i < span.start().line() || i > span.end().line()) {
-                continue;
+        if (!program.isEmpty()) {
+            if (span.start().line() - 1 > 0) {
+                LOGGER.errorContext("...");
             }
 
-            StringBuilder positionMarker = new StringBuilder();
-            int startMarking = span.start().line() == i ? span.start().column() : 0;
-            int stopMarking = span.end().line() == i ? span.end().column() : line.length() - 1;
-            positionMarker
-                    .append(ConsoleColors.RED)
-                    .repeat(' ', startMarking)
-                    .repeat('^', stopMarking - startMarking)
-                    .repeat(' ', line.length() - 1 + stopMarking)
-                    .append(ConsoleColors.RESET);
+            for (int i = Math.max(0, span.start().line() - 1); i <= Math.min(lines.size() - 1, span.end().line()); i++) {
+                String line = lines.get(i);
+                LOGGER.errorContext(line);
 
-            LOGGER.errorContext(positionMarker.toString());
+                if (i < span.start().line() || i > span.end().line()) {
+                    continue;
+                }
+
+                StringBuilder positionMarker = new StringBuilder();
+                int startMarking = span.start().line() == i ? span.start().column() : 0;
+                int stopMarking = span.end().line() == i ? span.end().column() : line.length() - 1;
+                positionMarker
+                        .append(ConsoleColors.RED)
+                        .repeat(' ', startMarking)
+                        .repeat('^', stopMarking - startMarking)
+                        .repeat(' ', line.length() - 1 + stopMarking)
+                        .append(ConsoleColors.RESET);
+
+                LOGGER.errorContext(positionMarker.toString());
+            }
+            if (span.end().line() + 1 < lines.size() - 1) {
+                LOGGER.errorContext("...");
+            }
+            LOGGER.errorNewline();
         }
-        if (span.end().line() + 1 < lines.size() - 1) {
-            LOGGER.errorContext("...");
-        }
-        LOGGER.errorNewline();
 
         if (DEBUG) {
             LOGGER.error(ConsoleColors.RED + "Stacktrace:");

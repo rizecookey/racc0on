@@ -12,6 +12,8 @@ import net.rizecookey.racc0on.lexer.Separator.SeparatorType;
 import net.rizecookey.racc0on.lexer.Token;
 import net.rizecookey.racc0on.lexer.keyword.TypeKeywordType;
 import net.rizecookey.racc0on.utils.Pair;
+import net.rizecookey.racc0on.utils.Position;
+import net.rizecookey.racc0on.utils.Span;
 
 import java.util.Arrays;
 import java.util.List;
@@ -106,7 +108,14 @@ public class TokenSource {
 
     private void expectHasMore() {
         if (this.idx >= this.tokens.size()) {
-            throw new ParseException(this.tokens.getLast().span(), "reached end of file but expected more tokens");
+            Span span;
+            if (this.tokens.isEmpty()) {
+                Position zero = new Position.SimplePosition(0, 0);
+                span = new Span.SimpleSpan(zero, zero);
+            } else {
+                span = this.tokens.getLast().span();
+            }
+            throw new ParseException(span, "reached end of file but expected more tokens");
         }
     }
 }
