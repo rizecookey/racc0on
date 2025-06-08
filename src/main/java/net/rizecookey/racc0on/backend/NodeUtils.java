@@ -1,18 +1,18 @@
 package net.rizecookey.racc0on.backend;
 
-import edu.kit.kastel.vads.compiler.ir.node.ConstBoolNode;
-import edu.kit.kastel.vads.compiler.ir.node.IfNode;
-import edu.kit.kastel.vads.compiler.ir.node.JumpNode;
-import edu.kit.kastel.vads.compiler.ir.node.operation.TernaryNode;
-import edu.kit.kastel.vads.compiler.ir.node.operation.binary.BinaryOperationNode;
-import edu.kit.kastel.vads.compiler.ir.node.Block;
-import edu.kit.kastel.vads.compiler.ir.node.ConstIntNode;
-import edu.kit.kastel.vads.compiler.ir.node.Node;
-import edu.kit.kastel.vads.compiler.ir.node.Phi;
-import edu.kit.kastel.vads.compiler.ir.node.ProjNode;
-import edu.kit.kastel.vads.compiler.ir.node.ReturnNode;
-import edu.kit.kastel.vads.compiler.ir.node.StartNode;
-import edu.kit.kastel.vads.compiler.ir.node.operation.unary.UnaryOperationNode;
+import net.rizecookey.racc0on.ir.node.ConstBoolNode;
+import net.rizecookey.racc0on.ir.node.IfNode;
+import net.rizecookey.racc0on.ir.node.JumpNode;
+import net.rizecookey.racc0on.ir.node.operation.TernaryNode;
+import net.rizecookey.racc0on.ir.node.operation.binary.BinaryOperationNode;
+import net.rizecookey.racc0on.ir.node.Block;
+import net.rizecookey.racc0on.ir.node.ConstIntNode;
+import net.rizecookey.racc0on.ir.node.Node;
+import net.rizecookey.racc0on.ir.node.Phi;
+import net.rizecookey.racc0on.ir.node.ProjNode;
+import net.rizecookey.racc0on.ir.node.ReturnNode;
+import net.rizecookey.racc0on.ir.node.StartNode;
+import net.rizecookey.racc0on.ir.node.operation.unary.UnaryOperationNode;
 
 import java.util.List;
 

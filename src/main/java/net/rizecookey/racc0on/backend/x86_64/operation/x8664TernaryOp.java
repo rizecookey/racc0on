@@ -1,7 +1,7 @@
 package net.rizecookey.racc0on.backend.x86_64.operation;
 
-import edu.kit.kastel.vads.compiler.ir.node.Node;
-import edu.kit.kastel.vads.compiler.ir.node.operation.TernaryNode;
+import net.rizecookey.racc0on.ir.node.Node;
+import net.rizecookey.racc0on.ir.node.operation.TernaryNode;
 import net.rizecookey.racc0on.backend.store.StoreReference;
 import net.rizecookey.racc0on.backend.store.StoreRequestService;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664InstrType;

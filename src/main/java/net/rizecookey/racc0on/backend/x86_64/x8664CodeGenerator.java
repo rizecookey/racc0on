@@ -1,6 +1,6 @@
 package net.rizecookey.racc0on.backend.x86_64;
 
-import edu.kit.kastel.vads.compiler.ir.IrGraph;
+import net.rizecookey.racc0on.ir.IrGraph;
 import net.rizecookey.racc0on.backend.CodeGenerator;
 import net.rizecookey.racc0on.backend.instruction.InstructionBlock;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664Instr;

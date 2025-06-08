@@ -1,9 +1,8 @@
 package net.rizecookey.racc0on.ir;
 
-import edu.kit.kastel.vads.compiler.ir.IrGraph;
-import edu.kit.kastel.vads.compiler.ir.node.Block;
-import edu.kit.kastel.vads.compiler.ir.node.Node;
-import edu.kit.kastel.vads.compiler.ir.node.StartNode;
+import net.rizecookey.racc0on.ir.node.Block;
+import net.rizecookey.racc0on.ir.node.Node;
+import net.rizecookey.racc0on.ir.node.StartNode;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -27,7 +26,9 @@ public record SsaSchedule(Map<Block, List<Node>> blockSchedules, IrGraph program
             Node node = stack.peek();
 
             if (seen.add(node)) {
-                node.predecessors().forEach(stack::push);
+                node.predecessors().stream()
+                        .filter(pred -> !visited.contains(pred))
+                        .forEach(stack::push);
                 continue;
             }
 
@@ -35,7 +36,11 @@ public record SsaSchedule(Map<Block, List<Node>> blockSchedules, IrGraph program
 
             if (node instanceof Block block && visited.add(block)) {
                 blockSchedules.computeIfAbsent(block, _ -> new ArrayList<>());
-                block.predecessors().stream().map(Node::block).distinct().forEach(stack::push);
+                block.predecessors().stream()
+                        .map(Node::block)
+                        .distinct()
+                        .filter(pred -> !visited.contains(pred))
+                        .forEach(stack::push);
                 continue;
             }
 

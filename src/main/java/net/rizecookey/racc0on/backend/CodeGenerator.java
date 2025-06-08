@@ -1,6 +1,6 @@
 package net.rizecookey.racc0on.backend;
 
-import edu.kit.kastel.vads.compiler.ir.IrGraph;
+import net.rizecookey.racc0on.ir.IrGraph;
 
 import java.util.List;
 

@@ -1,8 +1,8 @@
 package net.rizecookey.racc0on.backend.x86_64.operation;
 
-import edu.kit.kastel.vads.compiler.ir.node.ConstBoolNode;
-import edu.kit.kastel.vads.compiler.ir.node.ConstIntNode;
-import edu.kit.kastel.vads.compiler.ir.node.Node;
+import net.rizecookey.racc0on.ir.node.ConstBoolNode;
+import net.rizecookey.racc0on.ir.node.ConstIntNode;
+import net.rizecookey.racc0on.ir.node.Node;
 import net.rizecookey.racc0on.backend.store.StoreReference;
 import net.rizecookey.racc0on.backend.store.StoreRequestService;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Store;

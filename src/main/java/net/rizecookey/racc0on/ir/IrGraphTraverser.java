@@ -1,7 +1,6 @@
 package net.rizecookey.racc0on.ir;
 
-import edu.kit.kastel.vads.compiler.ir.IrGraph;
-import edu.kit.kastel.vads.compiler.ir.node.Node;
+import net.rizecookey.racc0on.ir.node.Node;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
