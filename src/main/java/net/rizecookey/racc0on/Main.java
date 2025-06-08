@@ -1,22 +1,17 @@
 package net.rizecookey.racc0on;
 
-import net.rizecookey.racc0on.assembler.Assembler;
-import net.rizecookey.racc0on.assembler.ExternalGcc;
-import net.rizecookey.racc0on.compilation.Racc0onCompilation;
-import net.rizecookey.racc0on.debug.DebugConsumer;
+import net.rizecookey.racc0on.assembler.AssemblerException;
+import net.rizecookey.racc0on.compilation.CompilerException;
+import net.rizecookey.racc0on.compilation.InputErrorException;
+import net.rizecookey.racc0on.compilation.Racc0on;
 import net.rizecookey.racc0on.debug.DefaultDebugConsumer;
 import net.rizecookey.racc0on.parser.ParseException;
 import net.rizecookey.racc0on.semantic.SemanticException;
-import net.rizecookey.racc0on.compilation.CompilerException;
-import net.rizecookey.racc0on.compilation.InputErrorException;
-import net.rizecookey.racc0on.assembler.AssemblerException;
 import net.rizecookey.racc0on.utils.ConsoleColors;
 import net.rizecookey.racc0on.utils.Logger;
 import net.rizecookey.racc0on.utils.Span;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
@@ -32,50 +27,25 @@ public class Main {
         }
         Path input = Path.of(args[0]);
         Path output = Path.of(args[1]);
-        String inputString;
+
         try {
-            inputString = Files.readString(input);
+            Racc0on.compileAndAssemble(input, output, DEBUG ? new DefaultDebugConsumer(output, LOGGER) : null);
         } catch (IOException e) {
-            LOGGER.prefixedError("failed to read from input file:", e);
+            LOGGER.prefixedError(e.getMessage(), e);
             System.exit(3);
-            throw new IllegalStateException();
-        }
-
-        DebugConsumer debugConsumer = new DefaultDebugConsumer(output, LOGGER);
-        Racc0onCompilation compilation = new Racc0onCompilation(inputString, debugConsumer);
-
-        String asmString;
-        try {
-            asmString = compilation.compile();
         } catch (CompilerException e) {
             printInputError(e.input(), e.cause());
-            int exitCode = switch (e.cause()) {
+            System.exit(switch (e.cause()) {
                 case ParseException _ -> 42;
                 case SemanticException _ -> 7;
-            };
-            System.exit(exitCode);
-            throw new IllegalStateException();
-        }
-
-        Assembler assembler = new ExternalGcc();
-        byte[] binary;
-        try {
-            binary = assembler.assemble(asmString);
+            });
         } catch (AssemblerException e) {
             LOGGER.prefixedError("error while assembling: " + e.getMessage());
             if (e.getContext() != null) {
                 LOGGER.errorContext(e.getContext());
             }
-            System.exit(1);
-            throw new IllegalStateException();
-        }
 
-        try {
-            Files.write(output, binary);
-            new File(output.toString()).setExecutable(true);
-        } catch (IOException e) {
-            LOGGER.prefixedError("could not write to output file:", e);
-            System.exit(3);
+            System.exit(1);
         }
     }
 

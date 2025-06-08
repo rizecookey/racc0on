@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Test all samples" type="JUnit" factoryName="JUnit">
+    <module name="racc0on.test" />
+    <option name="ALTERNATIVE_JRE_PATH" value="BUNDLED" />
+    <option name="PACKAGE_NAME" value="net.rizecookey.racc0on.test" />
+    <option name="MAIN_CLASS_NAME" value="net.rizecookey.racc0on.test.SamplesTest" />
+    <option name="METHOD_NAME" value="" />
+    <option name="TEST_OBJECT" value="class" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
