@@ -321,6 +321,9 @@ public class SsaTranslation {
             forTree.body().accept(this, data);
             transformerStack.pop();
             if (!data.constructor.hasUnconditionalJump()) {
+                if (forTree.step() != null) {
+                    forTree.step().accept(this, data);
+                }
                 Node jump = data.constructor.newJump();
                 conditionBlock.addPredecessor(jump);
             }
