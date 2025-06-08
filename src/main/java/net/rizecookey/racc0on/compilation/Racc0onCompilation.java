@@ -6,6 +6,7 @@ import net.rizecookey.racc0on.ir.IrGraph;
 import net.rizecookey.racc0on.ir.SsaTranslation;
 import net.rizecookey.racc0on.ir.optimize.LocalValueNumbering;
 import net.rizecookey.racc0on.ir.util.GraphVizPrinter;
+import net.rizecookey.racc0on.ir.util.YCompPrinter;
 import net.rizecookey.racc0on.lexer.Lexer;
 import net.rizecookey.racc0on.parser.ParseException;
 import net.rizecookey.racc0on.parser.Parser;
@@ -65,7 +66,7 @@ public final class Racc0onCompilation {
 
                 consumer.artifact("ycomp-graph-" + procedure.name(),
                         debugFile(name -> "graphs/" + name + "." + procedure.name() + ".vcg"),
-                        GraphVizPrinter.print(procedure));
+                        YCompPrinter.print(procedure));
             }
         });
 
