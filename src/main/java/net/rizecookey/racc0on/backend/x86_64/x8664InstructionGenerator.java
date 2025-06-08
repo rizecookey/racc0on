@@ -372,7 +372,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
             move(second, stackStore);
         }
 
-        write(x8664InstrType.TEST, first, second);
+        write(x8664InstrType.TEST, x8664Operand.Size.BYTE, first, second);
     }
 
     public void push(x8664Operand operand) {
