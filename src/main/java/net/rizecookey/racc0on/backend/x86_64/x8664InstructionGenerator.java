@@ -1,5 +1,8 @@
 package net.rizecookey.racc0on.backend.x86_64;
 
+import net.rizecookey.racc0on.backend.x86_64.operation.x8664EmptyOpLike;
+import net.rizecookey.racc0on.backend.x86_64.operation.x8664IfElseOpLike;
+import net.rizecookey.racc0on.backend.x86_64.operation.x8664OpLike;
 import net.rizecookey.racc0on.ir.node.ConstBoolNode;
 import net.rizecookey.racc0on.ir.node.IfNode;
 import net.rizecookey.racc0on.ir.node.JumpNode;
@@ -54,7 +57,6 @@ import net.rizecookey.racc0on.backend.x86_64.operation.compare.x8664LessEqOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.compare.x8664LessOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.compare.x8664NotEqOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.logic.x8664AndOp;
-import net.rizecookey.racc0on.backend.x86_64.operation.x8664ConditionalJumpOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.arithmetic.x8664DivPhantomOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664EnterOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.arithmetic.x8664IMulOp;
@@ -242,60 +244,51 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
     }
 
     public List<x8664Op> selectOperations(Node node) {
-        List<x8664Op> base = switch (node) {
-            case StartNode _ -> List.of(new x8664EnterOp());
-            case AddNode addNode -> List.of(new x8664AddOp(extractOperands(addNode)));
-            case SubNode subNode -> List.of(new x8664SubOp(extractOperands(subNode)));
-            case MulNode mulNode -> List.of(new x8664IMulOp(extractOperands(mulNode)));
-            case DivNode divNode -> List.of(new x8664DivPhantomOp(extractOperands(divNode)));
-            case ModNode modNode -> List.of(new x8664ModPhantomOp(extractOperands(modNode)));
-            case ConstIntNode constIntNode -> List.of(new x8664LoadConstPhantomOp(constIntNode));
-            case ConstBoolNode constBoolNode -> List.of(new x8664LoadConstPhantomOp(constBoolNode));
+        List<x8664Op> operations = node instanceof JumpNode || node instanceof IfNode
+                ? schedule.phiValues().getOrDefault(node.block(), Map.of())
+                .entrySet()
+                .stream()
+                .map(entry -> new x8664PhiMoveOp(entry.getKey(), entry.getValue()))
+                .collect(Collectors.toCollection(ArrayList::new))
+                : new ArrayList<>();
+
+        x8664OpLike base = switch (node) {
+            case StartNode _ -> new x8664EnterOp();
+            case AddNode addNode -> new x8664AddOp(extractOperands(addNode));
+            case SubNode subNode -> new x8664SubOp(extractOperands(subNode));
+            case MulNode mulNode -> new x8664IMulOp(extractOperands(mulNode));
+            case DivNode divNode -> new x8664DivPhantomOp(extractOperands(divNode));
+            case ModNode modNode -> new x8664ModPhantomOp(extractOperands(modNode));
+            case ConstIntNode constIntNode -> new x8664LoadConstPhantomOp(constIntNode);
+            case ConstBoolNode constBoolNode -> new x8664LoadConstPhantomOp(constBoolNode);
             case ReturnNode returnNode ->
-                    List.of(new x8664RetOp(NodeUtils.shortcutPredecessors(returnNode).get(ReturnNode.RESULT)));
-            case JumpNode jumpNode -> List.of(new x8664JumpOp(label(jumpNode.target())));
+                    new x8664RetOp(NodeUtils.shortcutPredecessors(returnNode).get(ReturnNode.RESULT));
+            case JumpNode jumpNode -> new x8664JumpOp(label(jumpNode.target()));
             case IfNode ifNode -> {
                 Map<Boolean, Block> targets = ifNode.targets();
                 Block trueTarget = targets.get(true);
                 Block falseTarget = targets.get(false);
 
-                yield List.of(new x8664ConditionalJumpOp(ifNode.predecessor(IfNode.CONDITION), true, label(falseTarget)),
-                        new x8664JumpOp(label(trueTarget)));
+                yield new x8664IfElseOpLike(ifNode.predecessor(IfNode.CONDITION), true, label(falseTarget),
+                        label(trueTarget));
             }
-            case BitwiseAndNode bitwiseAndNode -> List.of(new x8664AndOp(extractOperands(bitwiseAndNode)));
-            case BitwiseOrNode bitwiseOrNode -> List.of(new x8664OrOp(extractOperands(bitwiseOrNode)));
-            case BitwiseXorNode bitwiseXorNode -> List.of(new x8664XorOp(extractOperands(bitwiseXorNode)));
-            case NotNode notNode -> List.of(new x8664NotOp(notNode, notNode.predecessor(NotNode.IN)));
-            case EqNode eqNode -> List.of(new x8664EqOp(extractOperands(eqNode)));
-            case NotEqNode notEqNode -> List.of(new x8664NotEqOp(extractOperands(notEqNode)));
-            case GreaterNode greaterNode -> List.of(new x8664GreaterOp(extractOperands(greaterNode)));
-            case GreaterOrEqNode greaterOrEqNode -> List.of(new x8664GreaterEqOp(extractOperands(greaterOrEqNode)));
-            case LessNode lessNode -> List.of(new x8664LessOp(extractOperands(lessNode)));
-            case LessOrEqNode lessOrEqNode -> List.of(new x8664LessEqOp(extractOperands(lessOrEqNode)));
-            case TernaryNode ternaryNode -> List.of(new x8664TernaryOp(ternaryNode));
-            case Phi _, Block _, ProjNode _ -> List.of();
+            case BitwiseAndNode bitwiseAndNode -> new x8664AndOp(extractOperands(bitwiseAndNode));
+            case BitwiseOrNode bitwiseOrNode -> new x8664OrOp(extractOperands(bitwiseOrNode));
+            case BitwiseXorNode bitwiseXorNode -> new x8664XorOp(extractOperands(bitwiseXorNode));
+            case NotNode notNode -> new x8664NotOp(notNode, notNode.predecessor(NotNode.IN));
+            case EqNode eqNode -> new x8664EqOp(extractOperands(eqNode));
+            case NotEqNode notEqNode -> new x8664NotEqOp(extractOperands(notEqNode));
+            case GreaterNode greaterNode -> new x8664GreaterOp(extractOperands(greaterNode));
+            case GreaterOrEqNode greaterOrEqNode -> new x8664GreaterEqOp(extractOperands(greaterOrEqNode));
+            case LessNode lessNode -> new x8664LessOp(extractOperands(lessNode));
+            case LessOrEqNode lessOrEqNode -> new x8664LessEqOp(extractOperands(lessOrEqNode));
+            case TernaryNode ternaryNode -> new x8664TernaryOp(ternaryNode);
+            case Phi _, Block _, ProjNode _ -> new x8664EmptyOpLike();
             case ShiftLeftNode _, ShiftRightNode _ -> throw new UnsupportedOperationException(); // TODO
         };
+        operations.addAll(base.asOperations());
 
-        if (!NodeUtils.providesValue(node)) {
-            return base;
-        }
-
-        // TODO this is broken as the phis might be in the "wrong" block to perform move!
-        List<Phi> phiSuccessors = schedule.programGraph().successors(node).stream()
-                .filter(succ -> succ instanceof Phi)
-                .map(succ -> (Phi) succ)
-                .toList();
-
-        if (phiSuccessors.isEmpty()) {
-            return base;
-        }
-
-        List<x8664Op> seq = new ArrayList<>(base);
-        for (Phi phiSuccessor : phiSuccessors) {
-            seq.add(new x8664PhiMoveOp(phiSuccessor, node));
-        }
-        return seq;
+        return operations;
     }
 
     private Operands.Binary<Node> extractOperands(BinaryOperationNode node) {
