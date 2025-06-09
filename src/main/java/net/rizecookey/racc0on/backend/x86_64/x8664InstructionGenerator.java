@@ -308,6 +308,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
             return base;
         }
 
+        // TODO this is broken as the phis might be in the "wrong" block to perform move!
         List<Phi> phiSuccessors = schedule.programGraph().successors(node).stream()
                 .filter(succ -> succ instanceof Phi)
                 .map(succ -> (Phi) succ)

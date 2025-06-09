@@ -275,15 +275,15 @@ public class SsaTranslation {
             Node trueProj = data.constructor.newIfTrueProj(ifNode);
             Node falseProj = data.constructor.newIfFalseProj(ifNode);
             Block trueBranch = data.constructor.newBlock(trueProj);
+            data.constructor.sealBlock(trueBranch);
             ifElseTree.thenBranch().accept(this, data);
             Node trueJump = data.constructor.hasUnconditionalJump() ? null : data.constructor.newJump();
-            data.constructor.sealBlock(trueBranch);
             Node falseJump = falseProj;
             if (ifElseTree.elseBranch() != null) {
                 Block falseBranch = data.constructor.newBlock(falseProj);
+                data.constructor.sealBlock(falseBranch);
                 ifElseTree.elseBranch().accept(this, data);
                 falseJump = data.constructor.hasUnconditionalJump() ? null : data.constructor.newJump();
-                data.constructor.sealBlock(falseBranch);
             }
 
             Block followingBlock = data.constructor.newBlock(Stream.of(trueJump, falseJump).filter(Objects::nonNull).toList());
@@ -321,11 +321,14 @@ public class SsaTranslation {
             forTree.body().accept(this, data);
             transformerStack.pop();
             if (!data.constructor.hasUnconditionalJump()) {
+                Node jumpToStep = data.constructor.newJump();
+                Block stepBlock = data.constructor.newBlock(jumpToStep);
+                data.constructor.sealBlock(stepBlock);
                 if (forTree.step() != null) {
                     forTree.step().accept(this, data);
                 }
-                Node jump = data.constructor.newJump();
-                conditionBlock.addPredecessor(jump);
+                Node jumpToCondition = data.constructor.newJump();
+                conditionBlock.addPredecessor(jumpToCondition);
             }
 
             data.constructor.sealBlock(conditionBlock);
@@ -344,13 +347,17 @@ public class SsaTranslation {
             }
             LoopInfo loop = transformerStack.peek();
 
-            if (loop.step() != null) {
-                loop.step().accept(this, data);
-            }
-
             Node jump = data.constructor.newJump();
             Node target = switch (loopControlTree.type()) {
-                case CONTINUE -> loop.continueTarget();
+                case CONTINUE -> {
+                    Block stepBlock = data.constructor.newBlock(jump);
+                    data.constructor.sealBlock(stepBlock);
+                    if (loop.step() != null) {
+                        loop.step().accept(this, data);
+                    }
+                    jump = data.constructor.newJump();
+                    yield loop.continueTarget();
+                }
                 case BREAK -> loop.breakTarget();
             };
             target.addPredecessor(jump);

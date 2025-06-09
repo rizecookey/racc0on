@@ -28,9 +28,5 @@ public final class Phi extends Node {
                 graph().registerSuccessor(predecessor, user);
             }
         }
-
-        for (Node node : predecessors()) {
-            graph().removeSuccessor(node, this);
-        }
     }
 }
