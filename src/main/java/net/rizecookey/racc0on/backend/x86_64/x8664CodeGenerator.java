@@ -4,7 +4,7 @@ import net.rizecookey.racc0on.ir.IrGraph;
 import net.rizecookey.racc0on.backend.CodeGenerator;
 import net.rizecookey.racc0on.backend.instruction.InstructionBlock;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664Instr;
-import net.rizecookey.racc0on.ir.SsaSchedule;
+import net.rizecookey.racc0on.ir.schedule.SsaSchedule;
 
 import java.util.List;
 import java.util.stream.Collectors;

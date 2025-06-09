@@ -1,26 +1,24 @@
 package net.rizecookey.racc0on.ir;
 
 import net.rizecookey.racc0on.ir.node.Node;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public abstract class IrGraphTraverser {
     private final Set<Node> seen = new HashSet<>();
+    private final Deque<Node> stack = new ArrayDeque<>();
 
     public void traverse(IrGraph graph) {
-        clearSeen();
-        Deque<Node> stack = new ArrayDeque<>();
         stack.add(graph.endBlock());
 
         while (!stack.isEmpty()) {
             Node node = stack.peek();
 
-            if (addSeen(node)) {
-                getPredecessors(node).reversed().forEach(stack::push);
+            if (visit(node)) {
                 continue;
             }
 
@@ -30,19 +28,31 @@ public abstract class IrGraphTraverser {
         }
     }
 
-    public void clearSeen() {
-        seen.clear();
+    protected void push(Node node) {
+        stack.push(node);
     }
 
-    public boolean hasSeen(Node node) {
+    protected Node pop() {
+        return stack.pop();
+    }
+
+    protected @Nullable Node peek() {
+        return stack.peek();
+    }
+
+    protected boolean hasSeen(Node node) {
         return seen.contains(node);
     }
 
-    public boolean addSeen(Node node) {
-        return seen.add(node);
+    protected boolean addSeen(Node node) {
+        return this.seen.add(node);
     }
 
-    public abstract List<? extends Node> getPredecessors(Node node);
+    protected boolean removeSeen(Node node) {
+        return this.seen.remove(node);
+    }
 
-    public abstract void consume(Node node);
+    protected abstract boolean visit(Node node);
+
+    protected abstract void consume(Node node);
 }

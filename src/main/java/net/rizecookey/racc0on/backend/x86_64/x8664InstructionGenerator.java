@@ -71,8 +71,7 @@ import net.rizecookey.racc0on.backend.x86_64.operation.x8664TernaryOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.logic.x8664XorOp;
 import net.rizecookey.racc0on.backend.x86_64.optimization.x8664AsmOptimization;
 import net.rizecookey.racc0on.backend.x86_64.store.x8664StoreAllocator;
-import net.rizecookey.racc0on.ir.IrGraphTraverser;
-import net.rizecookey.racc0on.ir.SsaSchedule;
+import net.rizecookey.racc0on.ir.schedule.SsaSchedule;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -112,12 +111,11 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
     }
 
     public List<InstructionBlock<x8664Instr>> generateInstructions() {
-        List<Block> ssaBlockSchedule = scheduleSsaBlocks();
-        labelBlocks(ssaBlockSchedule);
+        labelBlocks();
 
         StoreRequests<x8664Op, x8664Store> requestService = new StoreRequests<>();
         Map<String, List<x8664Op>> operations = generateOperations(requestService);
-        OperationSchedule<x8664Op> opSchedule = createOperationSchedule(operations, ssaBlockSchedule);
+        OperationSchedule<x8664Op> opSchedule = createOperationSchedule(operations);
 
         x8664StoreAllocator allocator = new x8664StoreAllocator();
         x8664StoreAllocator.Allocation allocation = allocator.allocate(opSchedule, requestService);
@@ -135,37 +133,21 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         return blocks;
     }
 
-    private List<Block> scheduleSsaBlocks() {
-        SsaBlockScheduler scheduler = new SsaBlockScheduler();
-        scheduler.traverse(schedule.programGraph());
-
-        return scheduler.getResult();
-    }
-
-    private static class SsaBlockScheduler extends IrGraphTraverser {
-        private final List<Block> result = new ArrayList<>();
-
-        @Override
-        public List<? extends Node> getPredecessors(Node node) {
-            return node.predecessors().stream().map(Node::block).toList();
-        }
-
-        @Override
-        public void consume(Node node) {
-            result.add(node.block());
-        }
-
-        public List<Block> getResult() {
-            return result;
+    private void labelBlocks() {
+        String procedureName = schedule.programGraph().name();
+        int index = 0;
+        for (Block block : schedule.blockSchedule()) {
+            String label = block == schedule.programGraph().startBlock() ? procedureName : procedureName + "$" + index++;
+            blockLabels.put(block, label);
         }
     }
 
     private Map<String, List<x8664Op>> generateOperations(StoreRequests<x8664Op, x8664Store> storeRequests) {
         Map<String, List<x8664Op>> operations = new HashMap<>();
-        for (Block block : schedule.blockSchedules().keySet()) {
+        for (Block block : schedule.blockSchedule()) {
             String label = blockLabels.get(block);
             List<x8664Op> blockOperations = new ArrayList<>();
-            for (Node node : schedule.blockSchedules().get(block)) {
+            for (Node node : schedule.nodeSchedules().get(block)) {
                 List<x8664Op> nodeOperations = selectOperations(node);
                 nodeOperations.forEach(op -> op.makeStoreRequests(storeRequests));
                 blockOperations.addAll(nodeOperations);
@@ -177,11 +159,11 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         return operations;
     }
 
-    private OperationSchedule<x8664Op> createOperationSchedule(Map<String, List<x8664Op>> operations, List<Block> ssaBlockSchedule) {
+    private OperationSchedule<x8664Op> createOperationSchedule(Map<String, List<x8664Op>> operations) {
         SequencedMap<String, OperationBlock<x8664Op>> blocks = new LinkedHashMap<>();
         OperationBlock<x8664Op> entry = null;
         Set<OperationBlock<x8664Op>> exits = new HashSet<>();
-        for (Block block : ssaBlockSchedule) {
+        for (Block block : schedule.blockSchedule()) {
             String label = label(block);
             List<x8664Op> blockOps = List.copyOf(operations.getOrDefault(label, List.of()));
 
@@ -210,15 +192,6 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         }
 
         return new OperationSchedule<>(blocks, entry, Set.copyOf(exits));
-    }
-
-    private void labelBlocks(List<Block> ssaBlockSchedule) {
-        String procedureName = schedule.programGraph().name();
-        int index = 0;
-        for (Block block : ssaBlockSchedule) {
-            String label = block == schedule.programGraph().startBlock() ? procedureName : procedureName + "$" + index++;
-            blockLabels.put(block, label);
-        }
     }
 
     public SequencedSet<StoreReference<x8664Store>> getReferencesLiveAt(x8664Op at) {

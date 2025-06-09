@@ -15,7 +15,7 @@ import net.rizecookey.racc0on.ir.node.ProjNode.SimpleProjectionInfo;
 import net.rizecookey.racc0on.ir.node.ReturnNode;
 import net.rizecookey.racc0on.ir.node.StartNode;
 import net.rizecookey.racc0on.ir.node.operation.unary.UnaryOperationNode;
-import net.rizecookey.racc0on.ir.SsaSchedule;
+import net.rizecookey.racc0on.ir.schedule.SsaSchedule;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -43,7 +43,7 @@ public class YCompPrinter {
 
     public YCompPrinter(IrGraph graph) {
         this.graph = graph;
-        this.schedule = new SsaSchedule(Map.of(), graph);
+        this.schedule = new SsaSchedule(List.of(), Map.of(), Map.of(), graph);
     }
 
     private void prepare(Node node, Set<Node> seen) {
@@ -220,7 +220,7 @@ public class YCompPrinter {
 
     private String formatSchedule(Block block) {
         // Once you have a schedule, you might want to also emit it :)
-        List<Node> blockSchedule = schedule.blockSchedules().get(block).stream()
+        List<Node> blockSchedule = schedule.nodeSchedules().get(block).stream()
                 .filter(node -> !block.getExits().contains(node))
                 .toList();
         List<Edge> edges = List.of();
