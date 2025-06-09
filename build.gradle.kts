@@ -28,3 +28,24 @@ java {
 tasks.test {
     useJUnitPlatform()
 }
+
+val createLauncherRun by tasks.register<CreateStartScripts>("createLauncherRun") {
+    val startScripts = tasks.startScripts.get()
+    applicationName = "racc0on-tester"
+    mainModule = "net.rizecookey.racc0on"
+    mainClass = "net.rizecookey.racc0on.utils.SimpleCompilerLauncher"
+    classpath = startScripts.classpath
+    outputDir = startScripts.outputDir
+}
+
+distributions {
+    main {
+        contents {
+            from(createLauncherRun) {
+                into("bin") {
+                    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+                }
+            }
+        }
+    }
+}

@@ -27,26 +27,31 @@ public class Main {
         }
         Path input = Path.of(args[0]);
         Path output = Path.of(args[1]);
+        System.exit(runCompiler(input, output, DEBUG));
+    }
 
+    public static int runCompiler(Path input, Path output, boolean debug) {
         try {
-            Racc0on.compileAndAssemble(input, output, DEBUG ? new DefaultDebugConsumer(output, LOGGER) : null);
+            Racc0on.compileAndAssemble(input, output, debug ? new DefaultDebugConsumer(output, LOGGER) : null);
         } catch (IOException e) {
             LOGGER.prefixedError(e.getMessage(), e);
-            System.exit(3);
+            return 3;
         } catch (CompilerException e) {
             printInputError(e.input(), e.cause());
-            System.exit(switch (e.cause()) {
+            return switch (e.cause()) {
                 case ParseException _ -> 42;
                 case SemanticException _ -> 7;
-            });
+            };
         } catch (AssemblerException e) {
             LOGGER.prefixedError("error while assembling: " + e.getMessage());
             if (e.getContext() != null) {
                 LOGGER.errorContext(e.getContext());
             }
 
-            System.exit(1);
+            return 3;
         }
+
+        return 0;
     }
 
     private static void printInputError(String program, InputErrorException e) {
