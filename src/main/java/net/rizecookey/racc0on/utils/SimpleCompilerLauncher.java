@@ -58,6 +58,7 @@ public final class SimpleCompilerLauncher {
             }
         }
 
+        int exitCode = 0;
         for (int i = 0; i < files.size(); i++) {
             Path input = files.get(i);
             String filename = input.getFileName().toString();
@@ -69,6 +70,7 @@ public final class SimpleCompilerLauncher {
             } catch (Exception e) {
                 LOGGER.prefixedError("compiler failed", e);
                 LOGGER.log(System.lineSeparator());
+                exitCode = 1;
                 continue;
             }
 
@@ -80,6 +82,7 @@ public final class SimpleCompilerLauncher {
                 LOGGER.log(System.lineSeparator());
             }
         }
+        System.exit(exitCode);
     }
 
     private static void run(Path file) throws IOException, InterruptedException {
@@ -97,7 +100,6 @@ public final class SimpleCompilerLauncher {
         if (!exited) {
             LOGGER.prefixedError("timed out: program did not end after 1 minute");
             proc.destroyForcibly();
-            System.exit(1);
         }
 
         LOGGER.log("Program exited with status code " + proc.exitValue());
