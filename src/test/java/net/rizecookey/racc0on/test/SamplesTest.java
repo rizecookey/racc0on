@@ -81,7 +81,7 @@ class SamplesTest {
         new File(result.toString()).setExecutable(true);
 
         ExecutionResult initial = execute(result, timeout, timeoutUnit);
-        for (int i = 1; i <= 5; i++) {
+        for (int i = 1; i <= 100; i++) {
             ExecutionResult subsequent = execute(result, timeout, timeoutUnit);
             assertEquals(initial, subsequent, "different execution result for the same binary occured");
         }
