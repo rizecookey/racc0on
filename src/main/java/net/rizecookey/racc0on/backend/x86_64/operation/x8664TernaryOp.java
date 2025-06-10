@@ -10,16 +10,17 @@ import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664StackStore;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Store;
 import net.rizecookey.racc0on.backend.x86_64.store.x8664StoreRefResolver;
 import net.rizecookey.racc0on.backend.x86_64.x8664InstructionGenerator;
+import net.rizecookey.racc0on.ir.util.NodeSupport;
 
 public class x8664TernaryOp implements x8664Op {
     private final Node condition, out, ifTrue, ifFalse;
     private StoreReference<x8664Store> conditionRef, outRef, ifTrueRef, ifFalseRef;
 
     public x8664TernaryOp(TernaryNode ternaryNode) {
-        this.condition = ternaryNode.predecessor(TernaryNode.CONDITION);
+        this.condition = NodeSupport.predecessorSkipProj(ternaryNode, TernaryNode.CONDITION);
         this.out = ternaryNode;
-        this.ifTrue = ternaryNode.predecessor(TernaryNode.IF_TRUE);
-        this.ifFalse = ternaryNode.predecessor(TernaryNode.IF_FALSE);
+        this.ifTrue = NodeSupport.predecessorSkipProj(ternaryNode, TernaryNode.IF_TRUE);
+        this.ifFalse = NodeSupport.predecessorSkipProj(ternaryNode, TernaryNode.IF_FALSE);
 
         conditionRef = outRef = ifTrueRef = ifFalseRef = new StoreReference.Null<>();
     }

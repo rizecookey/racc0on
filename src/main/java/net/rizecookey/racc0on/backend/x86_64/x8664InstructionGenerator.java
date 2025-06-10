@@ -33,7 +33,6 @@ import net.rizecookey.racc0on.ir.node.operation.binary.ShiftLeftNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.ShiftRightNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.SubNode;
 import net.rizecookey.racc0on.ir.node.operation.unary.NotNode;
-import net.rizecookey.racc0on.backend.NodeUtils;
 import net.rizecookey.racc0on.backend.instruction.InstructionBlock;
 import net.rizecookey.racc0on.backend.instruction.InstructionGenerator;
 import net.rizecookey.racc0on.backend.operand.Operands;
@@ -75,6 +74,7 @@ import net.rizecookey.racc0on.backend.x86_64.operation.logic.x8664XorOp;
 import net.rizecookey.racc0on.backend.x86_64.optimization.x8664AsmOptimization;
 import net.rizecookey.racc0on.backend.x86_64.store.x8664StoreAllocator;
 import net.rizecookey.racc0on.ir.schedule.SsaSchedule;
+import net.rizecookey.racc0on.ir.util.NodeSupport;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -263,14 +263,14 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
             case ConstIntNode constIntNode -> new x8664LoadConstPhantomOp(constIntNode);
             case ConstBoolNode constBoolNode -> new x8664LoadConstPhantomOp(constBoolNode);
             case ReturnNode returnNode ->
-                    new x8664RetOp(NodeUtils.shortcutPredecessors(returnNode).get(ReturnNode.RESULT));
+                    new x8664RetOp(NodeSupport.predecessorsSkipProj(returnNode).get(ReturnNode.RESULT));
             case JumpNode jumpNode -> new x8664JumpOp(label(jumpNode.target()));
             case IfNode ifNode -> {
                 Map<Boolean, Block> targets = ifNode.targets();
                 Block trueTarget = targets.get(true);
                 Block falseTarget = targets.get(false);
 
-                yield new x8664IfElseOpLike(ifNode.predecessor(IfNode.CONDITION), true, label(falseTarget),
+                yield new x8664IfElseOpLike(NodeSupport.predecessorSkipProj(ifNode, IfNode.CONDITION), true, label(falseTarget),
                         label(trueTarget));
             }
             case BitwiseAndNode bitwiseAndNode -> new x8664AndOp(extractOperands(bitwiseAndNode));
@@ -278,7 +278,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
             case BitwiseXorNode bitwiseXorNode -> new x8664XorOp(extractOperands(bitwiseXorNode));
             case ShiftLeftNode shiftLeftNode -> new x8664ShiftOp(x8664ShiftOp.Direction.LEFT, extractOperands(shiftLeftNode));
             case ShiftRightNode shiftRightNode -> new x8664ShiftOp(x8664ShiftOp.Direction.RIGHT, extractOperands(shiftRightNode));
-            case NotNode notNode -> new x8664NotOp(notNode, notNode.predecessor(NotNode.IN));
+            case NotNode notNode -> new x8664NotOp(notNode, NodeSupport.predecessorSkipProj(notNode, NotNode.IN));
             case EqNode eqNode -> new x8664EqOp(extractOperands(eqNode));
             case NotEqNode notEqNode -> new x8664NotEqOp(extractOperands(notEqNode));
             case GreaterNode greaterNode -> new x8664GreaterOp(extractOperands(greaterNode));
@@ -294,7 +294,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
     }
 
     private Operands.Binary<Node> extractOperands(BinaryOperationNode node) {
-        List<Node> realPreds = NodeUtils.shortcutPredecessors(node);
+        List<Node> realPreds = NodeSupport.predecessorsSkipProj(node);
         return new Operands.Binary<>(node, realPreds.get(BinaryOperationNode.LEFT), realPreds.get(BinaryOperationNode.RIGHT));
     }
 
