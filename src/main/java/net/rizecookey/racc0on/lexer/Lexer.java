@@ -1,5 +1,6 @@
 package net.rizecookey.racc0on.lexer;
 
+import net.rizecookey.racc0on.lexer.keyword.BoolLiteralKeywordType;
 import net.rizecookey.racc0on.utils.Position;
 import net.rizecookey.racc0on.utils.Span;
 import net.rizecookey.racc0on.lexer.Separator.SeparatorType;
@@ -7,8 +8,6 @@ import net.rizecookey.racc0on.lexer.keyword.KeywordType;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class Lexer {
     private final String source;
@@ -65,12 +64,11 @@ public class Lexer {
                     if (isNumeric(peek())) {
                         yield lexNumber();
                     }
-                    Optional<String> booleanMatch = tryLexingBoolean();
-                    if (booleanMatch.isPresent()) {
-                        String booleanString = booleanMatch.get();
-                        yield new BooleanLiteral(Boolean.parseBoolean(booleanString), buildSpan(booleanString.length()));
+                    var token = lexIdentifierOrKeyword();
+                    if (token instanceof Keyword(BoolLiteralKeywordType bool, Span span)) {
+                        yield new BooleanLiteral(Boolean.parseBoolean(bool.keyword()), span);
                     }
-                    yield lexIdentifierOrKeyword();
+                    yield token;
                 }
                 yield new ErrorToken(String.valueOf(peek()), buildSpan(1));
             }
@@ -207,27 +205,6 @@ public class Lexer {
 
     private boolean isHex(char c) {
         return isNumeric(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
-    }
-
-    private Optional<String> tryLexingBoolean() {
-        Optional<String> match = peekAndSearch("true");
-        if (match.isPresent()) {
-            return match;
-        }
-
-        return peekAndSearch("false");
-    }
-
-    private Optional<String> peekAndSearch(String value) {
-        if (!hasMore(value.length() - 1)) {
-            return Optional.empty();
-        }
-
-        String peeked = IntStream.range(0, value.length())
-                .mapToObj(this::peek)
-                .map(String::valueOf)
-                .collect(Collectors.joining());
-        return peeked.equals(value) ? Optional.of(value) : Optional.empty();
     }
 
     private Token singleOrFollowedByEq(OperatorType single, OperatorType assign) {
