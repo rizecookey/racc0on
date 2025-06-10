@@ -322,6 +322,12 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         instructions.add(new x8664Instr.Binary(type, first, second, size));
     }
 
+    public void write(x8664InstrType type,
+                      x8664Operand.Size firstSize, x8664Operand.Size secondSize,
+                      x8664Operand first, x8664Operand second) {
+        instructions.add(new x8664Instr.Binary(type, first, second, firstSize, secondSize));
+    }
+
     public void move(x8664Store to, x8664Operand from) {
         if (to.equals(from)) {
             return;

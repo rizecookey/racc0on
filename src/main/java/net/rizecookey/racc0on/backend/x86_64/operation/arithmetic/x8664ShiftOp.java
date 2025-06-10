@@ -64,7 +64,7 @@ public class x8664ShiftOp implements x8664Op {
         }
 
         generator.write(direction == Direction.LEFT ? x8664InstrType.SAL : x8664InstrType.SAR,
-                out, x8664Register.RCX);
+                x8664Operand.Size.DOUBLE_WORD, x8664Operand.Size.BYTE, out, x8664Register.RCX);
 
         if (!shiftCount.equals(x8664Register.RCX)) {
             generator.move(x8664Register.RCX, x8664Register.MEMORY_ACCESS_RESERVE);
