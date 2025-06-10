@@ -1,0 +1,18 @@
+int main() {
+  int a = 3 * 20;
+  int b = 12 + 7;
+  int c = 20 / 5;
+  int d = 29 % 2;
+
+  int x;
+  int y;
+  if (false) {
+    x = a;
+    y = b;
+  } else {
+    x = c;
+    y = d;
+  }
+
+  return x + y;
+}

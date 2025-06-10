@@ -4,11 +4,12 @@ import net.rizecookey.racc0on.ir.IrGraph;
 import net.rizecookey.racc0on.ir.node.Block;
 import net.rizecookey.racc0on.ir.node.Node;
 import net.rizecookey.racc0on.ir.node.Phi;
+import net.rizecookey.racc0on.utils.Pair;
 
 import java.util.List;
 import java.util.Map;
 
-public record SsaSchedule(List<Block> blockSchedule, Map<Block, List<Node>> nodeSchedules, Map<Block, Map<Phi, Node>> phiValues, IrGraph programGraph) {
+public record SsaSchedule(List<Block> blockSchedule, Map<Block, List<Node>> nodeSchedules, Map<Block, List<Pair<Phi, Node>>> phiMoves, IrGraph programGraph) {
 
     public static SsaSchedule generate(IrGraph program) {
         SsaBlockScheduler blockSchedule = new SsaBlockScheduler();
@@ -21,8 +22,8 @@ public record SsaSchedule(List<Block> blockSchedule, Map<Block, List<Node>> node
 
         PhiMoveScheduler phiMoveScheduler = new PhiMoveScheduler();
         phiMoveScheduler.traverse(program);
-        Map<Block, Map<Phi, Node>> phiValues = phiMoveScheduler.getPhiValues();
+        Map<Block, List<Pair<Phi, Node>>> phiMoves = phiMoveScheduler.getPhiMoves();
 
-        return new SsaSchedule(blockOrder, nodeSchedules, phiValues, program);
+        return new SsaSchedule(blockOrder, nodeSchedules, phiMoves, program);
     }
 }

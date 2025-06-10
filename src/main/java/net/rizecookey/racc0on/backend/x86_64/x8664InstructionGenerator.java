@@ -246,10 +246,9 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
 
     public List<x8664Op> selectOperations(Node node) {
         List<x8664Op> operations = node instanceof JumpNode || node instanceof IfNode
-                ? schedule.phiValues().getOrDefault(node.block(), Map.of())
-                .entrySet()
+                ? schedule.phiMoves().getOrDefault(node.block(), List.of())
                 .stream()
-                .map(entry -> new x8664PhiMoveOp(entry.getKey(), entry.getValue()))
+                .map(entry -> new x8664PhiMoveOp(entry.first(), entry.second()))
                 .collect(Collectors.toCollection(ArrayList::new))
                 : new ArrayList<>();
 
