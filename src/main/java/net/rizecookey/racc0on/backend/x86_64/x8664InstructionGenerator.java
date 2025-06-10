@@ -1,5 +1,6 @@
 package net.rizecookey.racc0on.backend.x86_64;
 
+import net.rizecookey.racc0on.backend.x86_64.operation.arithmetic.x8664ShiftOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664EmptyOpLike;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664IfElseOpLike;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664OpLike;
@@ -275,6 +276,8 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
             case BitwiseAndNode bitwiseAndNode -> new x8664AndOp(extractOperands(bitwiseAndNode));
             case BitwiseOrNode bitwiseOrNode -> new x8664OrOp(extractOperands(bitwiseOrNode));
             case BitwiseXorNode bitwiseXorNode -> new x8664XorOp(extractOperands(bitwiseXorNode));
+            case ShiftLeftNode shiftLeftNode -> new x8664ShiftOp(x8664ShiftOp.Direction.LEFT, extractOperands(shiftLeftNode));
+            case ShiftRightNode shiftRightNode -> new x8664ShiftOp(x8664ShiftOp.Direction.RIGHT, extractOperands(shiftRightNode));
             case NotNode notNode -> new x8664NotOp(notNode, notNode.predecessor(NotNode.IN));
             case EqNode eqNode -> new x8664EqOp(extractOperands(eqNode));
             case NotEqNode notEqNode -> new x8664NotEqOp(extractOperands(notEqNode));
@@ -284,7 +287,6 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
             case LessOrEqNode lessOrEqNode -> new x8664LessEqOp(extractOperands(lessOrEqNode));
             case TernaryNode ternaryNode -> new x8664TernaryOp(ternaryNode);
             case Phi _, Block _, ProjNode _ -> new x8664EmptyOpLike();
-            case ShiftLeftNode _, ShiftRightNode _ -> throw new UnsupportedOperationException(); // TODO
         };
         operations.addAll(base.asOperations());
 

@@ -37,6 +37,8 @@ public enum x8664InstrType implements InstructionType<x8664Instr, x8664Store> {
     OR("or", operand(0)),
     XOR("xor", operand(0)),
     CMP("cmp"),
+    SAR("sar"),
+    SAL("sal"),
     ;
 
     private final String name;
