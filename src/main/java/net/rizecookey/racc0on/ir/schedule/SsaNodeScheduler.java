@@ -2,7 +2,10 @@ package net.rizecookey.racc0on.ir.schedule;
 
 import net.rizecookey.racc0on.ir.IrGraphTraverser;
 import net.rizecookey.racc0on.ir.node.Block;
+import net.rizecookey.racc0on.ir.node.IfNode;
+import net.rizecookey.racc0on.ir.node.JumpNode;
 import net.rizecookey.racc0on.ir.node.Node;
+import net.rizecookey.racc0on.ir.node.ProjNode;
 import net.rizecookey.racc0on.ir.node.StartNode;
 
 import java.util.ArrayList;
@@ -11,6 +14,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public class SsaNodeScheduler extends IrGraphTraverser {
 
@@ -32,7 +37,7 @@ public class SsaNodeScheduler extends IrGraphTraverser {
     @Override
     protected void consume(Node node) {
         if (node instanceof Block block && visited.add(block)) {
-            schedules.computeIfAbsent(block, _ -> new ArrayList<>());
+            schedules.computeIfAbsent(block, _ -> List.of());
             block.predecessors().stream()
                     .map(Node::block)
                     .distinct()
@@ -54,6 +59,25 @@ public class SsaNodeScheduler extends IrGraphTraverser {
     }
 
     public Map<Block, List<Node>> getSchedules() {
-        return Map.copyOf(schedules);
+        Map<Block, List<Node>> finalSchedules = new HashMap<>();
+
+        for (Block block : schedules.keySet()) {
+            List<Node> schedule = schedules.get(block);
+            finalSchedules.put(block, Stream.concat(
+                    schedule.stream().filter(Predicate.not(SsaNodeScheduler::moveToEnd)),
+                    schedule.stream().filter(SsaNodeScheduler::moveToEnd)
+            ).toList());
+        }
+
+        return Map.copyOf(finalSchedules);
+    }
+
+    private static boolean moveToEnd(Node node) {
+        return switch (node) {
+            case JumpNode _, IfNode _ -> true;
+            case ProjNode projNode when projNode.projectionInfo() == ProjNode.SimpleProjectionInfo.IF_TRUE
+                    || projNode.projectionInfo() == ProjNode.SimpleProjectionInfo.IF_FALSE -> true;
+            default -> false;
+        };
     }
 }
