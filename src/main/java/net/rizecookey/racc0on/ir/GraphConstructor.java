@@ -150,7 +150,9 @@ class GraphConstructor {
     }
 
     public Node newReturn(Node result) {
-        return new ReturnNode(currentBlock(), readCurrentSideEffect(), result);
+        Node returnNode = new ReturnNode(currentBlock(), readCurrentSideEffect(), result);
+        currentBlock.addExit(returnNode);
+        return returnNode;
     }
 
     public Node newConstInt(int value) {
