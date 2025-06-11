@@ -16,7 +16,7 @@ import java.util.Set;
 
 public class PhiMoveScheduler extends IrGraphTraverser {
 
-    private final Set<Phi> visited = new HashSet<>();
+    private final Set<Node> visited = new HashSet<>();
     private final Map<Block, List<Pair<Phi, Node>>> phiMoves = new HashMap<>();
 
     @Override
@@ -31,6 +31,14 @@ public class PhiMoveScheduler extends IrGraphTraverser {
 
     @Override
     protected void consume(Node node) {
+        if (node instanceof Block block && visited.add(block)) {
+            block.predecessors().stream()
+                    .map(Node::block)
+                    .filter(pred -> !visited.contains(pred))
+                    .forEach(this::push);
+            return;
+        }
+
         if (!(node instanceof Phi phi) || !visited.add(phi)) {
             return;
         }
