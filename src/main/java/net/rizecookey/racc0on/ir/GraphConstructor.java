@@ -10,7 +10,6 @@ import net.rizecookey.racc0on.ir.node.Phi;
 import net.rizecookey.racc0on.ir.node.ProjNode;
 import net.rizecookey.racc0on.ir.node.ReturnNode;
 import net.rizecookey.racc0on.ir.node.StartNode;
-import net.rizecookey.racc0on.ir.node.operation.TernaryNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.AddNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.BitwiseAndNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.BitwiseOrNode;
@@ -146,14 +145,6 @@ class GraphConstructor {
         return newBinaryOp(NotEqNode::new, left, right);
     }
 
-    public Node newAnd(Node left, Node right) {
-        return optimizer.transform(new TernaryNode(currentBlock(), left, right, new ConstBoolNode(currentBlock(), false)));
-    }
-
-    public Node newOr(Node left, Node right) {
-        return optimizer.transform(new TernaryNode(currentBlock(), left, new ConstBoolNode(currentBlock(), true), right));
-    }
-
     public Node newNot(Node in) {
         return optimizer.transform(new NotNode(currentBlock(), in));
     }
@@ -194,10 +185,6 @@ class GraphConstructor {
 
     public Node newIf(Node condition) {
         return this.optimizer.transform(new IfNode(currentBlock(), condition));
-    }
-
-    public Node newTernary(Node condition, Node ifTrue, Node ifFalse) {
-        return this.optimizer.transform(new TernaryNode(currentBlock(), condition, ifTrue, ifFalse));
     }
 
     public Node newJump() {

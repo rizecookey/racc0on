@@ -1,6 +1,5 @@
 package net.rizecookey.racc0on.ir.node;
 
-import net.rizecookey.racc0on.ir.node.operation.TernaryNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.BinaryOperationNode;
 import net.rizecookey.racc0on.ir.node.operation.unary.UnaryOperationNode;
 import net.rizecookey.racc0on.ir.util.DebugInfo;
@@ -11,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /// The base class for all nodes.
-public sealed abstract class Node permits Block, ConstBoolNode, ConstIntNode, IfNode, JumpNode, Phi, ProjNode, ReturnNode, StartNode, TernaryNode, BinaryOperationNode, UnaryOperationNode {
+public sealed abstract class Node permits Block, ConstBoolNode, ConstIntNode, IfNode, JumpNode, Phi, ProjNode, ReturnNode, StartNode, BinaryOperationNode, UnaryOperationNode {
     private final IrGraph graph;
     private final Block block;
     private final List<Node> predecessors = new ArrayList<>();

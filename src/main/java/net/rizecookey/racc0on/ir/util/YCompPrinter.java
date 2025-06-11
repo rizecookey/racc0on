@@ -4,7 +4,6 @@ import net.rizecookey.racc0on.ir.IrGraph;
 import net.rizecookey.racc0on.ir.node.ConstBoolNode;
 import net.rizecookey.racc0on.ir.node.IfNode;
 import net.rizecookey.racc0on.ir.node.JumpNode;
-import net.rizecookey.racc0on.ir.node.operation.TernaryNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.BinaryOperationNode;
 import net.rizecookey.racc0on.ir.node.Block;
 import net.rizecookey.racc0on.ir.node.ConstIntNode;
@@ -247,7 +246,6 @@ public class YCompPrinter {
         return switch (node) {
             case BinaryOperationNode _ -> VcgColor.NORMAL;
             case UnaryOperationNode _ -> VcgColor.NORMAL;
-            case TernaryNode _ -> VcgColor.NORMAL;
             case Block _ -> VcgColor.NORMAL;
             case ConstIntNode _ -> VcgColor.NORMAL;
             case ConstBoolNode _ -> VcgColor.NORMAL;

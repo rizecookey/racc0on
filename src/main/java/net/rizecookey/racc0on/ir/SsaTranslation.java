@@ -1,6 +1,7 @@
 package net.rizecookey.racc0on.ir;
 
 import net.rizecookey.racc0on.ir.node.Block;
+import net.rizecookey.racc0on.ir.node.Phi;
 import net.rizecookey.racc0on.ir.node.operation.binary.DivNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.ModNode;
 import net.rizecookey.racc0on.ir.node.Node;
@@ -137,7 +138,15 @@ public class SsaTranslation {
 
         @Override
         public Optional<Node> visit(BinaryOperationTree binaryOperationTree, SsaTranslation data) {
+            OperatorType.Binary type = binaryOperationTree.operatorType();
+            if (type == OperatorType.Binary.AND) {
+                return Optional.of(transformAndToTernary(data, binaryOperationTree));
+            } else if (type == OperatorType.Binary.OR) {
+                return Optional.of(transformOrToTernary(data, binaryOperationTree));
+            }
+
             pushSpan(binaryOperationTree);
+
             Node lhs = binaryOperationTree.lhs().accept(this, data).orElseThrow();
             Node rhs = binaryOperationTree.rhs().accept(this, data).orElseThrow();
             Node res = switch (binaryOperationTree.operatorType()) {
@@ -157,11 +166,30 @@ public class SsaTranslation {
                 case GREATER_OR_EQUAL -> data.constructor.newGreaterOrEqual(lhs, rhs);
                 case EQUAL -> data.constructor.newEqual(lhs, rhs);
                 case NOT_EQUAL -> data.constructor.newNotEqual(lhs, rhs);
-                case AND -> data.constructor.newAnd(lhs, rhs);
-                case OR -> data.constructor.newOr(lhs, rhs);
+                default -> throw new IllegalStateException("Unexpected value: " + binaryOperationTree.operatorType());
             };
             popSpan();
             return Optional.of(res);
+        }
+
+        private Node transformOrToTernary(SsaTranslation data, BinaryOperationTree tree) {
+            if (tree.operatorType() != OperatorType.Binary.OR) {
+                throw new IllegalArgumentException("Expected AND binary operation tree");
+            }
+            TernaryExpressionTree ternary = new TernaryExpressionTree(tree.lhs(), new BoolLiteralTree(true, tree.span()),
+                    tree.rhs());
+
+            return ternary.accept(this, data).orElseThrow();
+        }
+
+        private Node transformAndToTernary(SsaTranslation data, BinaryOperationTree tree) {
+            if (tree.operatorType() != OperatorType.Binary.AND) {
+                throw new IllegalArgumentException("Expected OR binary operation tree");
+            }
+            TernaryExpressionTree ternary = new TernaryExpressionTree(tree.lhs(), tree.rhs(),
+                    new BoolLiteralTree(false, tree.span()));
+
+            return ternary.accept(this, data).orElseThrow();
         }
 
         @Override
@@ -370,9 +398,26 @@ public class SsaTranslation {
             pushSpan(ternaryExpressionTree);
 
             Node condition = ternaryExpressionTree.condition().accept(this, data).orElseThrow();
+            Node ifNode = data.constructor.newIf(condition);
+            Node ifTrueJump = data.constructor.newIfTrueProj(ifNode);
+            Node ifFalseJump = data.constructor.newIfFalseProj(ifNode);
+
+            Block ifTrueBlock = data.constructor.newBlock(ifTrueJump);
+            data.constructor.sealBlock(ifTrueBlock);
             Node ifTrue = ternaryExpressionTree.ifBranch().accept(this, data).orElseThrow();
+            Node ifTrueExitJump = data.constructor.newJump();
+
+            Block ifFalseBlock = data.constructor.newBlock(ifFalseJump);
+            data.constructor.sealBlock(ifFalseBlock);
             Node ifFalse = ternaryExpressionTree.elseBranch().accept(this, data).orElseThrow();
-            Node res = data.constructor.newTernary(condition, ifTrue, ifFalse);
+            Node ifFalseExitJump = data.constructor.newJump();
+
+            Block followingBlock = data.constructor.newBlock(ifTrueExitJump, ifFalseExitJump);
+            data.constructor.sealBlock(followingBlock);
+
+            Phi res = data.constructor.newPhi();
+            res.appendOperand(ifTrue);
+            res.appendOperand(ifFalse);
 
             popSpan();
             return Optional.of(res);
