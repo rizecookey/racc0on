@@ -25,4 +25,9 @@ public final class ConstBoolNode extends Node {
 
         return false;
     }
+
+    @Override
+    protected String info() {
+        return "[" + value() + "]";
+    }
 }
