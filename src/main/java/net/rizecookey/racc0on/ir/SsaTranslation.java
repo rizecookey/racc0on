@@ -314,8 +314,10 @@ public class SsaTranslation {
                 falseJump = data.constructor.hasUnconditionalJump() ? null : data.constructor.newJump();
             }
 
-            Block followingBlock = data.constructor.newBlock(Stream.of(trueJump, falseJump).filter(Objects::nonNull).toList());
-            data.constructor.sealBlock(followingBlock);
+            if (trueJump != null || falseJump != null) {
+                Block followingBlock = data.constructor.newBlock(Stream.of(trueJump, falseJump).filter(Objects::nonNull).toList());
+                data.constructor.sealBlock(followingBlock);
+            }
 
             popSpan();
             return NOT_AN_EXPRESSION;
