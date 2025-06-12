@@ -136,9 +136,8 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
 
     private void labelBlocks() {
         String procedureName = schedule.programGraph().name();
-        int index = 0;
         for (Block block : schedule.blockSchedule()) {
-            String label = block == schedule.programGraph().startBlock() ? procedureName : procedureName + "$" + index++;
+            String label = block == schedule.programGraph().startBlock() ? procedureName : procedureName + "$" + block.id();
             blockLabels.put(block, label);
         }
     }
