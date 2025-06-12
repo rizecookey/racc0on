@@ -32,7 +32,9 @@ public class x8664ShiftOp implements x8664Op {
     @Override
     public void makeStoreRequests(StoreRequestService<x8664Op, x8664Store> service) {
         if (!(shiftee instanceof ConstIntNode)) {
-            shifteeRef = service.requestInputStore(this, shiftee);
+            shifteeRef = service.requestInputStore(this, shiftee, StoreRequestService.Conditions.<x8664Store>builder()
+                    .collidesWith(x8664Register.RCX)
+                    .build());
         }
 
         if (!(shiftCount instanceof ConstIntNode)) {
@@ -54,6 +56,7 @@ public class x8664ShiftOp implements x8664Op {
                 ? new x8664Immediate(c.value())
                 : storeSupplier.resolve(shiftCountRef).orElseThrow();
 
+        // TODO check for liveness before backing up to potentially save moves
         if (!shiftCount.equals(x8664Register.RCX)) {
             generator.move(x8664Register.MEMORY_ACCESS_RESERVE, x8664Register.RCX);
             generator.move(x8664Register.RCX, shiftCount);
