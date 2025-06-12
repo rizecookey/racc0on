@@ -45,6 +45,9 @@ public class PhiMoveScheduler extends IrGraphTraverser {
 
         for (int i = 0; i < phi.predecessors().size(); i++) {
             Node predecessor = NodeSupport.predecessorSkipProj(node, i);
+            if (!NodeSupport.providesValue(predecessor)) {
+                continue;
+            }
             Block block = phi.block().predecessor(i).block();
             phiMoves.computeIfAbsent(block, _ -> new ArrayList<>()).addFirst(new Pair<>(phi, predecessor));
         }
