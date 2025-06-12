@@ -26,7 +26,7 @@ public class SsaNodeScheduler extends IrGraphTraverser {
     protected boolean visit(Node node) {
         if (addSeen(node)) {
             node.predecessors().stream()
-                    .filter(pred -> !visited.contains(pred))
+                    .filter(Predicate.not(this::hasSeen))
                     .forEach(this::push);
             return true;
         }
@@ -41,7 +41,7 @@ public class SsaNodeScheduler extends IrGraphTraverser {
             block.predecessors().stream()
                     .map(Node::block)
                     .distinct()
-                    .filter(pred -> !visited.contains(pred))
+                    .filter(Predicate.not(this::hasSeen))
                     .forEach(this::push);
             return;
         }

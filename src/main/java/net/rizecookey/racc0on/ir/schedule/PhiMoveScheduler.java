@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
 public class PhiMoveScheduler extends IrGraphTraverser {
 
@@ -22,7 +23,7 @@ public class PhiMoveScheduler extends IrGraphTraverser {
     @Override
     protected boolean visit(Node node) {
         if (addSeen(node)) {
-            node.predecessors().forEach(this::push);
+            node.predecessors().stream().filter(Predicate.not(this::hasSeen)).forEach(this::push);
             return true;
         }
 
@@ -34,7 +35,7 @@ public class PhiMoveScheduler extends IrGraphTraverser {
         if (node instanceof Block block && visited.add(block)) {
             block.predecessors().stream()
                     .map(Node::block)
-                    .filter(pred -> !visited.contains(pred))
+                    .filter(Predicate.not(this::hasSeen))
                     .forEach(this::push);
             return;
         }
