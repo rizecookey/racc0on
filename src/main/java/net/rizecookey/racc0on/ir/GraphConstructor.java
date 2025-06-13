@@ -46,7 +46,7 @@ class GraphConstructor {
     private final Map<Block, Map<Name, Phi>> incompletePhis = new HashMap<>();
     private final Map<Block, Node> currentSideEffect = new HashMap<>();
     private final Map<Block, Phi> incompleteSideEffectPhis = new HashMap<>();
-    private final Map<Block, JumpNode> jumps = new HashMap<>();
+    private final Set<Block> hasUnconditionalExit = new HashSet<>();
     private final Set<Block> sealedBlocks = new HashSet<>();
     private Block currentBlock;
 
@@ -150,8 +150,12 @@ class GraphConstructor {
     }
 
     public Node newReturn(Node result) {
+        if (hasUnconditionalExit()) {
+            throw new IllegalStateException(currentBlock() + " already has an unconditional exit");
+        }
         Node returnNode = new ReturnNode(currentBlock(), readCurrentSideEffect(), result);
-        currentBlock.addExit(returnNode);
+        currentBlock().addExit(returnNode);
+        hasUnconditionalExit.add(currentBlock());
         return returnNode;
     }
 
@@ -174,14 +178,32 @@ class GraphConstructor {
     }
 
     public Node newIfTrueProj(Node node) {
+        if (hasUnconditionalExit()) {
+            throw new IllegalStateException(currentBlock() + " already has an unconditional exit");
+        }
         ProjNode proj = new ProjNode(currentBlock(), node, ProjNode.SimpleProjectionInfo.IF_TRUE);
         currentBlock().addExit(proj);
+        if (currentBlock().getExits().stream()
+                .anyMatch(exit -> exit instanceof ProjNode projNode
+                        && projNode.projectionInfo() == ProjNode.SimpleProjectionInfo.IF_FALSE
+                        && projNode.predecessor(ProjNode.IN).equals(node))) {
+            hasUnconditionalExit.add(currentBlock());
+        }
         return proj;
     }
 
     public Node newIfFalseProj(Node node) {
+        if (hasUnconditionalExit()) {
+            throw new IllegalStateException(currentBlock() + " already has an unconditional exit");
+        }
         ProjNode proj = new ProjNode(currentBlock(), node, ProjNode.SimpleProjectionInfo.IF_FALSE);
         currentBlock().addExit(proj);
+        if (currentBlock().getExits().stream()
+                .anyMatch(exit -> exit instanceof ProjNode projNode
+                        && projNode.projectionInfo() == ProjNode.SimpleProjectionInfo.IF_TRUE
+                        && projNode.predecessor(ProjNode.IN).equals(node))) {
+            hasUnconditionalExit.add(currentBlock());
+        }
         return proj;
     }
 
@@ -190,14 +212,17 @@ class GraphConstructor {
     }
 
     public Node newJump() {
+        if (hasUnconditionalExit()) {
+            throw new IllegalStateException(currentBlock() + " already has an unconditional exit");
+        }
         JumpNode jumpNode = new JumpNode(currentBlock());
-        jumps.put(currentBlock(), jumpNode);
+        hasUnconditionalExit.add(currentBlock());
         currentBlock().addExit(jumpNode);
         return jumpNode;
     }
 
-    public boolean hasUnconditionalJump() {
-        return jumps.containsKey(currentBlock());
+    public boolean hasUnconditionalExit() {
+        return hasUnconditionalExit.contains(currentBlock());
     }
 
     public Block newBlock(Node... predecessors) {
