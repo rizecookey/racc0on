@@ -53,11 +53,11 @@ public class Graph<T> {
     }
 
     public Set<T> getNeighbors(T node) {
-        return Set.copyOf(edges.containsKey(node) ? edges.get(node) : new LinkedHashSet<>());
+        return Collections.unmodifiableSequencedSet(edges.containsKey(node) ? edges.get(node) : new LinkedHashSet<>());
     }
 
     public Map<T, Set<T>> getEdges() {
-        return Map.copyOf(edges);
+        return Collections.unmodifiableMap(edges);
     }
 
     public void addEdge(T node1, T node2) {
