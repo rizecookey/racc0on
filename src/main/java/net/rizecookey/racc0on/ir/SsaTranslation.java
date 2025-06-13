@@ -85,6 +85,36 @@ public class SsaTranslation {
         private final Deque<DebugInfo> debugStack = new ArrayDeque<>();
         private final Deque<LoopInfo> transformerStack = new ArrayDeque<>();
 
+        private CancellationRange currentCancellation = CancellationRange.NONE;
+
+        private enum CancellationRange {
+            NONE, LOOP, RETURN
+        }
+
+        private void resetInstructionCancellation(CancellationRange range) {
+            if (range.ordinal() >= currentCancellation.ordinal()) {
+                currentCancellation = CancellationRange.NONE;
+            }
+        }
+
+        private void resetInstructionCancellation() {
+            resetInstructionCancellation(CancellationRange.values()[CancellationRange.values().length - 1]);
+        }
+
+        private void cancelFurtherInstructions(CancellationRange range) {
+            if (range.ordinal() > currentCancellation.ordinal()) {
+                currentCancellation = range;
+            }
+        }
+
+        private boolean instructionsCancelled() {
+            return currentCancellation != CancellationRange.NONE;
+        }
+
+        private CancellationRange instructionCancellationRange() {
+            return currentCancellation;
+        }
+
         private void pushSpan(Tree tree) {
             this.debugStack.push(DebugInfoHelper.getDebugInfo());
             DebugInfoHelper.setDebugInfo(new DebugInfo.SourceInfo(tree.span()));
@@ -196,11 +226,11 @@ public class SsaTranslation {
         public Optional<Node> visit(BlockTree blockTree, SsaTranslation data) {
             pushSpan(blockTree);
             for (StatementTree statement : blockTree.statements()) {
-                statement.accept(this, data);
                 // skip everything after a return, continue or break in a block
-                if (statement instanceof ReturnTree || statement instanceof LoopControlTree) {
+                if (instructionsCancelled()) {
                     break;
                 }
+                statement.accept(this, data);
             }
             popSpan();
             return NOT_AN_EXPRESSION;
@@ -285,6 +315,7 @@ public class SsaTranslation {
             Node node = returnTree.expression().accept(this, data).orElseThrow();
             Node ret = data.constructor.newReturn(node);
             data.constructor.graph().endBlock().addPredecessor(ret);
+            cancelFurtherInstructions(CancellationRange.RETURN);
             popSpan();
             return NOT_AN_EXPRESSION;
         }
@@ -305,19 +336,29 @@ public class SsaTranslation {
             Block trueBranch = data.constructor.newBlock(trueProj);
             data.constructor.sealBlock(trueBranch);
             ifElseTree.thenBranch().accept(this, data);
-            Node trueJump = data.constructor.hasUnconditionalJump() ? null : data.constructor.newJump();
-            Node falseJump = falseProj;
+            CancellationRange trueBranchCancellationRange = instructionCancellationRange();
+            resetInstructionCancellation();
+            Node trueJump = data.constructor.hasUnconditionalExit() ? null : data.constructor.newJump();
+
+            Block falseBranch = data.constructor.newBlock(falseProj);
+            data.constructor.sealBlock(falseBranch);
+            CancellationRange falseBranchCancellationRange = CancellationRange.NONE;
             if (ifElseTree.elseBranch() != null) {
-                Block falseBranch = data.constructor.newBlock(falseProj);
-                data.constructor.sealBlock(falseBranch);
                 ifElseTree.elseBranch().accept(this, data);
-                falseJump = data.constructor.hasUnconditionalJump() ? null : data.constructor.newJump();
+                falseBranchCancellationRange = instructionCancellationRange();
+                resetInstructionCancellation();
             }
+            Node falseJump = data.constructor.hasUnconditionalExit() ? null : data.constructor.newJump();
 
             if (trueJump != null || falseJump != null) {
                 Block followingBlock = data.constructor.newBlock(Stream.of(trueJump, falseJump).filter(Objects::nonNull).toList());
                 data.constructor.sealBlock(followingBlock);
             }
+
+            cancelFurtherInstructions(CancellationRange.values()[Math.min(
+                    trueBranchCancellationRange.ordinal(),
+                    falseBranchCancellationRange.ordinal()
+            )]);
 
             popSpan();
             return NOT_AN_EXPRESSION;
@@ -343,17 +384,19 @@ public class SsaTranslation {
             Node ifTrue = data.constructor.newIfTrueProj(ifNode);
             Node ifFalse = data.constructor.newIfFalseProj(ifNode);
 
-            Block followingBlock = data.constructor.newBlock(ifFalse);
+            Block exitBlock = data.constructor.newBlock(ifFalse);
+            data.constructor.sealBlock(exitBlock);
+            Node jumpToFollowing = data.constructor.newJump();
+
+            Block followingBlock = data.constructor.newBlock(jumpToFollowing);
 
             Block bodyBlock = data.constructor.newBlock(ifTrue);
             data.constructor.sealBlock(bodyBlock);
             transformerStack.push(new LoopInfo(conditionBlock, followingBlock, forTree.step()));
             forTree.body().accept(this, data);
+            resetInstructionCancellation();
             transformerStack.pop();
-            if (!data.constructor.hasUnconditionalJump()) {
-                Node jumpToStep = data.constructor.newJump();
-                Block stepBlock = data.constructor.newBlock(jumpToStep);
-                data.constructor.sealBlock(stepBlock);
+            if (!data.constructor.hasUnconditionalExit()) {
                 if (forTree.step() != null) {
                     forTree.step().accept(this, data);
                 }
@@ -377,20 +420,19 @@ public class SsaTranslation {
             }
             LoopInfo loop = transformerStack.peek();
 
-            Node jump = data.constructor.newJump();
             Node target = switch (loopControlTree.type()) {
                 case CONTINUE -> {
-                    Block stepBlock = data.constructor.newBlock(jump);
-                    data.constructor.sealBlock(stepBlock);
                     if (loop.step() != null) {
                         loop.step().accept(this, data);
                     }
-                    jump = data.constructor.newJump();
                     yield loop.continueTarget();
                 }
                 case BREAK -> loop.breakTarget();
             };
+            Node jump = data.constructor.newJump();
             target.addPredecessor(jump);
+
+            cancelFurtherInstructions(CancellationRange.LOOP);
 
             return NOT_AN_EXPRESSION;
         }
