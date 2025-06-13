@@ -1,6 +1,5 @@
 package net.rizecookey.racc0on.semantic;
 
-import net.rizecookey.racc0on.utils.Position;
 import net.rizecookey.racc0on.utils.Span;
 import net.rizecookey.racc0on.parser.ast.AssignmentTree;
 import net.rizecookey.racc0on.parser.ast.BinaryOperationTree;
@@ -27,11 +26,7 @@ import net.rizecookey.racc0on.parser.type.BasicType;
 import net.rizecookey.racc0on.parser.type.Type;
 import net.rizecookey.racc0on.parser.visitor.Visitor;
 
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 
 public class TypeAnalysis implements Visitor<Namespace<Type>, Optional<Type>> {
     @Override
@@ -197,24 +192,13 @@ public class TypeAnalysis implements Visitor<Namespace<Type>, Optional<Type>> {
         return expected;
     }
 
-    private Type expectTypeSame(Namespace<Type> namespace, Tree... trees) {
-        List<Tree> treesList = Arrays.asList(trees);
-        List<Type> types = treesList.stream()
-                .map(tree -> tree.accept(this, namespace).orElseThrow())
-                .distinct()
-                .toList();
-        if (types.size() > 1) {
-            Position start = treesList.stream()
-                    .map(tree -> tree.span().start())
-                    .min(Comparator.comparing(Function.identity()))
-                    .orElseThrow();
-            Position end = treesList.stream()
-                    .map(tree -> tree.span().end())
-                    .max(Comparator.comparing(Function.identity()))
-                    .orElseThrow();
-            throw new SemanticException(new Span.SimpleSpan(start, end), "mismatched types, expected type to be the same");
+    private Type expectTypeSame(Namespace<Type> namespace, Tree first, Tree second) {
+        Type firstType = first.accept(this, namespace).orElseThrow();
+        Type secondType = second.accept(this, namespace).orElseThrow();
+        if (!firstType.equals(secondType)) {
+            throw new SemanticException(first.span().merge(second.span()), "mismatched types, expected type to be the same");
         }
 
-        return types.getFirst();
+        return firstType;
     }
 }
