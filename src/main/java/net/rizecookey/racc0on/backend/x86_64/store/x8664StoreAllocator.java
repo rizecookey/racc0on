@@ -12,6 +12,7 @@ import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664Op;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -39,6 +40,6 @@ public class x8664StoreAllocator {
         };
 
         Map<StoreReference<x8664Store>, x8664Store> coloring = interference.createColoring(availableLocations, stackAllocator);
-        return new Allocation(liveness, Map.copyOf(coloring), stackAllocator.size * STACK_STORE_SIZE);
+        return new Allocation(liveness, Collections.unmodifiableMap(coloring), stackAllocator.size * STACK_STORE_SIZE);
     }
 }

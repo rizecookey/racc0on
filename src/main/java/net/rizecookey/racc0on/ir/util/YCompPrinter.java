@@ -15,6 +15,7 @@ import net.rizecookey.racc0on.ir.node.ReturnNode;
 import net.rizecookey.racc0on.ir.node.StartNode;
 import net.rizecookey.racc0on.ir.node.operation.unary.UnaryOperationNode;
 import net.rizecookey.racc0on.ir.schedule.SsaSchedule;
+import net.rizecookey.racc0on.ir.schedule.SsaScheduler;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,11 +39,11 @@ public class YCompPrinter {
     private final IrGraph graph;
     private int nodeCounter = 0;
     private int blockCounter = 0;
-    private SsaSchedule schedule;
+    private final SsaSchedule schedule;
 
     public YCompPrinter(IrGraph graph) {
         this.graph = graph;
-        this.schedule = new SsaSchedule(List.of(), Map.of(), Map.of(), graph);
+        this.schedule = SsaScheduler.schedule(graph);
     }
 
     private void prepare(Node node, Set<Node> seen) {
@@ -64,8 +65,6 @@ public class YCompPrinter {
         if (node == this.graph.endBlock()) {
             this.clusters.put(this.graph.endBlock(), Set.of());
         }
-
-        schedule = SsaSchedule.generate(graph);
     }
 
     public static String print(IrGraph graph) {

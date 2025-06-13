@@ -75,6 +75,7 @@ import net.rizecookey.racc0on.ir.schedule.SsaSchedule;
 import net.rizecookey.racc0on.ir.util.NodeSupport;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -191,7 +192,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
             throw new IllegalStateException("No exit block found");
         }
 
-        return new OperationSchedule<>(blocks, entry, Set.copyOf(exits));
+        return new OperationSchedule<>(blocks, entry, Collections.unmodifiableSet(exits));
     }
 
     public SequencedSet<StoreReference<x8664Store>> getReferencesLiveAt(x8664Op at) {

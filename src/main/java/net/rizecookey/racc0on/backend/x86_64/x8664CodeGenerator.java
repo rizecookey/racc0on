@@ -5,6 +5,7 @@ import net.rizecookey.racc0on.backend.CodeGenerator;
 import net.rizecookey.racc0on.backend.instruction.InstructionBlock;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664Instr;
 import net.rizecookey.racc0on.ir.schedule.SsaSchedule;
+import net.rizecookey.racc0on.ir.schedule.SsaScheduler;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,7 +34,7 @@ public class x8664CodeGenerator implements CodeGenerator {
         initializeTextSegment();
 
         for (IrGraph graph : program) {
-            SsaSchedule schedule = SsaSchedule.generate(graph);
+            SsaSchedule schedule = SsaScheduler.schedule(graph);
             generateProcedure(schedule);
         }
 

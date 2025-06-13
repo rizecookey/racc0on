@@ -12,19 +12,19 @@ public abstract class IrGraphTraverser {
     private final Set<Node> seen = new HashSet<>();
     private final Deque<Node> stack = new ArrayDeque<>();
 
-    public void traverse(IrGraph graph) {
-        stack.add(graph.endBlock());
+    public void traverse(Node node) {
+        stack.add(node);
 
         while (!stack.isEmpty()) {
-            Node node = stack.peek();
+            Node top = stack.peek();
 
-            if (visit(node)) {
+            if (visit(top)) {
                 continue;
             }
 
             stack.pop();
 
-            consume(node);
+            consume(top);
         }
     }
 
