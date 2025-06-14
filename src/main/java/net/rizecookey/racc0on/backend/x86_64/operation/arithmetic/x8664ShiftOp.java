@@ -18,7 +18,7 @@ public class x8664ShiftOp implements x8664Op {
     private final Direction direction;
     private final Node shiftee, shiftCount, out;
 
-    private StoreReference<x8664Store> shifteeRef, shiftCountRef, outRef;
+    private StoreReference<x8664Store> shifteeRef, shiftCountRef, outRef, backupRef;
 
     public x8664ShiftOp(Direction direction, Operands.Binary<Node> operands) {
         this.direction = direction;
@@ -26,7 +26,7 @@ public class x8664ShiftOp implements x8664Op {
         this.shiftee = operands.inLeft();
         this.shiftCount = operands.inRight();
 
-        shifteeRef = shiftCountRef = outRef = new StoreReference.Null<>();
+        shifteeRef = shiftCountRef = outRef = backupRef = new StoreReference.Null<>();
     }
 
     @Override
@@ -44,6 +44,10 @@ public class x8664ShiftOp implements x8664Op {
         outRef = service.requestOutputStore(this, out, StoreRequestService.Conditions.<x8664Store>builder()
                 .collidesWith(x8664Register.RCX)
                 .build());
+
+        backupRef = service.requestAdditional(this, StoreRequestService.Conditions.<x8664Store>builder()
+                .collidesWith(x8664Register.RCX)
+                .build());
     }
 
     @Override
@@ -56,9 +60,12 @@ public class x8664ShiftOp implements x8664Op {
                 ? new x8664Immediate(c.value())
                 : storeSupplier.resolve(shiftCountRef).orElseThrow();
 
+        // TODO eliminate this if possible
+        x8664Store backup = storeSupplier.resolve(backupRef).orElseThrow();
+
         // TODO check for liveness before backing up to potentially save moves
         if (!shiftCount.equals(x8664Register.RCX)) {
-            generator.move(x8664Register.MEMORY_ACCESS_RESERVE, x8664Register.RCX);
+            generator.move(backup, x8664Register.RCX);
             generator.move(x8664Register.RCX, shiftCount);
         }
 
@@ -70,7 +77,7 @@ public class x8664ShiftOp implements x8664Op {
                 x8664Operand.Size.DOUBLE_WORD, x8664Operand.Size.BYTE, out, x8664Register.RCX);
 
         if (!shiftCount.equals(x8664Register.RCX)) {
-            generator.move(x8664Register.RCX, x8664Register.MEMORY_ACCESS_RESERVE);
+            generator.move(x8664Register.RCX, backup);
         }
     }
 
