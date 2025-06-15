@@ -59,13 +59,14 @@ public class x8664ShiftOp implements x8664Op {
         x8664Operand shiftCount = this.shiftCount instanceof ConstIntNode c
                 ? new x8664Immediate(c.value())
                 : storeSupplier.resolve(shiftCountRef).orElseThrow();
-
-        // TODO eliminate this if possible
         x8664Store backup = storeSupplier.resolve(backupRef).orElseThrow();
 
-        // TODO check for liveness before backing up to potentially save moves
+        boolean backupRcx = false;
         if (!shiftCount.equals(x8664Register.RCX)) {
-            generator.move(backup, x8664Register.RCX);
+            if (generator.getLiveAt(this).contains(x8664Register.RCX)) {
+                backupRcx = true;
+                generator.move(backup, x8664Register.RCX);
+            }
             generator.move(x8664Register.RCX, shiftCount);
         }
 
@@ -76,7 +77,7 @@ public class x8664ShiftOp implements x8664Op {
         generator.write(direction == Direction.LEFT ? x8664InstrType.SAL : x8664InstrType.SAR,
                 x8664Operand.Size.DOUBLE_WORD, x8664Operand.Size.BYTE, out, x8664Register.RCX);
 
-        if (!shiftCount.equals(x8664Register.RCX)) {
+        if (backupRcx) {
             generator.move(x8664Register.RCX, backup);
         }
     }
