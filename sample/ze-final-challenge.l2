@@ -1,0 +1,32 @@
+// edited from compiler.vads.kit.edu
+int main() {
+  int a = 55;
+  int b = 57;
+  int c = 63;
+  int d = 49;
+  int e = 61;
+  int f = 96;
+  int g = 51;
+  int h = 65;
+  int i = 10;
+  int j = 31;
+  int k = 31;
+  int l = 50;
+  int m = 30;
+  int n = 49;
+  int o = 76;
+  int p = 12;
+  int q = 44;
+  int r = 21;
+  int s = 89;
+  int t = 69;
+  int u = 20;
+  int v = 98;
+  int w = 83;
+  int x = 41;
+  int y = 15;
+  int z = 88;               /*    Epic tower of simple arithmetic operations    */
+                           a=a*b-c%d+e/f/g+h+i%j-k-l- m -n-o*p*q/r*s-t%u%v+w%x/y+z;
+                          b=a+b*c/d-e*f/g%h-i/j+k%l /m*n+o*p/q/r+s-t /u*v/w+x -y%z;
+                          return b;
+}

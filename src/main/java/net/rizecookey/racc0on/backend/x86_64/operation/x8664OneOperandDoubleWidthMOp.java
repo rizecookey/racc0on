@@ -43,11 +43,11 @@ public class x8664OneOperandDoubleWidthMOp implements x8664Op {
     }
 
     private void forEachTaintedBackupPair(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier,
-                                BiConsumer<x8664Store, x8664Store> consumer) {
+                                x8664Store outStore, BiConsumer<x8664Store, x8664Store> consumer) {
         SequencedSet<x8664Store> live = generator.getLiveAt(this);
         for (int i = 0; i < tainted.size(); i++) {
             x8664Register taintedReg = tainted.get(i);
-            if (!live.contains(taintedReg)) {
+            if (!live.contains(taintedReg) || taintedReg.equals(outStore)) {
                 continue;
             }
 
@@ -56,12 +56,12 @@ public class x8664OneOperandDoubleWidthMOp implements x8664Op {
         }
     }
 
-    private void backupTainted(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {
-        forEachTaintedBackupPair(generator, storeSupplier, (tainted, backup) -> generator.move(backup, tainted));
+    private void backupTainted(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier, x8664Store outStore) {
+        forEachTaintedBackupPair(generator, storeSupplier, outStore, (tainted, backup) -> generator.move(backup, tainted));
     }
 
-    private void restoreTainted(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {
-        forEachTaintedBackupPair(generator, storeSupplier, generator::move);
+    private void restoreTainted(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier, x8664Store outStore) {
+        forEachTaintedBackupPair(generator, storeSupplier, outStore, generator::move);
     }
 
     @Override
@@ -85,7 +85,7 @@ public class x8664OneOperandDoubleWidthMOp implements x8664Op {
         x8664Store inLeftOp = storeSupplier.resolve(inLeftRef).orElseThrow();
         x8664Store inRightOp = storeSupplier.resolve(inRightRef).orElseThrow();
 
-        backupTainted(generator, storeSupplier);
+        backupTainted(generator, storeSupplier, outOp);
 
         x8664Store realRight = inRightOp;
         if (realRight instanceof x8664Register inRightRegister && SELF_TAINTED.contains(inRightRegister)) {
@@ -103,6 +103,6 @@ public class x8664OneOperandDoubleWidthMOp implements x8664Op {
             generator.move(outOp, outData);
         }
 
-        restoreTainted(generator, storeSupplier);
+        restoreTainted(generator, storeSupplier, outOp);
     }
 }
