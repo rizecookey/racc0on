@@ -64,14 +64,12 @@ public class SsaScheduler extends IrGraphTraverser {
         List<Node> schedule = scheduler.getSchedule();
         schedules.put(block, schedule);
 
-        for (Node inner : schedule) {
-            for (Node pred : NodeSupport.predecessorsSkipProj(inner)) {
-                if (!(pred instanceof Phi phi) || !phisVisited.add(phi)) {
-                    continue;
-                }
-
-                schedulePhiMoves(phi);
+        for (Node inner : schedule.reversed()) {
+            if (!(inner instanceof Phi phi) || !phisVisited.add(phi) || NodeSupport.isSideEffect(phi)) {
+                continue;
             }
+
+            schedulePhiMoves(phi);
         }
     }
 
@@ -80,7 +78,7 @@ public class SsaScheduler extends IrGraphTraverser {
             Node pred = NodeSupport.predecessorSkipProj(phi, i);
             Block block = phi.block().predecessor(i).block();
 
-            phiMoves.computeIfAbsent(block, _ -> new ArrayList<>()).addFirst(new Pair<>(phi, pred));
+            phiMoves.computeIfAbsent(block, _ -> new ArrayList<>()).add(new Pair<>(phi, pred));
         }
     }
 

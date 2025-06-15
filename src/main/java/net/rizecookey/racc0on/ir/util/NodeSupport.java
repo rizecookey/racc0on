@@ -46,4 +46,16 @@ public final class NodeSupport {
                 })
                 .toList();
     }
+
+    public static boolean isSideEffect(Phi phi) {
+        for (Node pred : phi.predecessors()) {
+            return switch (pred) {
+                case ProjNode proj when proj.projectionInfo() == ProjNode.SimpleProjectionInfo.SIDE_EFFECT -> true;
+                case Phi predPhi -> isSideEffect(predPhi);
+                default -> false;
+            };
+        }
+
+        return false;
+    }
 }
