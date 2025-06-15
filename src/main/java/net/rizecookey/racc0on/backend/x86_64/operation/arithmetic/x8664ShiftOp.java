@@ -31,23 +31,20 @@ public class x8664ShiftOp implements x8664Op {
 
     @Override
     public void makeStoreRequests(StoreRequestService<x8664Op, x8664Store> service) {
+        StoreRequestService.Conditions<x8664Store> collidesWithRcx = StoreRequestService.Conditions.<x8664Store>builder()
+                .collidesWith(x8664Register.RCX)
+                .build();
         if (!(shiftee instanceof ConstIntNode)) {
-            shifteeRef = service.requestInputStore(this, shiftee, StoreRequestService.Conditions.<x8664Store>builder()
-                    .collidesWith(x8664Register.RCX)
-                    .build());
+            shifteeRef = service.requestInputStore(this, shiftee, collidesWithRcx);
         }
 
         if (!(shiftCount instanceof ConstIntNode)) {
             shiftCountRef = service.requestInputStore(this, shiftCount);
         }
 
-        outRef = service.requestOutputStore(this, out, StoreRequestService.Conditions.<x8664Store>builder()
-                .collidesWith(x8664Register.RCX)
-                .build());
+        outRef = service.requestOutputStore(this, out, collidesWithRcx);
 
-        backupRef = service.requestAdditional(this, StoreRequestService.Conditions.<x8664Store>builder()
-                .collidesWith(x8664Register.RCX)
-                .build());
+        backupRef = service.requestAdditional(this, collidesWithRcx);
     }
 
     @Override
