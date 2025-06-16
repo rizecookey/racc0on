@@ -4,6 +4,8 @@ import net.rizecookey.racc0on.backend.x86_64.operation.arithmetic.x8664ShiftOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664EmptyOpLike;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664IfElseOpLike;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664OpLike;
+import net.rizecookey.racc0on.backend.x86_64.optimization.x8664InstrOptimization;
+import net.rizecookey.racc0on.backend.x86_64.optimization.x8664JumpOptimization;
 import net.rizecookey.racc0on.ir.node.ConstBoolNode;
 import net.rizecookey.racc0on.ir.node.IfNode;
 import net.rizecookey.racc0on.ir.node.JumpNode;
@@ -42,7 +44,6 @@ import net.rizecookey.racc0on.backend.store.StoreReference;
 import net.rizecookey.racc0on.backend.store.StoreRequests;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664Instr;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664InstrType;
-import net.rizecookey.racc0on.backend.x86_64.instruction.x8664InstructionStream;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Register;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664StackStore;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Store;
@@ -69,7 +70,6 @@ import net.rizecookey.racc0on.backend.x86_64.operation.x8664PhiMoveOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664RetOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.arithmetic.x8664SubOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.logic.x8664XorOp;
-import net.rizecookey.racc0on.backend.x86_64.optimization.x8664AsmOptimization;
 import net.rizecookey.racc0on.backend.x86_64.store.x8664StoreAllocator;
 import net.rizecookey.racc0on.ir.schedule.SsaSchedule;
 import net.rizecookey.racc0on.ir.util.NodeSupport;
@@ -128,9 +128,11 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         List<InstructionBlock<x8664Instr>> blocks = new ArrayList<>();
         for (OperationBlock<x8664Op> opBlock : opSchedule.blocks().values()) {
             opBlock.operations().forEach(op -> op.write(this, ref -> Optional.ofNullable(locations.get(ref))));
-            blocks.add(new InstructionBlock<>(opBlock.label(), List.copyOf(performOptimizations())));
+            blocks.add(new InstructionBlock<>(opBlock.label(), new ArrayList<>(instructions)));
             instructions.clear();
         }
+
+        applyOptimizations(blocks);
 
         return blocks;
     }
@@ -209,25 +211,12 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
                 .collect(Collectors.joining("\n"));
     }
 
-    private List<x8664Instr> performOptimizations() {
-        x8664InstructionStream stream = new x8664InstructionStream(instructions);
-        List<x8664AsmOptimization> optimizers = List.of();
-        int index = 0;
+    private void applyOptimizations(List<InstructionBlock<x8664Instr>> instructions) {
+        List<x8664InstrOptimization> optimizations = List.of(new x8664JumpOptimization());
 
-        outerLoop:
-        while (index < stream.size()) {
-            for (x8664AsmOptimization optimizer : optimizers) {
-                optimizer.performOptimization(index);
-                if (stream.isMarkedDirty()) {
-                    index = stream.getLowestModifiedIndex();
-                    stream.resetDirtyMark();
-                    continue outerLoop;
-                }
-            }
-            index++;
+        for (var optimization : optimizations) {
+            optimization.accept(instructions);
         }
-
-        return stream.toInstructionList();
     }
 
     public void prepareStack() {
