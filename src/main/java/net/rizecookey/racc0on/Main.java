@@ -60,11 +60,13 @@ public class Main {
 
         LOGGER.prefixedError(String.format("line %s, column %s: %s", span.start().line() + 1, span.start().column() + 1, e.getMessage()));
         if (!program.isEmpty()) {
-            if (span.start().line() - 1 > 0) {
+            int contextStart = Math.max(0, span.start().line() - 1);
+            int contextEnd = Math.min(lines.size() - 1, span.end().line() + 1);
+            if (contextStart > 0) {
                 LOGGER.errorContext("...");
             }
 
-            for (int i = Math.max(0, span.start().line() - 1); i <= Math.min(lines.size() - 1, span.end().line()); i++) {
+            for (int i = contextStart; i <= contextEnd; i++) {
                 String line = lines.get(i);
                 LOGGER.errorContext(line);
 
@@ -84,7 +86,7 @@ public class Main {
 
                 LOGGER.errorContext(positionMarker.toString());
             }
-            if (span.end().line() + 1 < lines.size() - 1) {
+            if (contextEnd < lines.size() - 1) {
                 LOGGER.errorContext("...");
             }
             LOGGER.errorNewline();
