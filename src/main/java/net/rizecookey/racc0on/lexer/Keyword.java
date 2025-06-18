@@ -1,5 +1,6 @@
 package net.rizecookey.racc0on.lexer;
 
+import net.rizecookey.racc0on.lexer.keyword.BuiltinFunctionsKeywordType;
 import net.rizecookey.racc0on.utils.Span;
 import net.rizecookey.racc0on.lexer.keyword.ControlKeywordType;
 import net.rizecookey.racc0on.lexer.keyword.KeywordType;
@@ -24,5 +25,10 @@ public record Keyword(KeywordType type, Span span) implements Token {
     @Override
     public boolean isControlKeyword() {
         return type instanceof ControlKeywordType;
+    }
+
+    @Override
+    public boolean isBuiltinFunctionKeyword() {
+        return type instanceof BuiltinFunctionsKeywordType;
     }
 }

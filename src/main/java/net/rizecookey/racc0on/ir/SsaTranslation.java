@@ -13,12 +13,14 @@ import net.rizecookey.racc0on.parser.ast.simp.AssignmentTree;
 import net.rizecookey.racc0on.parser.ast.exp.BinaryOperationTree;
 import net.rizecookey.racc0on.parser.ast.BlockTree;
 import net.rizecookey.racc0on.parser.ast.exp.BoolLiteralTree;
+import net.rizecookey.racc0on.parser.ast.call.BuiltinCallTree;
 import net.rizecookey.racc0on.parser.ast.simp.DeclarationTree;
 import net.rizecookey.racc0on.parser.ast.FunctionTree;
 import net.rizecookey.racc0on.parser.ast.exp.IdentExpressionTree;
 import net.rizecookey.racc0on.parser.ast.LValueIdentTree;
 import net.rizecookey.racc0on.parser.ast.exp.IntLiteralTree;
 import net.rizecookey.racc0on.parser.ast.ParameterTree;
+import net.rizecookey.racc0on.parser.ast.call.FunctionCallTree;
 import net.rizecookey.racc0on.parser.ast.simp.SimpleStatementTree;
 import net.rizecookey.racc0on.parser.ast.exp.TernaryExpressionTree;
 import net.rizecookey.racc0on.parser.ast.control.ForTree;
@@ -471,6 +473,16 @@ public class SsaTranslation {
         @Override
         public Optional<Node> visit(ParameterTree parameterTree, SsaTranslation data) {
             throw new UnsupportedOperationException(); // TODO
+        }
+
+        @Override
+        public Optional<Node> visit(FunctionCallTree functionCallTree, SsaTranslation data) {
+            throw new UnsupportedOperationException(); //TODO
+        }
+
+        @Override
+        public Optional<Node> visit(BuiltinCallTree builtinCallTree, SsaTranslation data) {
+            throw new UnsupportedOperationException(); //TODO
         }
 
         private Node projResultDivMod(SsaTranslation data, Node divMod) {

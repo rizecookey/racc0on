@@ -1,6 +1,9 @@
 package net.rizecookey.racc0on.parser;
 
+import net.rizecookey.racc0on.lexer.keyword.BuiltinFunctionsKeywordType;
 import net.rizecookey.racc0on.parser.ast.ParameterTree;
+import net.rizecookey.racc0on.parser.ast.call.BuiltinCallTree;
+import net.rizecookey.racc0on.parser.ast.call.FunctionCallTree;
 import net.rizecookey.racc0on.utils.Pair;
 import net.rizecookey.racc0on.utils.Position;
 import net.rizecookey.racc0on.lexer.BooleanLiteral;
@@ -64,12 +67,7 @@ public class Parser {
         TypeTree type = parseType();
         Identifier identifier = this.tokenSource.expectIdentifier();
 
-        List<ParameterTree> parameters = List.of();
-        this.tokenSource.expectSeparator(SeparatorType.PAREN_OPEN);
-        if (!this.tokenSource.peek().isSeparator(SeparatorType.PAREN_CLOSE)) {
-            parameters = parseParameterList();
-        }
-        this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
+        List<ParameterTree> parameters = parseParameterList();
         BlockTree body = parseBlock();
         return new FunctionTree(
             type,
@@ -85,12 +83,18 @@ public class Parser {
     }
 
     private List<ParameterTree> parseParameterList() {
+        this.tokenSource.expectSeparator(SeparatorType.PAREN_OPEN);
+        if (this.tokenSource.peek().isSeparator(SeparatorType.PAREN_CLOSE)) {
+            this.tokenSource.consume();
+            return List.of();
+        }
         List<ParameterTree> parameters = new ArrayList<>();
         parameters.add(parseParameter());
         while (this.tokenSource.peek().isSeparator(SeparatorType.COMMA)) {
-            this.tokenSource.expectSeparator(SeparatorType.COMMA);
+            this.tokenSource.consume();
             parameters.add(parseParameter());
         }
+        this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
 
         return List.copyOf(parameters);
     }
@@ -137,11 +141,23 @@ public class Parser {
     }
 
     private SimpleStatementTree parseSimple() {
-        if (this.tokenSource.peek().isTypeKeyword()) {
+        Token next = this.tokenSource.peek();
+        if (next.isTypeKeyword()) {
             return parseDeclaration();
         }
 
+        if (next instanceof Keyword(BuiltinFunctionsKeywordType _, _)) {
+            this.tokenSource.consume();
+            Pair<List<ExpressionTree>, Span> argsPair = parseArgumentList();
+            return new BuiltinCallTree((Keyword) next, List.copyOf(argsPair.first()), next.span().merge(argsPair.second()));
+        }
+
         LValueTree lValue = parseLValue();
+        if (next instanceof Identifier ident && this.tokenSource.peek().isSeparator(SeparatorType.PAREN_OPEN)) {
+            Pair<List<ExpressionTree>, Span> argsPair = parseArgumentList();
+            return new FunctionCallTree(name(ident), List.copyOf(argsPair.first()), next.span().merge(argsPair.second()));
+        }
+
         Operator assignmentOperator = parseAssignmentOperator();
         OperatorType.Assignment assignment = assignmentOperator.type().as(OperatorType.Assignment.class).orElseThrow();
         ExpressionTree expression = parseExpression();
@@ -275,8 +291,19 @@ public class Parser {
                 Span span = this.tokenSource.consume().span();
                 yield new UnaryOperationTree(OperatorType.Unary.NEGATION, parseFactor(), span);
             }
+            case Keyword(BuiltinFunctionsKeywordType _, _) -> {
+                Keyword kw = this.tokenSource.expectKeyword(BuiltinFunctionsKeywordType.PRINT);
+                Pair<List<ExpressionTree>, Span> argsPair = parseArgumentList();
+
+                yield new BuiltinCallTree(kw, List.copyOf(argsPair.first()), kw.span().merge(argsPair.second()));
+            }
             case Identifier ident -> {
                 this.tokenSource.consume();
+                if (this.tokenSource.peek().isSeparator(SeparatorType.PAREN_OPEN)) {
+                    Pair<List<ExpressionTree>, Span> argsPair = parseArgumentList();
+                    yield new FunctionCallTree(name(ident), List.copyOf(argsPair.first()), ident.span().merge(argsPair.second()));
+                }
+
                 yield new IdentExpressionTree(name(ident));
             }
             case NumberLiteral(String value, int base, Span span) -> {
@@ -289,6 +316,25 @@ public class Parser {
             }
             case Token t -> throw new ParseException(t.span(), "invalid factor " + t.asString());
         };
+    }
+
+    private Pair<List<ExpressionTree>, Span> parseArgumentList() {
+        Separator start = this.tokenSource.expectSeparator(SeparatorType.PAREN_OPEN);
+        if (this.tokenSource.peek().isSeparator(SeparatorType.PAREN_CLOSE)) {
+            Span span = start.span().merge(this.tokenSource.consume().span());
+            return new Pair<>(List.of(), span);
+        }
+
+        List<ExpressionTree> args = new ArrayList<>();
+        args.add(parseExpression());
+
+        while (this.tokenSource.peek().isSeparator(SeparatorType.COMMA)) {
+            this.tokenSource.consume();
+            args.add(parseExpression());
+        }
+
+        Token end = this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
+        return new Pair<>(List.copyOf(args), start.span().merge(end.span()));
     }
 
     private static NameTree name(Identifier ident) {

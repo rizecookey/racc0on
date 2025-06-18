@@ -11,5 +11,8 @@ bool one_param(bool param) {
 }
 
 int main() {
-  return 0;
+  int val = no_param();
+  one_param(false);
+  flush();
+  return two_param(val, one_param(true));
 }

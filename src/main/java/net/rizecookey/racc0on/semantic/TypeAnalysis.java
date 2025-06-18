@@ -1,6 +1,8 @@
 package net.rizecookey.racc0on.semantic;
 
 import net.rizecookey.racc0on.parser.ast.ParameterTree;
+import net.rizecookey.racc0on.parser.ast.call.BuiltinCallTree;
+import net.rizecookey.racc0on.parser.ast.call.FunctionCallTree;
 import net.rizecookey.racc0on.utils.Span;
 import net.rizecookey.racc0on.parser.ast.simp.AssignmentTree;
 import net.rizecookey.racc0on.parser.ast.exp.BinaryOperationTree;
@@ -185,6 +187,16 @@ public class TypeAnalysis implements Visitor<Namespace<Type>, Optional<Type>> {
     @Override
     public Optional<Type> visit(ParameterTree parameterTree, Namespace<Type> data) {
         throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public Optional<Type> visit(FunctionCallTree functionCallTree, Namespace<Type> data) {
+        throw new UnsupportedOperationException(); //TODO
+    }
+
+    @Override
+    public Optional<Type> visit(BuiltinCallTree builtinCallTree, Namespace<Type> data) {
+        throw new UnsupportedOperationException(); //TODO
     }
 
     private Type expectType(Tree tree, Type expected, Namespace<Type> namespace) {

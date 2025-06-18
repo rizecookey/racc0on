@@ -1,5 +1,8 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Compile sample" type="Application" factoryName="Application">
+    <envs>
+      <env name="RACC0ON_DEBUG" value="true" />
+    </envs>
     <option name="MAIN_CLASS_NAME" value="net.rizecookey.racc0on.utils.SimpleCompilerLauncher" />
     <module name="racc0on.main" />
     <option name="PROGRAM_PARAMETERS" value="compile $FilePrompt$" />

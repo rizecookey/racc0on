@@ -1,6 +1,7 @@
 package net.rizecookey.racc0on.semantic;
 
 import net.rizecookey.racc0on.lexer.OperatorType;
+import net.rizecookey.racc0on.parser.ast.FunctionTree;
 import net.rizecookey.racc0on.parser.ast.simp.AssignmentTree;
 import net.rizecookey.racc0on.parser.ast.BlockTree;
 import net.rizecookey.racc0on.parser.ast.simp.DeclarationTree;
@@ -33,6 +34,12 @@ class VariableStatusAnalysis extends RecursivePostorderVisitor<Namespace<Variabl
 
     VariableStatusAnalysis() {
         super(new NoOpVisitor<>() {});
+    }
+
+    @Override
+    public Unit visit(FunctionTree functionTree, Namespace<VariableStatus> data) {
+        // TODO mark parameters as initialized
+        return super.visit(functionTree, data);
     }
 
     @Override

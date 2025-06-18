@@ -1,9 +1,11 @@
 package net.rizecookey.racc0on.parser.visitor;
 
+import net.rizecookey.racc0on.parser.ast.exp.ExpressionTree;
 import net.rizecookey.racc0on.parser.ast.simp.AssignmentTree;
 import net.rizecookey.racc0on.parser.ast.exp.BinaryOperationTree;
 import net.rizecookey.racc0on.parser.ast.BlockTree;
 import net.rizecookey.racc0on.parser.ast.exp.BoolLiteralTree;
+import net.rizecookey.racc0on.parser.ast.call.BuiltinCallTree;
 import net.rizecookey.racc0on.parser.ast.simp.DeclarationTree;
 import net.rizecookey.racc0on.parser.ast.FunctionTree;
 import net.rizecookey.racc0on.parser.ast.exp.IdentExpressionTree;
@@ -21,6 +23,7 @@ import net.rizecookey.racc0on.parser.ast.control.ReturnTree;
 import net.rizecookey.racc0on.parser.ast.StatementTree;
 import net.rizecookey.racc0on.parser.ast.TypeTree;
 import net.rizecookey.racc0on.parser.ast.control.WhileTree;
+import net.rizecookey.racc0on.parser.ast.call.FunctionCallTree;
 
 /// A visitor that traverses a tree in postorder
 /// @param <T> a type for additional data
@@ -195,6 +198,26 @@ public class RecursivePostorderVisitor<T, R> implements Visitor<T, R> {
         r = parameterTree.name().accept(this, accumulate(data, r));
 
         r = this.visitor.visit(parameterTree, accumulate(data, r));
+        return r;
+    }
+
+    @Override
+    public R visit(FunctionCallTree functionCallTree, T data) {
+        R r = functionCallTree.name().accept(this, data);
+        for (ExpressionTree arg : functionCallTree.arguments()) {
+            r = arg.accept(this, accumulate(data, r));
+        }
+        r = this.visitor.visit(functionCallTree, accumulate(data, r));
+        return r;
+    }
+
+    @Override
+    public R visit(BuiltinCallTree builtinCallTree, T data) {
+        R r = null;
+        for (ExpressionTree arg : builtinCallTree.arguments()) {
+            r = arg.accept(this, r == null ? data : accumulate(data, r));
+        }
+        r = this.visitor.visit(builtinCallTree, r == null ? data : accumulate(data, r));
         return r;
     }
 

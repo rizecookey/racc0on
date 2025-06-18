@@ -4,6 +4,7 @@ import net.rizecookey.racc0on.parser.ast.simp.AssignmentTree;
 import net.rizecookey.racc0on.parser.ast.exp.BinaryOperationTree;
 import net.rizecookey.racc0on.parser.ast.BlockTree;
 import net.rizecookey.racc0on.parser.ast.exp.BoolLiteralTree;
+import net.rizecookey.racc0on.parser.ast.call.BuiltinCallTree;
 import net.rizecookey.racc0on.parser.ast.simp.DeclarationTree;
 import net.rizecookey.racc0on.parser.ast.FunctionTree;
 import net.rizecookey.racc0on.parser.ast.exp.IdentExpressionTree;
@@ -20,6 +21,7 @@ import net.rizecookey.racc0on.parser.ast.ProgramTree;
 import net.rizecookey.racc0on.parser.ast.control.ReturnTree;
 import net.rizecookey.racc0on.parser.ast.TypeTree;
 import net.rizecookey.racc0on.parser.ast.control.WhileTree;
+import net.rizecookey.racc0on.parser.ast.call.FunctionCallTree;
 
 public interface Visitor<T, R> {
 
@@ -62,4 +64,8 @@ public interface Visitor<T, R> {
     R visit(TernaryExpressionTree ternaryExpressionTree, T data);
 
     R visit(ParameterTree parameterTree, T data);
+
+    R visit(FunctionCallTree functionCallTree, T data);
+
+    R visit(BuiltinCallTree builtinCallTree, T data);
 }

@@ -15,6 +15,10 @@ public sealed interface Token permits ErrorToken, Identifier, Keyword, NumberLit
         return false;
     }
 
+    default boolean isBuiltinFunctionKeyword() {
+        return false;
+    }
+
     default boolean isKeyword(KeywordType keywordType) {
         return false;
     }
