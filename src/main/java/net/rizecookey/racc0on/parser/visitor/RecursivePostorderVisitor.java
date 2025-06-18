@@ -9,6 +9,7 @@ import net.rizecookey.racc0on.parser.ast.FunctionTree;
 import net.rizecookey.racc0on.parser.ast.IdentExpressionTree;
 import net.rizecookey.racc0on.parser.ast.LValueIdentTree;
 import net.rizecookey.racc0on.parser.ast.IntLiteralTree;
+import net.rizecookey.racc0on.parser.ast.ParameterTree;
 import net.rizecookey.racc0on.parser.ast.TernaryExpressionTree;
 import net.rizecookey.racc0on.parser.ast.control.ForTree;
 import net.rizecookey.racc0on.parser.ast.control.IfElseTree;
@@ -185,6 +186,15 @@ public class RecursivePostorderVisitor<T, R> implements Visitor<T, R> {
         r = ternaryExpressionTree.ifBranch().accept(this, accumulate(data, r));
         r = ternaryExpressionTree.elseBranch().accept(this, accumulate(data, r));
         r = this.visitor.visit(ternaryExpressionTree, accumulate(data, r));
+        return r;
+    }
+
+    @Override
+    public R visit(ParameterTree parameterTree, T data) {
+        R r = parameterTree.type().accept(this, data);
+        r = parameterTree.name().accept(this, accumulate(data, r));
+
+        r = this.visitor.visit(parameterTree, accumulate(data, r));
         return r;
     }
 

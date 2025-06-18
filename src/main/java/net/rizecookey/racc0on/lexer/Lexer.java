@@ -36,6 +36,7 @@ public class Lexer {
             case ')' -> separator(SeparatorType.PAREN_CLOSE);
             case '{' -> separator(SeparatorType.BRACE_OPEN);
             case '}' -> separator(SeparatorType.BRACE_CLOSE);
+            case ',' -> separator(SeparatorType.COMMA);
             case ';' -> separator(SeparatorType.SEMICOLON);
             case '-' -> singleOrFollowedByEq(OperatorType.Ambiguous.MINUS, OperatorType.Assignment.MINUS);
             case '+' -> singleOrFollowedByEq(OperatorType.Binary.PLUS, OperatorType.Assignment.PLUS);

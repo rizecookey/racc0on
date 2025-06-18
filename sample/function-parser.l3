@@ -1,0 +1,15 @@
+int two_param(int param1, bool param2) {
+  return 0;
+}
+
+int no_param() {
+  return -1;
+}
+
+bool one_param(bool param) {
+  return true;
+}
+
+int main() {
+  return 0;
+}

@@ -1,5 +1,6 @@
 package net.rizecookey.racc0on.semantic;
 
+import net.rizecookey.racc0on.parser.ast.ParameterTree;
 import net.rizecookey.racc0on.utils.Span;
 import net.rizecookey.racc0on.parser.ast.AssignmentTree;
 import net.rizecookey.racc0on.parser.ast.BinaryOperationTree;
@@ -179,6 +180,11 @@ public class TypeAnalysis implements Visitor<Namespace<Type>, Optional<Type>> {
     public Optional<Type> visit(TernaryExpressionTree ternaryExpressionTree, Namespace<Type> namespace) {
         expectType(ternaryExpressionTree.condition(), BasicType.BOOL, namespace);
         return Optional.of(expectTypeSame(namespace, ternaryExpressionTree.ifBranch(), ternaryExpressionTree.elseBranch()));
+    }
+
+    @Override
+    public Optional<Type> visit(ParameterTree parameterTree, Namespace<Type> data) {
+        throw new UnsupportedOperationException(); // TODO
     }
 
     private Type expectType(Tree tree, Type expected, Namespace<Type> namespace) {

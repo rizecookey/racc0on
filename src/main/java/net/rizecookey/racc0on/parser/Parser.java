@@ -1,5 +1,7 @@
 package net.rizecookey.racc0on.parser;
 
+import net.rizecookey.racc0on.parser.ast.ParameterTree;
+import net.rizecookey.racc0on.utils.Pair;
 import net.rizecookey.racc0on.utils.Position;
 import net.rizecookey.racc0on.lexer.BooleanLiteral;
 import net.rizecookey.racc0on.lexer.Identifier;
@@ -38,7 +40,6 @@ import net.rizecookey.racc0on.parser.ast.StatementTree;
 import net.rizecookey.racc0on.parser.ast.TypeTree;
 import net.rizecookey.racc0on.parser.ast.control.WhileTree;
 import net.rizecookey.racc0on.parser.symbol.Name;
-import net.rizecookey.racc0on.parser.type.BasicType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,28 +53,53 @@ public class Parser {
     }
 
     public ProgramTree parseProgram() {
-        ProgramTree programTree = new ProgramTree(List.of(parseFunction()));
-        if (this.tokenSource.hasMore()) {
-            Token token = this.tokenSource.peek();
-            throw new ParseException(token.span(), "expected end of input but got " + token.asString());
+        List<FunctionTree> functions = new ArrayList<>();
+        while (this.tokenSource.hasMore()) {
+            functions.add(parseFunction());
         }
-        return programTree;
+        return new ProgramTree(List.copyOf(functions));
     }
 
     private FunctionTree parseFunction() {
-        Keyword returnType = this.tokenSource.expectKeyword(TypeKeywordType.INT);
+        TypeTree type = parseType();
         Identifier identifier = this.tokenSource.expectIdentifier();
-        if (!identifier.value().equals("main")) {
-            throw new ParseException(identifier.span(), "expected main function but got " + identifier.value());
-        }
+
+        List<ParameterTree> parameters = List.of();
         this.tokenSource.expectSeparator(SeparatorType.PAREN_OPEN);
+        if (!this.tokenSource.peek().isSeparator(SeparatorType.PAREN_CLOSE)) {
+            parameters = parseParameterList();
+        }
         this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
         BlockTree body = parseBlock();
         return new FunctionTree(
-            new TypeTree(BasicType.INT, returnType.span()),
+            type,
             name(identifier),
+            parameters,
             body
         );
+    }
+
+    private TypeTree parseType() {
+        Pair<Keyword, TypeKeywordType> typePair = this.tokenSource.expectType();
+        return new TypeTree(typePair.second().type(), typePair.first().span());
+    }
+
+    private List<ParameterTree> parseParameterList() {
+        List<ParameterTree> parameters = new ArrayList<>();
+        parameters.add(parseParameter());
+        while (this.tokenSource.peek().isSeparator(SeparatorType.COMMA)) {
+            this.tokenSource.expectSeparator(SeparatorType.COMMA);
+            parameters.add(parseParameter());
+        }
+
+        return List.copyOf(parameters);
+    }
+
+    private ParameterTree parseParameter() {
+        TypeTree type = parseType();
+        Identifier identifier = this.tokenSource.expectIdentifier();
+
+        return new ParameterTree(type, name(identifier));
     }
 
     private BlockTree parseBlock() {
@@ -100,16 +126,14 @@ public class Parser {
     }
 
     private SimpleStatementTree parseDeclaration() {
-        var result = this.tokenSource.expectType();
-        Keyword keyword = result.first();
-        TypeKeywordType type = result.second();
+        TypeTree type = parseType();
         Identifier ident = this.tokenSource.expectIdentifier();
         ExpressionTree expr = null;
         if (this.tokenSource.peek().isOperator(OperatorType.Assignment.DEFAULT)) {
             this.tokenSource.expectOperator(OperatorType.Assignment.DEFAULT);
             expr = parseExpression();
         }
-        return new DeclarationTree(new TypeTree(type.type(), keyword.span()), name(ident), expr);
+        return new DeclarationTree(type, name(ident), expr);
     }
 
     private SimpleStatementTree parseSimple() {

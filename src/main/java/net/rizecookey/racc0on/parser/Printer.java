@@ -7,6 +7,7 @@ import net.rizecookey.racc0on.parser.ast.BoolLiteralTree;
 import net.rizecookey.racc0on.parser.ast.IdentExpressionTree;
 import net.rizecookey.racc0on.parser.ast.LValueIdentTree;
 import net.rizecookey.racc0on.parser.ast.IntLiteralTree;
+import net.rizecookey.racc0on.parser.ast.ParameterTree;
 import net.rizecookey.racc0on.parser.ast.SimpleStatementTree;
 import net.rizecookey.racc0on.parser.ast.TernaryExpressionTree;
 import net.rizecookey.racc0on.parser.ast.control.ForTree;
@@ -63,11 +64,19 @@ public class Printer {
                 this.indentDepth--;
                 print("}");
             }
-            case FunctionTree(var returnType, var name, var body) -> {
+            case FunctionTree(var returnType, var name, var params, var body) -> {
                 printTree(returnType);
                 space();
                 printTree(name);
-                print("()");
+                print("(");
+                for (int i = 0; i < params.size(); i++) {
+                    printTree(params.get(i));
+
+                    if (i < params.size() - 1) {
+                        print(", ");
+                    }
+                }
+                print(")");
                 space();
                 printTree(body);
             }
@@ -167,6 +176,11 @@ public class Printer {
                 print(") : (");
                 printTree(ternaryExpressionTree.elseBranch());
                 print(")");
+            }
+            case ParameterTree parameterTree -> {
+                printTree(parameterTree.type());
+                space();
+                printTree(parameterTree.name());
             }
         }
     }

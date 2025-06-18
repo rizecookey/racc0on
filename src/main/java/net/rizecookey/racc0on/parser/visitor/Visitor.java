@@ -7,6 +7,7 @@ import net.rizecookey.racc0on.parser.ast.BoolLiteralTree;
 import net.rizecookey.racc0on.parser.ast.DeclarationTree;
 import net.rizecookey.racc0on.parser.ast.FunctionTree;
 import net.rizecookey.racc0on.parser.ast.IdentExpressionTree;
+import net.rizecookey.racc0on.parser.ast.ParameterTree;
 import net.rizecookey.racc0on.parser.ast.TernaryExpressionTree;
 import net.rizecookey.racc0on.parser.ast.control.ForTree;
 import net.rizecookey.racc0on.parser.ast.control.IfElseTree;
@@ -59,4 +60,6 @@ public interface Visitor<T, R> {
     R visit(ForTree forTree, T data);
 
     R visit(TernaryExpressionTree ternaryExpressionTree, T data);
+
+    R visit(ParameterTree parameterTree, T data);
 }
