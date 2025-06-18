@@ -91,6 +91,9 @@ class SamplesTest {
         Process proc = Runtime.getRuntime().exec(new String[] {
                 "gcc",
                 "-x", "c",
+                "--include", "stdio.h",
+                "-D'print(x)=putchar(x)'"," -D'flush()=fflush(stdout)'", "-D'read()=getchar()'",
+                "-Wno-error=implicit-function-declaration",
                 input.toString(),
                 "-o", output.toString()
         });
