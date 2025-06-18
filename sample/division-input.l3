@@ -1,0 +1,89 @@
+int main() {
+  int x = read_number();
+  int y = read_number();
+
+  int result = x / y;
+  print_number(result, 10);
+  return 0;
+}
+
+int read_number() {
+  int sign = 1;
+  int num = 0;
+  int char_newline = 10;
+  int char_minus = 45;
+  int char_0 = 48;
+  int char_9 = 57;
+  for (int digit = read(); digit != char_newline; digit = read()) {
+    if (digit == char_minus) {
+      sign *= -1;
+      continue;
+    }
+    if (digit < char_0 || digit > char_9) continue;
+    num = num * 10 + (digit - 48);
+  }
+  return sign * num;
+}
+
+int print_prefix(int number, int base) {
+  if (base != 10 && base != 16) {
+    return 0;
+  }
+
+  int result = number;
+  if (result < 0) {
+    int char_dash = 45;
+    print(char_dash);
+    result *= -1;
+  }
+
+  if (base == 16) {
+    print(48);
+    print(120);
+  }
+
+  return result;
+}
+
+int print_digit(int digit) {
+  if (digit < 10) {
+    print(digit + 48);
+    return 0;
+  } else if (digit < 16) {
+    print(digit + 65 - 10);
+    return 0;
+  }
+  return -1;
+}
+
+int max_in_base(int base) {
+  if (base == 10) {
+    return 1000000000;
+  } else if (base == 16) {
+    return 1 << 24;
+  } else {
+    return 0;
+  }
+}
+
+int print_number(int num, int base) {
+  int max = max_in_base(base);
+
+  bool has_printed = false;
+  int remaining = print_prefix(num, base);
+
+  for (int i = max; i > 0; i /= base) {
+    int digit = remaining / i;
+    remaining = remaining % i;
+
+    if (digit != 0 || has_printed || i == 1) {
+      if (print_digit(digit) != 0) return -1;
+      has_printed = true;
+    }
+  }
+
+  int char_newline = 10;
+  print(char_newline);
+  flush();
+  return 0;
+}
