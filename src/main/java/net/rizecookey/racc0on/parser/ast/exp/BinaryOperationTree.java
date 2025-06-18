@@ -1,13 +1,15 @@
-package net.rizecookey.racc0on.parser.ast;
+package net.rizecookey.racc0on.parser.ast.exp;
 
 import net.rizecookey.racc0on.utils.Span;
 import net.rizecookey.racc0on.lexer.OperatorType;
 import net.rizecookey.racc0on.parser.visitor.Visitor;
 
-public record UnaryOperationTree(OperatorType.Unary type, ExpressionTree expression, Span minusPos) implements ExpressionTree {
+public record BinaryOperationTree(
+        ExpressionTree lhs, ExpressionTree rhs, OperatorType.Binary operatorType
+) implements ExpressionTree {
     @Override
     public Span span() {
-        return minusPos().merge(expression().span());
+        return lhs().span().merge(rhs().span());
     }
 
     @Override

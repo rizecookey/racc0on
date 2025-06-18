@@ -1,5 +1,8 @@
-package net.rizecookey.racc0on.parser.ast;
+package net.rizecookey.racc0on.parser.ast.simp;
 
+import net.rizecookey.racc0on.parser.ast.exp.ExpressionTree;
+import net.rizecookey.racc0on.parser.ast.NameTree;
+import net.rizecookey.racc0on.parser.ast.TypeTree;
 import net.rizecookey.racc0on.utils.Span;
 import net.rizecookey.racc0on.parser.visitor.Visitor;
 import org.jspecify.annotations.Nullable;

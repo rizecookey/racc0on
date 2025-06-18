@@ -1,6 +1,6 @@
 package net.rizecookey.racc0on.semantic;
 
-import net.rizecookey.racc0on.parser.ast.IntLiteralTree;
+import net.rizecookey.racc0on.parser.ast.exp.IntLiteralTree;
 import net.rizecookey.racc0on.parser.visitor.NoOpVisitor;
 import net.rizecookey.racc0on.parser.visitor.RecursivePostorderVisitor;
 import net.rizecookey.racc0on.parser.visitor.Unit;

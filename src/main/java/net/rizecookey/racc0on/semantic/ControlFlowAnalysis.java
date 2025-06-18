@@ -3,7 +3,7 @@ package net.rizecookey.racc0on.semantic;
 import net.rizecookey.racc0on.utils.Position;
 import net.rizecookey.racc0on.utils.Span;
 import net.rizecookey.racc0on.parser.ast.BlockTree;
-import net.rizecookey.racc0on.parser.ast.DeclarationTree;
+import net.rizecookey.racc0on.parser.ast.simp.DeclarationTree;
 import net.rizecookey.racc0on.parser.ast.FunctionTree;
 import net.rizecookey.racc0on.parser.ast.ProgramTree;
 import net.rizecookey.racc0on.parser.ast.StatementTree;

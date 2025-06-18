@@ -1,4 +1,4 @@
-package net.rizecookey.racc0on.parser.ast;
+package net.rizecookey.racc0on.parser.ast.exp;
 
 import net.rizecookey.racc0on.utils.Span;
 import net.rizecookey.racc0on.parser.visitor.Visitor;

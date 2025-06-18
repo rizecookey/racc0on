@@ -1,10 +1,10 @@
 package net.rizecookey.racc0on.semantic;
 
 import net.rizecookey.racc0on.lexer.OperatorType;
-import net.rizecookey.racc0on.parser.ast.AssignmentTree;
+import net.rizecookey.racc0on.parser.ast.simp.AssignmentTree;
 import net.rizecookey.racc0on.parser.ast.BlockTree;
-import net.rizecookey.racc0on.parser.ast.DeclarationTree;
-import net.rizecookey.racc0on.parser.ast.IdentExpressionTree;
+import net.rizecookey.racc0on.parser.ast.simp.DeclarationTree;
+import net.rizecookey.racc0on.parser.ast.exp.IdentExpressionTree;
 import net.rizecookey.racc0on.parser.ast.LValueIdentTree;
 import net.rizecookey.racc0on.parser.ast.NameTree;
 import net.rizecookey.racc0on.parser.ast.control.ForTree;
