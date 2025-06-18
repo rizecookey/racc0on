@@ -1,0 +1,108 @@
+// slightly edited to work with gcc
+
+int main() {
+  int number = -51038572;
+  if (print_number(number, 10) != 0) return 1;
+  if (print_number(number, 16) != 0) return 1;
+  return 0;
+}
+
+int print_leading(int base) {
+  if (base == 10) {
+    int char_D = 68;
+    int char_e = 101;
+    int char_c = 99;
+    int char_i = 105;
+    int char_m = 109;
+    int char_a = 97;
+    int char_l = 108;
+    int char_colon = 58;
+    int char_space = 32;
+
+    print(char_D); print(char_e); print(char_c); print(char_i); print(char_m); print(char_a); print(char_l);
+    print(char_colon); print(char_space);
+    return 0;
+  } else if (base == 16) {
+    int char_H = 72;
+    int char_x = 120;
+    int char_d = 100;
+    int char_e = 101;
+    int char_c = 99;
+    int char_i = 105;
+    int char_m = 109;
+    int char_a = 97;
+    int char_l = 108;
+    int char_colon = 58;
+    int char_space = 32;
+
+    print(char_H); print(char_e); print(char_x); print(char_a); print(char_d); print(char_e); print(char_c); print(char_i); print(char_m); print(char_a); print(char_l);
+    print(char_colon); print(char_space);
+    return 0;
+  } else {
+    return -1;
+  }
+}
+
+int print_prefix(int number, int base) {
+  if (base != 10 && base != 16) {
+    return 0;
+  }
+
+  int result = number;
+  if (result < 0) {
+    int char_dash = 45;
+    print(char_dash);
+    result *= -1;
+  }
+
+  if (base == 16) {
+    print(48);
+    print(120);
+  }
+
+  return result;
+}
+
+int print_digit(int digit) {
+  if (digit < 10) {
+    print(digit + 48);
+    return 0;
+  } else if (digit < 16) {
+    print(digit + 65 - 10);
+    return 0;
+  }
+  return -1;
+}
+
+int max_in_base(int base) {
+  if (base == 10) {
+    return 1000000000;
+  } else if (base == 16) {
+    return 1 << 24;
+  } else {
+    return 0;
+  }
+}
+
+int print_number(int num, int base) {
+  if (print_leading(base) != 0) return -1;
+  int max = max_in_base(base);
+
+  bool has_printed = false;
+  int remaining = print_prefix(num, base);
+
+  for (int i = max; i > 0; i /= base) {
+    int digit = remaining / i;
+    remaining = remaining % i;
+
+    if (digit != 0 || has_printed || i == 1) {
+      if (print_digit(digit) != 0) return -1;
+      has_printed = true;
+    }
+  }
+
+  int char_newline = 10;
+  print(char_newline);
+  flush();
+  return 0;
+}
