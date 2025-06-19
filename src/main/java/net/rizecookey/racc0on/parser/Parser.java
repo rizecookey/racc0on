@@ -60,6 +60,9 @@ public class Parser {
         while (this.tokenSource.hasMore()) {
             functions.add(parseFunction());
         }
+        if (functions.isEmpty()) {
+            throw new ParseException(this.tokenSource.consume().span(), "missing function declaration");
+        }
         return new ProgramTree(List.copyOf(functions));
     }
 
@@ -146,10 +149,10 @@ public class Parser {
             return parseDeclaration();
         }
 
-        if (next instanceof Keyword(BuiltinFunctionsKeywordType _, _)) {
+        if (next instanceof Keyword(BuiltinFunctionsKeywordType type, _)) {
             this.tokenSource.consume();
             Pair<List<ExpressionTree>, Span> argsPair = parseArgumentList();
-            return new BuiltinCallTree((Keyword) next, List.copyOf(argsPair.first()), next.span().merge(argsPair.second()));
+            return new BuiltinCallTree(type, List.copyOf(argsPair.first()), next.span().merge(argsPair.second()));
         }
 
         LValueTree lValue = parseLValue();
@@ -291,11 +294,11 @@ public class Parser {
                 Span span = this.tokenSource.consume().span();
                 yield new UnaryOperationTree(OperatorType.Unary.NEGATION, parseFactor(), span);
             }
-            case Keyword(BuiltinFunctionsKeywordType _, _) -> {
-                Keyword kw = this.tokenSource.expectKeyword(BuiltinFunctionsKeywordType.PRINT);
+            case Keyword(BuiltinFunctionsKeywordType type, _) -> {
+                Keyword kw = (Keyword) this.tokenSource.consume();
                 Pair<List<ExpressionTree>, Span> argsPair = parseArgumentList();
 
-                yield new BuiltinCallTree(kw, List.copyOf(argsPair.first()), kw.span().merge(argsPair.second()));
+                yield new BuiltinCallTree(type, List.copyOf(argsPair.first()), kw.span().merge(argsPair.second()));
             }
             case Identifier ident -> {
                 this.tokenSource.consume();

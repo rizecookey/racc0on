@@ -2,6 +2,7 @@ package net.rizecookey.racc0on.semantic;
 
 import net.rizecookey.racc0on.lexer.OperatorType;
 import net.rizecookey.racc0on.parser.ast.FunctionTree;
+import net.rizecookey.racc0on.parser.ast.ProgramTree;
 import net.rizecookey.racc0on.parser.ast.simp.AssignmentTree;
 import net.rizecookey.racc0on.parser.ast.BlockTree;
 import net.rizecookey.racc0on.parser.ast.simp.DeclarationTree;
@@ -38,7 +39,7 @@ class VariableStatusAnalysis extends RecursivePostorderVisitor<Namespace<Variabl
 
     @Override
     public Unit visit(FunctionTree functionTree, Namespace<VariableStatus> data) {
-        // TODO mark parameters as initialized
+        functionTree.parameters().forEach(param -> data.put(param.name().name(), VariableStatus.INITIALIZED));
         return super.visit(functionTree, data);
     }
 
@@ -147,6 +148,12 @@ class VariableStatusAnalysis extends RecursivePostorderVisitor<Namespace<Variabl
     public Unit visit(ReturnTree returnTree, Namespace<VariableStatus> data) {
         returnTree.expression().accept(this, data);
         initializeAll(data);
+        return Unit.INSTANCE;
+    }
+
+    @Override
+    public Unit visit(ProgramTree programTree, Namespace<VariableStatus> data) {
+        programTree.topLevelTrees().forEach(t -> t.accept(this, new Namespace<>()));
         return Unit.INSTANCE;
     }
 
