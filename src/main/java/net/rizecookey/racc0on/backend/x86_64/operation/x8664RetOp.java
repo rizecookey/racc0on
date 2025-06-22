@@ -30,6 +30,10 @@ public class x8664RetOp implements x8664Op {
             generator.move(x8664Register.RAX, returnLocation);
         }
 
+        x8664Register.getRegisterSet().stream()
+                .filter(x8664Register::isCalleeSaved)
+                .forEach(generator::pop); // TODO see x8664EnterOp.java
+
         generator.tearDownStack();
         generator.write(x8664InstrType.RET);
     }
