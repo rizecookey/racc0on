@@ -1,11 +1,14 @@
 package net.rizecookey.racc0on.ir;
 
 import net.rizecookey.racc0on.ir.node.Block;
+import net.rizecookey.racc0on.ir.node.CallNode;
 import net.rizecookey.racc0on.ir.node.ConstBoolNode;
 import net.rizecookey.racc0on.ir.node.ConstIntNode;
+import net.rizecookey.racc0on.ir.node.GlobalSymbolNode;
 import net.rizecookey.racc0on.ir.node.IfNode;
 import net.rizecookey.racc0on.ir.node.JumpNode;
 import net.rizecookey.racc0on.ir.node.Node;
+import net.rizecookey.racc0on.ir.node.ParameterNode;
 import net.rizecookey.racc0on.ir.node.Phi;
 import net.rizecookey.racc0on.ir.node.ProjNode;
 import net.rizecookey.racc0on.ir.node.ReturnNode;
@@ -29,6 +32,7 @@ import net.rizecookey.racc0on.ir.node.operation.binary.SubNode;
 import net.rizecookey.racc0on.ir.node.operation.unary.NotNode;
 import net.rizecookey.racc0on.ir.optimize.Optimizer;
 import net.rizecookey.racc0on.parser.symbol.Name;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -49,6 +53,7 @@ class GraphConstructor {
     private final Set<Block> hasUnconditionalExit = new HashSet<>();
     private final Set<Block> sealedBlocks = new HashSet<>();
     private Block currentBlock;
+    private @Nullable Node currentStartNode;
 
     public GraphConstructor(Optimizer optimizer, String name) {
         this.optimizer = optimizer;
@@ -60,7 +65,18 @@ class GraphConstructor {
 
     public Node newStart() {
         assert currentBlock() == this.graph.startBlock() : "start must be in start block";
-        return new StartNode(currentBlock());
+        currentStartNode = new StartNode(currentBlock());
+        return currentStartNode;
+    }
+
+    public Node newParameter(int index) {
+        Node startNode = currentStartNode();
+        assert startNode != null : "no start node found";
+        return this.optimizer.transform(new ParameterNode(this.graph().startBlock(), index, startNode));
+    }
+
+    public Node newGlobalSymbol(String symbolName) {
+        return this.optimizer.transform(new GlobalSymbolNode(currentBlock(), symbolName, readCurrentSideEffect()));
     }
 
     @FunctionalInterface
@@ -221,6 +237,14 @@ class GraphConstructor {
         return jumpNode;
     }
 
+    public Node newCall(String target, Node... inputs) {
+        return new CallNode(currentBlock(), target, inputs);
+    }
+
+    public Node newSideEffectCall(String target, Node... inputs) {
+        return new CallNode(currentBlock(), target, readCurrentSideEffect(), inputs);
+    }
+
     public boolean hasUnconditionalExit() {
         return hasUnconditionalExit.contains(currentBlock());
     }
@@ -240,6 +264,10 @@ class GraphConstructor {
 
     public Block currentBlock() {
         return this.currentBlock;
+    }
+
+    public @Nullable Node currentStartNode() {
+        return currentStartNode;
     }
 
     void setCurrentBlock(Block currentBlock) {

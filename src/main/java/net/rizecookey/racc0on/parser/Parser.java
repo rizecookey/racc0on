@@ -89,21 +89,21 @@ public class Parser {
             return List.of();
         }
         List<ParameterTree> parameters = new ArrayList<>();
-        parameters.add(parseParameter());
+        parameters.add(parseParameter(0));
         while (this.tokenSource.peek().isSeparator(SeparatorType.COMMA)) {
             this.tokenSource.consume();
-            parameters.add(parseParameter());
+            parameters.add(parseParameter(parameters.size()));
         }
         this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
 
         return List.copyOf(parameters);
     }
 
-    private ParameterTree parseParameter() {
+    private ParameterTree parseParameter(int index) {
         TypeTree type = parseType();
         Identifier identifier = this.tokenSource.expectIdentifier();
 
-        return new ParameterTree(type, name(identifier));
+        return new ParameterTree(index, type, name(identifier));
     }
 
     private BlockTree parseBlock() {

@@ -2,12 +2,11 @@ package net.rizecookey.racc0on.ir;
 
 import net.rizecookey.racc0on.ir.node.Block;
 import net.rizecookey.racc0on.ir.node.Phi;
-import net.rizecookey.racc0on.ir.node.operation.binary.DivNode;
-import net.rizecookey.racc0on.ir.node.operation.binary.ModNode;
 import net.rizecookey.racc0on.ir.node.Node;
 import net.rizecookey.racc0on.ir.optimize.Optimizer;
 import net.rizecookey.racc0on.ir.util.DebugInfo;
 import net.rizecookey.racc0on.ir.util.DebugInfoHelper;
+import net.rizecookey.racc0on.ir.util.NodeSupport;
 import net.rizecookey.racc0on.lexer.OperatorType;
 import net.rizecookey.racc0on.parser.ast.simp.AssignmentTree;
 import net.rizecookey.racc0on.parser.ast.exp.BinaryOperationTree;
@@ -136,9 +135,9 @@ public class SsaTranslation {
                 case OperatorType.Assignment.PLUS -> data.constructor::newAdd;
                 case OperatorType.Assignment.MUL -> data.constructor::newMul;
                 case OperatorType.Assignment.DIV ->
-                        (lhs, rhs) -> projResultDivMod(data, data.constructor.newDiv(lhs, rhs));
+                        (lhs, rhs) -> projResultSideEffectCause(data, data.constructor.newDiv(lhs, rhs));
                 case OperatorType.Assignment.MOD ->
-                        (lhs, rhs) -> projResultDivMod(data, data.constructor.newMod(lhs, rhs));
+                        (lhs, rhs) -> projResultSideEffectCause(data, data.constructor.newMod(lhs, rhs));
 
                 case OperatorType.Assignment.BITWISE_AND -> data.constructor::newBitwiseAnd;
                 case OperatorType.Assignment.BITWISE_XOR -> data.constructor::newBitwiseXor;
@@ -186,8 +185,8 @@ public class SsaTranslation {
                 case MINUS -> data.constructor.newSub(lhs, rhs);
                 case PLUS -> data.constructor.newAdd(lhs, rhs);
                 case MUL -> data.constructor.newMul(lhs, rhs);
-                case DIV -> projResultDivMod(data, data.constructor.newDiv(lhs, rhs));
-                case MOD -> projResultDivMod(data, data.constructor.newMod(lhs, rhs));
+                case DIV -> projResultSideEffectCause(data, data.constructor.newDiv(lhs, rhs));
+                case MOD -> projResultSideEffectCause(data, data.constructor.newMod(lhs, rhs));
                 case BITWISE_AND -> data.constructor.newBitwiseAnd(lhs, rhs);
                 case BITWISE_XOR -> data.constructor.newBitwiseXor(lhs, rhs);
                 case BITWISE_OR -> data.constructor.newBitwiseOr(lhs, rhs);
@@ -255,6 +254,7 @@ public class SsaTranslation {
             pushSpan(functionTree);
             Node start = data.constructor.newStart();
             data.constructor.writeCurrentSideEffect(data.constructor.newSideEffectProj(start));
+            functionTree.parameters().forEach(p -> p.accept(this, data));
             functionTree.body().accept(this, data);
             popSpan();
             return NOT_AN_EXPRESSION;
@@ -472,28 +472,47 @@ public class SsaTranslation {
 
         @Override
         public Optional<Node> visit(ParameterTree parameterTree, SsaTranslation data) {
-            throw new UnsupportedOperationException(); // TODO
+            Node parameter = data.constructor.newParameter(parameterTree.index());
+            data.writeVariable(parameterTree.name().name(), data.currentBlock(), parameter);
+            return Optional.of(parameter);
         }
 
         @Override
         public Optional<Node> visit(FunctionCallTree functionCallTree, SsaTranslation data) {
-            throw new UnsupportedOperationException(); //TODO
+            Node[] args = functionCallTree.arguments().stream()
+                    .map(arg -> arg.accept(this, data).orElseThrow())
+                    .toArray(Node[]::new);
+            Node result = data.constructor.newCall(functionCallTree.name().name().asString(), args);
+            return Optional.of(result);
         }
 
         @Override
         public Optional<Node> visit(BuiltinCallTree builtinCallTree, SsaTranslation data) {
-            throw new UnsupportedOperationException(); //TODO
+            Node call = switch (builtinCallTree.type()) {
+                case PRINT ->  {
+                    Node arg = builtinCallTree.arguments().getFirst().accept(this, data).orElseThrow();
+                    yield data.constructor.newSideEffectCall("putchar", arg);
+                }
+                case READ -> data.constructor.newSideEffectCall("getchar");
+                case FLUSH -> {
+                    Node stdoutSymbol = projResultSideEffectCause(data, data.constructor.newGlobalSymbol("stdout"));
+                    yield data.constructor.newSideEffectCall("fflush", stdoutSymbol);
+                }
+            };
+
+            Node result = projResultSideEffectCause(data, call);
+            return Optional.of(result);
         }
 
-        private Node projResultDivMod(SsaTranslation data, Node divMod) {
-            // make sure we actually have a div or a mod, as optimizations could
+        private Node projResultSideEffectCause(SsaTranslation data, Node sideEffectCause) {
+            // make sure we actually have a side effect cause, as optimizations could
             // have changed it to something else already
-            if (!(divMod instanceof DivNode || divMod instanceof ModNode)) {
-                return divMod;
+            if (!NodeSupport.causesSideEffect(sideEffectCause)) {
+                return sideEffectCause;
             }
-            Node projSideEffect = data.constructor.newSideEffectProj(divMod);
+            Node projSideEffect = data.constructor.newSideEffectProj(sideEffectCause);
             data.constructor.writeCurrentSideEffect(projSideEffect);
-            return data.constructor.newResultProj(divMod);
+            return data.constructor.newResultProj(sideEffectCause);
         }
     }
 

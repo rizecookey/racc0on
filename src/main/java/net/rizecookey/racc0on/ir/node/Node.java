@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 /// The base class for all nodes.
-public sealed abstract class Node permits Block, ConstBoolNode, ConstIntNode, IfNode, JumpNode, Phi, ProjNode, ReturnNode, StartNode, BinaryOperationNode, UnaryOperationNode {
+public sealed abstract class Node permits Block, CallNode, ConstBoolNode, ConstIntNode, GlobalSymbolNode, IfNode, JumpNode, ParameterNode, Phi, ProjNode, ReturnNode, StartNode, BinaryOperationNode, UnaryOperationNode {
     private static final Map<Pair<IrGraph, Class<? extends Node>>, Integer> NODE_IDS = new HashMap<>();
 
     private final IrGraph graph;

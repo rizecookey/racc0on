@@ -3,7 +3,7 @@ package net.rizecookey.racc0on.parser.ast;
 import net.rizecookey.racc0on.parser.visitor.Visitor;
 import net.rizecookey.racc0on.utils.Span;
 
-public record ParameterTree(TypeTree type, NameTree name) implements Tree {
+public record ParameterTree(int index, TypeTree type, NameTree name) implements Tree {
     @Override
     public Span span() {
         return type().span().merge(name().span());
