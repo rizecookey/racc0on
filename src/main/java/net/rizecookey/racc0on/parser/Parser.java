@@ -60,9 +60,6 @@ public class Parser {
         while (this.tokenSource.hasMore()) {
             functions.add(parseFunction());
         }
-        if (functions.isEmpty()) {
-            throw new ParseException(this.tokenSource.consume().span(), "missing function declaration");
-        }
         return new ProgramTree(List.copyOf(functions));
     }
 
