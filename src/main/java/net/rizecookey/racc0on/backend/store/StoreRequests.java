@@ -13,7 +13,7 @@ public class StoreRequests<T extends Operation<?, U>, U extends VariableStore> i
     private final Map<T, SequencedSet<StoreReference<U>>> inputStores;
     private final Map<T, StoreReference<U>> outputStores;
     private final Map<T, SequencedSet<StoreReference<U>>> additionalStores;
-    private final Map<StoreReference<U>, Conditions<U>> storeConditions;
+    private final Map<StoreReference<U>, StoreConditions<U>> storeConditions;
 
     private final Map<StoreReference<U>, T> pendingStores;
 
@@ -34,10 +34,10 @@ public class StoreRequests<T extends Operation<?, U>, U extends VariableStore> i
     private record AdditionalStore<U extends VariableStore>(int id) implements StoreReference<U> {}
 
     @Override
-    public StoreReference<U> requestInputStore(T location, Node node, Conditions<U> conditions) {
+    public StoreReference<U> requestInputStore(T location, Node node, StoreConditions<U> conditions) {
         RegularStore<U> nodeStore = new RegularStore<>(node);
         inputStores.computeIfAbsent(location, _ -> new LinkedHashSet<>()).add(nodeStore);
-        storeConditions.merge(nodeStore, conditions, Conditions::merge);
+        storeConditions.merge(nodeStore, conditions, StoreConditions::merge);
 
         if (pendingStores.containsKey(nodeStore)) {
             T pendingLoc = pendingStores.get(nodeStore);
@@ -49,19 +49,19 @@ public class StoreRequests<T extends Operation<?, U>, U extends VariableStore> i
     }
 
     @Override
-    public StoreReference<U> requestOutputStore(T location, Node node, Conditions<U> conditions) {
+    public StoreReference<U> requestOutputStore(T location, Node node, StoreConditions<U> conditions) {
         RegularStore<U> nodeStore = new RegularStore<>(node);
         outputStores.put(location, nodeStore);
-        storeConditions.merge(nodeStore, conditions, Conditions::merge);
+        storeConditions.merge(nodeStore, conditions, StoreConditions::merge);
 
         return nodeStore;
     }
 
     @Override
-    public StoreReference<U> requestAdditional(T location, Conditions<U> conditions) {
+    public StoreReference<U> requestAdditional(T location, StoreConditions<U> conditions) {
         AdditionalStore<U> additionalStore = new AdditionalStore<>(additionalStoreId++);
         additionalStores.computeIfAbsent(location, _ -> new LinkedHashSet<>()).add(additionalStore);
-        storeConditions.merge(additionalStore, conditions, Conditions::merge);
+        storeConditions.merge(additionalStore, conditions, StoreConditions::merge);
 
         return additionalStore;
     }
@@ -93,7 +93,7 @@ public class StoreRequests<T extends Operation<?, U>, U extends VariableStore> i
         return additionalStores.containsKey(location) ? additionalStores.get(location) : new LinkedHashSet<>();
     }
 
-    public Conditions<U> getConditions(StoreReference<U> reference) {
-        return storeConditions.containsKey(reference) ? storeConditions.get(reference) : Conditions.empty();
+    public StoreConditions<U> getConditions(StoreReference<U> reference) {
+        return storeConditions.containsKey(reference) ? storeConditions.get(reference) : StoreConditions.empty();
     }
 }

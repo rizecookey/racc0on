@@ -3,6 +3,7 @@ package net.rizecookey.racc0on.backend.x86_64;
 import net.rizecookey.racc0on.backend.x86_64.operation.arithmetic.x8664ShiftOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664EmptyOpLike;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664IfElseOpLike;
+import net.rizecookey.racc0on.backend.x86_64.operation.x8664LoadParamPhantomOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664OpLike;
 import net.rizecookey.racc0on.backend.x86_64.optimization.x8664InstrOptimization;
 import net.rizecookey.racc0on.backend.x86_64.optimization.x8664JumpOptimization;
@@ -274,8 +275,9 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
             case GreaterOrEqNode greaterOrEqNode -> new x8664GreaterEqOp(extractOperands(greaterOrEqNode));
             case LessNode lessNode -> new x8664LessOp(extractOperands(lessNode));
             case LessOrEqNode lessOrEqNode -> new x8664LessEqOp(extractOperands(lessOrEqNode));
+            case ParameterNode parameterNode -> new x8664LoadParamPhantomOp(parameterNode);
             case Phi _, Block _, ProjNode _ -> new x8664EmptyOpLike();
-            case CallNode _, GlobalSymbolNode _, ParameterNode _ -> throw new UnsupportedOperationException();
+            case CallNode _, GlobalSymbolNode _ -> throw new UnsupportedOperationException();
         };
         operations.addAll(base.asOperations());
 

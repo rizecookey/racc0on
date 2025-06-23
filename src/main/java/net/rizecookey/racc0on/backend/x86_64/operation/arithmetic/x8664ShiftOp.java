@@ -1,6 +1,7 @@
 package net.rizecookey.racc0on.backend.x86_64.operation.arithmetic;
 
 import net.rizecookey.racc0on.backend.operand.Operands;
+import net.rizecookey.racc0on.backend.store.StoreConditions;
 import net.rizecookey.racc0on.backend.store.StoreReference;
 import net.rizecookey.racc0on.backend.store.StoreRequestService;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664InstrType;
@@ -31,7 +32,7 @@ public class x8664ShiftOp implements x8664Op {
 
     @Override
     public void makeStoreRequests(StoreRequestService<x8664Op, x8664Store> service) {
-        StoreRequestService.Conditions<x8664Store> collidesWithRcx = StoreRequestService.Conditions.<x8664Store>builder()
+        StoreConditions<x8664Store> collidesWithRcx = StoreConditions.<x8664Store>builder()
                 .collidesWith(x8664Register.RCX)
                 .build();
         if (!(shiftee instanceof ConstIntNode)) {

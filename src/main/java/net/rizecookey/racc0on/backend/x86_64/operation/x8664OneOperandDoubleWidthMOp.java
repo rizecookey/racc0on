@@ -1,5 +1,6 @@
 package net.rizecookey.racc0on.backend.x86_64.operation;
 
+import net.rizecookey.racc0on.backend.store.StoreConditions;
 import net.rizecookey.racc0on.ir.node.Node;
 import net.rizecookey.racc0on.backend.operand.Operands;
 import net.rizecookey.racc0on.backend.store.StoreReference;
@@ -70,8 +71,7 @@ public class x8664OneOperandDoubleWidthMOp implements x8664Op {
         inLeftRef = service.requestInputStore(this, inLeft);
         inRightRef = service.requestInputStore(this, inRight);
 
-        StoreRequestService.Conditions<x8664Store> backupConditions = StoreRequestService.Conditions
-                .<x8664Store>builder()
+        StoreConditions<x8664Store> backupConditions = StoreConditions.<x8664Store>builder()
                 .collidesWith(tainted)
                 .build();
         for (x8664Register _: tainted) {

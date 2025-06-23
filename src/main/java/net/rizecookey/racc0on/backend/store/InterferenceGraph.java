@@ -18,7 +18,6 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class InterferenceGraph<T extends Operation<?, U>, U extends VariableStore> extends Graph<StoreReference<U>> {
     private final List<T> operations;
@@ -32,13 +31,25 @@ public class InterferenceGraph<T extends Operation<?, U>, U extends VariableStor
     }
 
     public List<StoreReference<U>> getSimplicialEliminationOrdering() {
+        Map<StoreReference<U>, Integer> currentWeight = new HashMap<>();
         PriorityQueue<Weighted<StoreReference<U>>> priorityQueue =
                 new PriorityQueue<>(Comparator.<Weighted<StoreReference<U>>>comparingInt(Weighted::weight).reversed());
-        getNodes().forEach(store -> priorityQueue.add(new Weighted<>(store, 0)));
+        List<StoreReference<U>> ordering = new ArrayList<>(this.getNodes().stream()
+                .filter(store -> !requests.getConditions(store).targetedStores().isEmpty())
+                .toList());
+        this.getNodes().stream()
+                .filter(store -> requests.getConditions(store).targetedStores().isEmpty())
+                .map(store -> new Weighted<>(store, 0))
+                .forEach(value -> {
+                    currentWeight.put(value.value(), value.weight());
+                    priorityQueue.add(value);
+                });
 
-        List<StoreReference<U>> ordering = new ArrayList<>();
         while (!priorityQueue.isEmpty()) {
             var store = priorityQueue.poll();
+            if (!currentWeight.get(store.value()).equals(store.weight())) {
+                continue;
+            }
             ordering.add(store.value());
 
             for (var other : priorityQueue.stream().toList()) {
@@ -46,8 +57,9 @@ public class InterferenceGraph<T extends Operation<?, U>, U extends VariableStor
                     continue;
                 }
 
-                priorityQueue.remove(other);
-                priorityQueue.add(new Weighted<>(other.value(), other.weight() + 1));
+                var newValue = new Weighted<>(other.value(), other.weight() + 1);
+                currentWeight.put(newValue.value(), newValue.weight());
+                priorityQueue.add(newValue);
             }
         }
 
@@ -112,9 +124,18 @@ public class InterferenceGraph<T extends Operation<?, U>, U extends VariableStor
      * colors are available
      */
     private Optional<U> colorWithExisting(StoreReference<U> store, List<U> availableStores, Set<U> forbiddenColors) {
-        StoreRequests.Conditions<U> conditions = requests.getConditions(store);
+        StoreConditions<U> conditions = requests.getConditions(store);
 
-        return Stream.concat(conditions.preferredLocations().stream(), availableStores.stream())
+        if (!conditions.targetedStores().isEmpty()) {
+            return Optional.of(conditions.targetedStores().stream()
+                    .filter(color -> !forbiddenColors.contains(color))
+                    .filter(color -> !conditions.collisions().contains(color))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("All targeted stores are reserved")));
+            // TODO avoid erroring out
+        }
+
+        return availableStores.stream()
                 .filter(color -> !forbiddenColors.contains(color))
                 .filter(color -> !conditions.collisions().contains(color))
                 .findFirst();

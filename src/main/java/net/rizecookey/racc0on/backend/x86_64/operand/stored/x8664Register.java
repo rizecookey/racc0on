@@ -24,6 +24,14 @@ public enum x8664Register implements x8664Store {
     RSP(reg16("sp"), Usage.STACK_POINTER, SaveType.NONE),
     RBP(reg16("bp"), Usage.BASE_POINTER, SaveType.NONE);
 
+    public static final List<x8664Register> ARGUMENT_REGISTERS = List.of(
+            RDI,
+            RSI,
+            RDX,
+            RCX,
+            R8,
+            R9
+    );
     public static final x8664Register MEMORY_ACCESS_RESERVE = R15;
 
     private final Id id;
