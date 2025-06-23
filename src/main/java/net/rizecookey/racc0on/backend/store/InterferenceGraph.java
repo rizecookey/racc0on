@@ -53,7 +53,8 @@ public class InterferenceGraph<T extends Operation<?, U>, U extends VariableStor
             ordering.add(store.value());
 
             for (var other : priorityQueue.stream().toList()) {
-                if (!getNeighbors(store.value()).contains(other.value())) {
+                if (!getNeighbors(store.value()).contains(other.value())
+                        || !currentWeight.getOrDefault(other.value(), -1).equals(other.weight())) {
                     continue;
                 }
 
