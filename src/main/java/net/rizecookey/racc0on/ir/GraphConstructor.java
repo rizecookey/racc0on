@@ -238,10 +238,6 @@ class GraphConstructor {
     }
 
     public Node newCall(String target, Node... inputs) {
-        return new CallNode(currentBlock(), target, inputs);
-    }
-
-    public Node newSideEffectCall(String target, Node... inputs) {
         return new CallNode(currentBlock(), target, readCurrentSideEffect(), inputs);
     }
 

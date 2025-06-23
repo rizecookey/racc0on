@@ -482,7 +482,10 @@ public class SsaTranslation {
             Node[] args = functionCallTree.arguments().stream()
                     .map(arg -> arg.accept(this, data).orElseThrow())
                     .toArray(Node[]::new);
-            Node result = data.constructor.newCall(functionCallTree.name().name().asString(), args);
+            Node result = projResultSideEffectCause(
+                    data,
+                    data.constructor.newCall(functionCallTree.name().name().asString(), args)
+            );
             return Optional.of(result);
         }
 
@@ -491,12 +494,12 @@ public class SsaTranslation {
             Node call = switch (builtinCallTree.type()) {
                 case PRINT ->  {
                     Node arg = builtinCallTree.arguments().getFirst().accept(this, data).orElseThrow();
-                    yield data.constructor.newSideEffectCall("putchar", arg);
+                    yield data.constructor.newCall("putchar", arg);
                 }
-                case READ -> data.constructor.newSideEffectCall("getchar");
+                case READ -> data.constructor.newCall("getchar");
                 case FLUSH -> {
                     Node stdoutSymbol = projResultSideEffectCause(data, data.constructor.newGlobalSymbol("stdout"));
-                    yield data.constructor.newSideEffectCall("fflush", stdoutSymbol);
+                    yield data.constructor.newCall("fflush", stdoutSymbol);
                 }
             };
 

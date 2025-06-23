@@ -55,10 +55,9 @@ public final class NodeSupport {
 
     public static boolean causesSideEffect(Node node) {
         return switch (node) {
-            case DivNode _, ModNode _, GlobalSymbolNode _ -> true;
-            case CallNode callNode when callNode.hasSideEffect() -> true;
+            case DivNode _, ModNode _, CallNode _, GlobalSymbolNode _ -> true;
             case Block _, ConstBoolNode _, ConstIntNode _, IfNode _, JumpNode _, ParameterNode _, Phi _, ProjNode _,
-                 ReturnNode _, StartNode _, BinaryOperationNode _, UnaryOperationNode _, CallNode _ -> false;
+                 ReturnNode _, StartNode _, BinaryOperationNode _, UnaryOperationNode _ -> false;
         };
     }
 
