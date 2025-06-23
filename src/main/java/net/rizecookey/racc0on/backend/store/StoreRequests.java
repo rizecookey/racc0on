@@ -51,7 +51,7 @@ public class StoreRequests<T extends Operation<?, U>, U extends VariableStore> i
     @Override
     public StoreReference<U> requestOutputStore(T location, Node node, Conditions<U> conditions) {
         RegularStore<U> nodeStore = new RegularStore<>(node);
-        outputStores.put(location, new RegularStore<>(node));
+        outputStores.put(location, nodeStore);
         storeConditions.merge(nodeStore, conditions, Conditions::merge);
 
         return nodeStore;
