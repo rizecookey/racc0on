@@ -1,10 +1,10 @@
 package net.rizecookey.racc0on.ir.util;
 
 import net.rizecookey.racc0on.ir.node.Block;
+import net.rizecookey.racc0on.ir.node.BuiltinCallNode;
 import net.rizecookey.racc0on.ir.node.CallNode;
 import net.rizecookey.racc0on.ir.node.ConstBoolNode;
 import net.rizecookey.racc0on.ir.node.ConstIntNode;
-import net.rizecookey.racc0on.ir.node.GlobalSymbolNode;
 import net.rizecookey.racc0on.ir.node.IfNode;
 import net.rizecookey.racc0on.ir.node.JumpNode;
 import net.rizecookey.racc0on.ir.node.Node;
@@ -29,8 +29,16 @@ public final class NodeSupport {
         return switch (node) {
             case StartNode _, Block _, ReturnNode _, IfNode _, ProjNode _, JumpNode _ -> false;
             case ConstBoolNode _, ConstIntNode _, Phi _, BinaryOperationNode _, UnaryOperationNode _,
-                 CallNode _, ParameterNode _, GlobalSymbolNode _ -> true;
+                 CallNode _, BuiltinCallNode _, ParameterNode _ -> true;
         };
+    }
+
+    public static Node skipProj(Node node) {
+        if (node instanceof ProjNode proj) {
+            return proj.predecessor(ProjNode.IN);
+        }
+
+        return node;
     }
 
     public static Node predecessorSkipProj(Node node, int predIdx) {
@@ -55,7 +63,7 @@ public final class NodeSupport {
 
     public static boolean causesSideEffect(Node node) {
         return switch (node) {
-            case DivNode _, ModNode _, CallNode _, GlobalSymbolNode _ -> true;
+            case DivNode _, ModNode _, CallNode _, BuiltinCallNode _ -> true;
             case Block _, ConstBoolNode _, ConstIntNode _, IfNode _, JumpNode _, ParameterNode _, Phi _, ProjNode _,
                  ReturnNode _, StartNode _, BinaryOperationNode _, UnaryOperationNode _ -> false;
         };

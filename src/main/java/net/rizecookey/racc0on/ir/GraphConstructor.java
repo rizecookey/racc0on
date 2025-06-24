@@ -1,10 +1,10 @@
 package net.rizecookey.racc0on.ir;
 
 import net.rizecookey.racc0on.ir.node.Block;
+import net.rizecookey.racc0on.ir.node.BuiltinCallNode;
 import net.rizecookey.racc0on.ir.node.CallNode;
 import net.rizecookey.racc0on.ir.node.ConstBoolNode;
 import net.rizecookey.racc0on.ir.node.ConstIntNode;
-import net.rizecookey.racc0on.ir.node.GlobalSymbolNode;
 import net.rizecookey.racc0on.ir.node.IfNode;
 import net.rizecookey.racc0on.ir.node.JumpNode;
 import net.rizecookey.racc0on.ir.node.Node;
@@ -31,6 +31,7 @@ import net.rizecookey.racc0on.ir.node.operation.binary.ShiftRightNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.SubNode;
 import net.rizecookey.racc0on.ir.node.operation.unary.NotNode;
 import net.rizecookey.racc0on.ir.optimize.Optimizer;
+import net.rizecookey.racc0on.lexer.keyword.BuiltinFunctionsKeywordType;
 import net.rizecookey.racc0on.parser.symbol.Name;
 import org.jspecify.annotations.Nullable;
 
@@ -73,10 +74,6 @@ class GraphConstructor {
         Node startNode = currentStartNode();
         assert startNode != null : "no start node found";
         return this.optimizer.transform(new ParameterNode(this.graph().startBlock(), index, startNode));
-    }
-
-    public Node newGlobalSymbol(String symbolName) {
-        return this.optimizer.transform(new GlobalSymbolNode(currentBlock(), symbolName, readCurrentSideEffect()));
     }
 
     @FunctionalInterface
@@ -239,6 +236,10 @@ class GraphConstructor {
 
     public Node newCall(String target, Node... inputs) {
         return new CallNode(currentBlock(), target, readCurrentSideEffect(), inputs);
+    }
+
+    public Node newBuiltinCall(BuiltinFunctionsKeywordType type, Node... inputs) {
+        return new BuiltinCallNode(currentBlock(), type, readCurrentSideEffect(), inputs);
     }
 
     public boolean hasUnconditionalExit() {

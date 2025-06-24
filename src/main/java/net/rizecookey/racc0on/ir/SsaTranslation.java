@@ -491,19 +491,13 @@ public class SsaTranslation {
 
         @Override
         public Optional<Node> visit(BuiltinCallTree builtinCallTree, SsaTranslation data) {
-            Node call = switch (builtinCallTree.type()) {
-                case PRINT ->  {
-                    Node arg = builtinCallTree.arguments().getFirst().accept(this, data).orElseThrow();
-                    yield data.constructor.newCall("putchar", arg);
-                }
-                case READ -> data.constructor.newCall("getchar");
-                case FLUSH -> {
-                    Node stdoutSymbol = projResultSideEffectCause(data, data.constructor.newGlobalSymbol("stdout"));
-                    yield data.constructor.newCall("fflush", stdoutSymbol);
-                }
-            };
-
-            Node result = projResultSideEffectCause(data, call);
+            Node[] args = builtinCallTree.arguments().stream()
+                    .map(arg -> arg.accept(this, data).orElseThrow())
+                    .toArray(Node[]::new);
+            Node result = projResultSideEffectCause(
+                    data,
+                    data.constructor.newBuiltinCall(builtinCallTree.type(), args)
+            );
             return Optional.of(result);
         }
 

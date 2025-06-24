@@ -1,9 +1,9 @@
 package net.rizecookey.racc0on.ir.util;
 
 import net.rizecookey.racc0on.ir.IrGraph;
+import net.rizecookey.racc0on.ir.node.BuiltinCallNode;
 import net.rizecookey.racc0on.ir.node.CallNode;
 import net.rizecookey.racc0on.ir.node.ConstBoolNode;
-import net.rizecookey.racc0on.ir.node.GlobalSymbolNode;
 import net.rizecookey.racc0on.ir.node.IfNode;
 import net.rizecookey.racc0on.ir.node.JumpNode;
 import net.rizecookey.racc0on.ir.node.ParameterNode;
@@ -269,8 +269,7 @@ public class YCompPrinter {
             case StartNode _ -> VcgColor.CONTROL_FLOW;
             case IfNode _ -> VcgColor.CONTROL_FLOW;
             case JumpNode _ -> VcgColor.CONTROL_FLOW;
-            case CallNode _ -> VcgColor.NORMAL;
-            case GlobalSymbolNode _ -> VcgColor.MEMORY;
+            case CallNode _, BuiltinCallNode _ -> VcgColor.NORMAL;
             case ParameterNode _ -> VcgColor.NORMAL;
         };
     }

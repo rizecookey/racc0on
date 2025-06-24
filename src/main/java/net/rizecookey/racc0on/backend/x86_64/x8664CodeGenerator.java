@@ -11,14 +11,49 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class x8664CodeGenerator implements CodeGenerator {
-    public static final String ENTRYPOINT_NAME = "_entry";
+    public static final String ENTRYPOINT_NAME = "$entry$";
 
     private static final String BOILERPLATE_ENTRY = """
-            _entry:
+            $entry$:
             call main
-            mov rdi, rax
+            mov r15, rax
+            call $flush$
+            mov rdi, r15
             mov rax, 0x3C
             syscall
+            """;
+
+    private static final String BUILTINS_IMPL = """
+            .globl $print$
+            .globl $read$
+            .globl $flush$
+            
+            $print$:
+            push rbp
+            mov rbp, rsp
+            call putchar
+            mov eax, 0
+            leave
+            ret
+            
+            $read$:
+            push rbp
+            mov rbp, rsp
+            call getchar
+            mov edi, -1
+            cmp eax, 0
+            cmovl eax, edi
+            leave
+            ret
+            
+            $flush$:
+            push rbp
+            mov rbp, rsp
+            mov rdi, stdout
+            call fflush
+            mov eax, 0
+            leave
+            ret
             """;
 
     private final StringBuilder builder = new StringBuilder();
@@ -32,6 +67,7 @@ public class x8664CodeGenerator implements CodeGenerator {
         }
 
         initializeTextSegment();
+        includeBuiltinWrappers();
 
         for (IrGraph graph : program) {
             SsaSchedule schedule = SsaScheduler.schedule(graph);
@@ -55,6 +91,11 @@ public class x8664CodeGenerator implements CodeGenerator {
         appendNewline();
         appendLine(".text");
         appendLine(BOILERPLATE_ENTRY);
+    }
+
+    public void includeBuiltinWrappers() {
+        appendNewline();
+        appendLine(BUILTINS_IMPL);
     }
 
     public void generateProcedure(SsaSchedule schedule) {
