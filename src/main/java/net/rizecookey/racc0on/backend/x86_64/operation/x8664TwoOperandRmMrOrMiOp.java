@@ -54,17 +54,17 @@ public class x8664TwoOperandRmMrOrMiOp implements x8664Op {
 
     public static void write(x8664InstructionGenerator generator, x8664InstrType type, x8664Store outOp, x8664Operand inLeftOp, x8664Operand inRightOp) {
         if (outOp instanceof x8664StackStore && (inLeftOp instanceof x8664StackStore || inRightOp instanceof x8664StackStore)) {
-            generator.move(x8664Register.MEMORY_ACCESS_RESERVE, inLeftOp);
+            generator.move(x8664Register.MEMORY_ACCESS_RESERVE, inLeftOp, x8664Operand.Size.DOUBLE_WORD);
             generator.write(type, x8664Register.MEMORY_ACCESS_RESERVE, inRightOp);
-            generator.move(outOp, x8664Register.MEMORY_ACCESS_RESERVE);
+            generator.move(outOp, x8664Register.MEMORY_ACCESS_RESERVE, x8664Operand.Size.DOUBLE_WORD);
         } else {
             x8664Operand actualRight = inRightOp;
             if (!outOp.equals(inLeftOp)) {
                 if (outOp.equals(inRightOp)) {
                     actualRight = x8664Register.MEMORY_ACCESS_RESERVE;
-                    generator.move(x8664Register.MEMORY_ACCESS_RESERVE, inRightOp);
+                    generator.move(x8664Register.MEMORY_ACCESS_RESERVE, inRightOp, x8664Operand.Size.DOUBLE_WORD);
                 }
-                generator.move(outOp, inLeftOp);
+                generator.move(outOp, inLeftOp, x8664Operand.Size.DOUBLE_WORD);
             }
 
             generator.write(type, outOp, actualRight);

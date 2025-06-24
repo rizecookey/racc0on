@@ -63,20 +63,20 @@ public class x8664ShiftOp implements x8664Op {
         if (!shiftCount.equals(x8664Register.RCX)) {
             if (generator.getLiveAt(this).contains(x8664Register.RCX)) {
                 backupRcx = true;
-                generator.move(backup, x8664Register.RCX);
+                generator.move(backup, x8664Register.RCX, x8664Operand.Size.QUAD_WORD);
             }
-            generator.move(x8664Register.RCX, shiftCount);
+            generator.move(x8664Register.RCX, shiftCount, x8664Operand.Size.DOUBLE_WORD);
         }
 
         if (!shiftee.equals(out)) {
-            generator.move(out, shiftee);
+            generator.move(out, shiftee, x8664Operand.Size.DOUBLE_WORD);
         }
 
         generator.write(direction == Direction.LEFT ? x8664InstrType.SAL : x8664InstrType.SAR,
                 x8664Operand.Size.DOUBLE_WORD, x8664Operand.Size.BYTE, out, x8664Register.RCX);
 
         if (backupRcx) {
-            generator.move(x8664Register.RCX, backup);
+            generator.move(x8664Register.RCX, backup, x8664Operand.Size.QUAD_WORD);
         }
     }
 

@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 public class x8664StoreAllocator {
-    private static final int STACK_STORE_SIZE = x8664Operand.Size.DOUBLE_WORD.getByteSize();
+    private static final int STACK_STORE_SIZE = x8664Operand.Size.QUAD_WORD.getByteSize();
 
     public record Allocation(LivenessMap<x8664Op, x8664Store> livenessMap, Map<StoreReference<x8664Store>, x8664Store> allocations, int stackSize) {}
 

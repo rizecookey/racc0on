@@ -1,6 +1,7 @@
 package net.rizecookey.racc0on.backend.x86_64.operation;
 
 import net.rizecookey.racc0on.backend.store.StoreConditions;
+import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
 import net.rizecookey.racc0on.ir.node.Node;
 import net.rizecookey.racc0on.backend.operand.Operands;
 import net.rizecookey.racc0on.backend.store.StoreReference;
@@ -58,11 +59,11 @@ public class x8664OneOperandDoubleWidthMOp implements x8664Op {
     }
 
     private void backupTainted(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier, x8664Store outStore) {
-        forEachTaintedBackupPair(generator, storeSupplier, outStore, (tainted, backup) -> generator.move(backup, tainted));
+        forEachTaintedBackupPair(generator, storeSupplier, outStore, (tainted, backup) -> generator.move(backup, tainted, x8664Operand.Size.QUAD_WORD));
     }
 
     private void restoreTainted(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier, x8664Store outStore) {
-        forEachTaintedBackupPair(generator, storeSupplier, outStore, generator::move);
+        forEachTaintedBackupPair(generator, storeSupplier, outStore, (tainted, backup) -> generator.move(tainted, backup, x8664Operand.Size.QUAD_WORD));
     }
 
     @Override
@@ -90,17 +91,17 @@ public class x8664OneOperandDoubleWidthMOp implements x8664Op {
         x8664Store realRight = inRightOp;
         if (realRight instanceof x8664Register inRightRegister && SELF_TAINTED.contains(inRightRegister)) {
             realRight = x8664Register.MEMORY_ACCESS_RESERVE;
-            generator.move(realRight, inRightOp);
+            generator.move(realRight, inRightOp, x8664Operand.Size.DOUBLE_WORD);
         }
 
         if (!inLeftOp.equals(inData)) {
-            generator.move(inData, inLeftOp);
+            generator.move(inData, inLeftOp, x8664Operand.Size.DOUBLE_WORD);
         }
 
         generator.write(x8664InstrType.CDQ);
         generator.write(type, realRight);
         if (!outOp.equals(outData)) {
-            generator.move(outOp, outData);
+            generator.move(outOp, outData, x8664Operand.Size.DOUBLE_WORD);
         }
 
         restoreTainted(generator, storeSupplier, outOp);

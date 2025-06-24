@@ -1,5 +1,6 @@
 package net.rizecookey.racc0on.backend.x86_64.operation;
 
+import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
 import net.rizecookey.racc0on.ir.node.ConstBoolNode;
 import net.rizecookey.racc0on.ir.node.ConstIntNode;
 import net.rizecookey.racc0on.ir.node.Node;
@@ -43,6 +44,6 @@ public class x8664LoadConstPhantomOp implements x8664Op {
             return;
         }
 
-        generator.move(outOp.get(), new x8664Immediate(value));
+        generator.move(outOp.get(), new x8664Immediate(value), x8664Operand.Size.DOUBLE_WORD);
     }
 }

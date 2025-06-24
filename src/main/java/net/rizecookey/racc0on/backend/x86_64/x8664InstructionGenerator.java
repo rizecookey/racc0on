@@ -319,23 +319,23 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         instructions.add(new x8664Instr.Binary(type, first, second, firstSize, secondSize));
     }
 
-    public void move(x8664Store to, x8664Operand from) {
+    public void move(x8664Store to, x8664Operand from, x8664Operand.Size size) {
         if (to.equals(from)) {
             return;
         }
         x8664Operand actualFrom = from;
         if (to instanceof x8664StackStore && from instanceof x8664StackStore) {
             actualFrom = x8664Register.MEMORY_ACCESS_RESERVE;
-            write(x8664InstrType.MOV, x8664Register.MEMORY_ACCESS_RESERVE, from);
+            write(x8664InstrType.MOV, size, x8664Register.MEMORY_ACCESS_RESERVE, from);
         }
 
-        write(x8664InstrType.MOV, to, actualFrom);
+        write(x8664InstrType.MOV, size, to, actualFrom);
     }
 
     public void test(x8664Store first, x8664Store second) {
         if (second instanceof x8664StackStore stackStore) {
             second = x8664Register.MEMORY_ACCESS_RESERVE;
-            move(second, stackStore);
+            move(second, stackStore, x8664Operand.Size.BYTE);
         }
 
         write(x8664InstrType.TEST, x8664Operand.Size.BYTE, first, second);

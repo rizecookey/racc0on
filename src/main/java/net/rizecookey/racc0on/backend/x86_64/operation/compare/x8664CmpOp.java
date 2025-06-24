@@ -43,7 +43,7 @@ public abstract class x8664CmpOp implements x8664Op {
         x8664Store actualInRight = inRight;
         if (inLeft instanceof x8664StackStore && inRight instanceof x8664StackStore) {
             actualInRight = x8664Register.MEMORY_ACCESS_RESERVE;
-            generator.move(actualInRight, inRight);
+            generator.move(actualInRight, inRight, x8664Operand.Size.DOUBLE_WORD);
         }
 
         generator.write(x8664InstrType.CMP, inLeft, actualInRight);

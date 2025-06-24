@@ -61,7 +61,7 @@ public class x8664TwoOperandRmOrR32IOp implements x8664Op {
         x8664TwoOperandRmMrOrMiOp.write(generator, type, target, inLeftOp, inRightOp);
 
         if (!target.equals(outOp)) {
-            generator.move(outOp, target);
+            generator.move(outOp, target, x8664Operand.Size.DOUBLE_WORD);
         }
     }
 }

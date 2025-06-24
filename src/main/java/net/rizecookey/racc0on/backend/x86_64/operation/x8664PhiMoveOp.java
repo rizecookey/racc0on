@@ -1,5 +1,6 @@
 package net.rizecookey.racc0on.backend.x86_64.operation;
 
+import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
 import net.rizecookey.racc0on.ir.node.Node;
 import net.rizecookey.racc0on.ir.node.Phi;
 import net.rizecookey.racc0on.backend.store.StoreReference;
@@ -29,6 +30,6 @@ public class x8664PhiMoveOp implements x8664Op {
     public void write(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {
         x8664Store in = storeSupplier.resolve(inRef).orElseThrow();
         x8664Store out = storeSupplier.resolve(outRef).orElseThrow();
-        generator.move(out, in);
+        generator.move(out, in, x8664Operand.Size.DOUBLE_WORD);
     }
 }

@@ -1,5 +1,6 @@
 package net.rizecookey.racc0on.backend.x86_64.operation;
 
+import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
 import net.rizecookey.racc0on.ir.node.Node;
 import net.rizecookey.racc0on.backend.store.StoreReference;
 import net.rizecookey.racc0on.backend.store.StoreRequestService;
@@ -27,7 +28,7 @@ public class x8664RetOp implements x8664Op {
     public void write(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {
         x8664Store returnLocation = storeSupplier.resolve(inRef).orElseThrow();
         if (returnLocation != x8664Register.RAX) {
-            generator.move(x8664Register.RAX, returnLocation);
+            generator.move(x8664Register.RAX, returnLocation, x8664Operand.Size.QUAD_WORD);
         }
 
         x8664Register.getRegisterSet().stream()
