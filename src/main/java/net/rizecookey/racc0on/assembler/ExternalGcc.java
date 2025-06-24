@@ -25,6 +25,7 @@ public class ExternalGcc implements Assembler {
 
     private void callGcc(String input, Path output) throws AssemblerException, IOException {
         Process gcc = Runtime.getRuntime().exec(new String[] {"gcc",
+                "-pie",
                 "-Wl,--entry=" + x8664CodeGenerator.ENTRYPOINT_NAME,
                 "-o", output.toString(),
                 "-x", "assembler",

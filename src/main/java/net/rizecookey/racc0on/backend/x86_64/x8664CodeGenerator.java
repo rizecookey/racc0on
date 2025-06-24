@@ -49,7 +49,7 @@ public class x8664CodeGenerator implements CodeGenerator {
             $flush$:
             push rbp
             mov rbp, rsp
-            mov rdi, stdout
+            mov rdi, [rip + stdout]
             call fflush
             mov eax, 0
             leave
