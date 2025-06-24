@@ -23,7 +23,7 @@ public class x8664LoadParamPhantomOp implements x8664Op {
         if (parameterIndex < x8664Register.ARGUMENT_REGISTERS.size()) {
             store = x8664Register.ARGUMENT_REGISTERS.get(parameterIndex);
         } else {
-            store = new x8664StackStore(8 * (parameterIndex - x8664Register.ARGUMENT_REGISTERS.size()) + 16);
+            store = new x8664StackStore(-(8 * (parameterIndex - x8664Register.ARGUMENT_REGISTERS.size()) + 16));
         }
 
         service.requestOutputStore(this, parameter, StoreConditions.<x8664Store>builder()
