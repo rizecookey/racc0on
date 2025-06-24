@@ -39,6 +39,7 @@ public enum x8664InstrType implements InstructionType<x8664Instr, x8664Store> {
     CMP("cmp"),
     SAR("sar"),
     SAL("sal"),
+    CALL("call"),
     ;
 
     private final String name;

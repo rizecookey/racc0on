@@ -1,6 +1,8 @@
 package net.rizecookey.racc0on.backend.x86_64;
 
+import net.rizecookey.racc0on.backend.x86_64.operand.x8664Label;
 import net.rizecookey.racc0on.backend.x86_64.operation.arithmetic.x8664ShiftOp;
+import net.rizecookey.racc0on.backend.x86_64.operation.x8664CallOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664EmptyOpLike;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664IfElseOpLike;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664LoadParamPhantomOp;
@@ -99,6 +101,8 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
     private final Map<StoreReference<x8664Store>, x8664Store> locations;
     private final Map<Block, String> blockLabels;
     private int stackSize;
+    /// rsp % 16
+    private int stackMisalignment;
     private LivenessMap<x8664Op, x8664Store> livenessMap;
 
     public x8664InstructionGenerator(x8664CodeGenerator codeGenerator, SsaSchedule schedule) {
@@ -229,6 +233,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         if (stackSize > 0) {
             write(x8664InstrType.SUB, x8664Operand.Size.QUAD_WORD, x8664Register.RSP, new x8664Immediate(stackSize));
         }
+        stackMisalignment = stackSize % 16;
     }
 
     public void tearDownStack() {
@@ -276,8 +281,9 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
             case LessNode lessNode -> new x8664LessOp(extractOperands(lessNode));
             case LessOrEqNode lessOrEqNode -> new x8664LessEqOp(extractOperands(lessOrEqNode));
             case ParameterNode parameterNode -> new x8664LoadParamPhantomOp(parameterNode);
+            case CallNode callNode -> new x8664CallOp(callNode);
+            case BuiltinCallNode builtinCallNode -> new x8664CallOp(builtinCallNode);
             case Phi _, Block _, ProjNode _ -> new x8664EmptyOpLike();
-            case CallNode _, BuiltinCallNode _ -> throw new UnsupportedOperationException();
         };
         operations.addAll(base.asOperations());
 
@@ -342,10 +348,53 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
     }
 
     public void push(x8664Operand operand) {
+        stackMisalignment = (stackMisalignment + 8) % 16;
         write(x8664InstrType.PUSH, x8664Operand.Size.QUAD_WORD, operand);
     }
 
     public void pop(x8664Operand operand) {
+        stackMisalignment = Math.abs(stackMisalignment - 8) % 16;
         write(x8664InstrType.POP, x8664Operand.Size.QUAD_WORD, operand);
+    }
+
+    public void call(String label, List<x8664Store> arguments, Map<x8664Register, x8664Store> alternativeSources) {
+        List<x8664Register> argRegs = x8664Register.ARGUMENT_REGISTERS;
+        int callStackSize = 0;
+        int stackArguments = Math.max(0, arguments.size() - argRegs.size());
+        callStackSize += stackArguments * 8;
+        int misalignmentAfter = (stackMisalignment + stackArguments * 8) % 16;
+        if (misalignmentAfter != 0) {
+            write(x8664InstrType.SUB, x8664Store.Size.QUAD_WORD, x8664Register.RSP, new x8664Immediate(16 - misalignmentAfter));
+        }
+        callStackSize += misalignmentAfter;
+
+        Set<x8664Register> writtenTo = new HashSet<>();
+        for (int i = 0; i < Math.min(arguments.size(), argRegs.size()); i++) {
+            x8664Register target = argRegs.get(i);
+            x8664Store source = arguments.get(i);
+            if (source instanceof x8664Register && writtenTo.contains(source)) {
+                source = alternativeSources.get(source);
+            }
+            move(target, source, x8664Operand.Size.QUAD_WORD);
+            if (!source.equals(target)) {
+                writtenTo.add(target);
+            }
+        }
+
+        if (stackArguments > 0) {
+            for (var stackArg : arguments
+                    .subList(argRegs.size(), argRegs.size() + stackArguments)
+                    .reversed()) {
+                if (stackArg instanceof x8664Register && writtenTo.contains(stackArg)) {
+                    stackArg = alternativeSources.get(stackArg);
+                }
+                push(stackArg);
+            }
+        }
+
+        write(x8664InstrType.CALL, new x8664Label(label));
+        if (callStackSize != 0) {
+            write(x8664InstrType.ADD, x8664Store.Size.QUAD_WORD, x8664Register.RSP, new x8664Immediate(callStackSize));
+        }
     }
 }
