@@ -89,12 +89,12 @@ public final class SimpleCompilerLauncher {
         LOGGER.log("");
         LOGGER.log("Running " + file + ":");
 
-        Process proc = Runtime.getRuntime().exec(new String[] {file.toString()});
+        Process proc = new ProcessBuilder(file.toString())
+                .redirectInput(ProcessBuilder.Redirect.INHERIT)
+                .redirectError(ProcessBuilder.Redirect.INHERIT)
+                .redirectOutput(ProcessBuilder.Redirect.INHERIT).start();
         Thread shutdownHook = new Thread(proc::destroyForcibly);
         Runtime.getRuntime().addShutdownHook(shutdownHook);
-
-        proc.getInputStream().transferTo(System.out);
-        proc.getErrorStream().transferTo(System.out);
 
         boolean exited = proc.waitFor(1, TimeUnit.MINUTES);
         if (!exited) {
