@@ -11,15 +11,15 @@ public enum x8664Register implements x8664Store {
     R8(reg64("r8"), SaveType.CALLER_SAVED),
     R9(reg64("r9"), SaveType.CALLER_SAVED),
     R10(reg64("r10"), SaveType.CALLER_SAVED),
-    R11(reg64("r11"), SaveType.CALLER_SAVED),
     R12(reg64("r12"), SaveType.CALLEE_SAVED),
     R13(reg64("r13"), SaveType.CALLEE_SAVED),
     R14(reg64("r14"), SaveType.CALLEE_SAVED),
+    R15(reg64("r15"), SaveType.CALLEE_SAVED),
 
     RAX(reg16("ax"), SaveType.CALLER_SAVED), // move down to make allocation prefer other registers
     RDX(reg16("dx"), SaveType.CALLER_SAVED),
 
-    R15(reg64("r15"), Usage.MEMORY_ACCESS_RESERVE, SaveType.CALLEE_SAVED),
+    R11(reg64("r11"), Usage.MEMORY_ACCESS_RESERVE, SaveType.CALLER_SAVED),
 
     RSP(reg16("sp"), Usage.STACK_POINTER, SaveType.NONE),
     RBP(reg16("bp"), Usage.BASE_POINTER, SaveType.NONE);
@@ -32,7 +32,7 @@ public enum x8664Register implements x8664Store {
             R8,
             R9
     );
-    public static final x8664Register MEMORY_ACCESS_RESERVE = R15;
+    public static final x8664Register MEMORY_ACCESS_RESERVE = R11;
 
     private final Id id;
     private final Usage usage;
