@@ -5,7 +5,6 @@ import net.rizecookey.racc0on.backend.store.StoreReference;
 import net.rizecookey.racc0on.backend.store.StoreRequestService;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Register;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Store;
-import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
 import net.rizecookey.racc0on.backend.x86_64.store.x8664StoreRefResolver;
 import net.rizecookey.racc0on.backend.x86_64.x8664InstructionGenerator;
 import net.rizecookey.racc0on.ir.node.BuiltinCallNode;
@@ -46,7 +45,6 @@ public class x8664CallOp implements x8664Op {
     @Override
     public void makeStoreRequests(StoreRequestService<x8664Op, x8664Store> service) {
         for (var arg : arguments) {
-            // TODO only backup necessary registers?
             argRefs.add(service.requestInputStore(this, NodeSupport.skipProj(arg)));
         }
 
@@ -65,29 +63,15 @@ public class x8664CallOp implements x8664Op {
         x8664Store out = storeSupplier.resolve(outRef).orElseThrow();
 
         Map<x8664Register, x8664Store> backupStores = new HashMap<>();
-        // TODO only backup live registers
         for (var register : CALLER_SAVED_REGS) {
             x8664Store backupStore = storeSupplier.resolve(backupRefs.get(register)).orElseThrow();
             backupStores.put(register, backupStore);
-            generator.move(backupStore, register, x8664Operand.Size.QUAD_WORD);
         }
 
         List<x8664Store> arguments = argRefs.stream()
                 .map(storeSupplier::resolve)
                 .map(Optional::orElseThrow)
                 .toList();
-        generator.call(target, arguments, backupStores);
-
-        for (var register : CALLER_SAVED_REGS) {
-            if (register.equals(out)) {
-                continue;
-            }
-            if (register.equals(x8664Register.RAX)) {
-                generator.move(out, x8664Register.RAX, x8664Operand.Size.QUAD_WORD);
-            }
-            x8664Store backupStore = backupStores.get(register);
-            generator.move(register, backupStore, x8664Operand.Size.QUAD_WORD);
-        }
-
+        generator.call(target, out, arguments, backupStores);
     }
 }

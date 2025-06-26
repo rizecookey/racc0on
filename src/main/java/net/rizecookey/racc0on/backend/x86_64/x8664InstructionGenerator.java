@@ -79,6 +79,7 @@ import net.rizecookey.racc0on.backend.x86_64.operation.logic.x8664XorOp;
 import net.rizecookey.racc0on.backend.x86_64.store.x8664StoreAllocator;
 import net.rizecookey.racc0on.ir.schedule.SsaSchedule;
 import net.rizecookey.racc0on.ir.util.NodeSupport;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -104,7 +105,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
     private int stackSize;
     /// rsp % 16
     private int stackMisalignment;
-    private x8664Op currentOp;
+    private @Nullable x8664Op currentOp;
     private LivenessMap<x8664Op, x8664Store> livenessMap;
 
     public x8664InstructionGenerator(x8664CodeGenerator codeGenerator, SsaSchedule schedule) {
@@ -213,6 +214,9 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
     }
 
     public SequencedSet<StoreReference<x8664Store>> getLiveReferences() {
+        if (currentOp == null) {
+            throw new IllegalStateException("Not currently writing an operation");
+        }
         return livenessMap.getLiveAt(currentOp);
     }
 
@@ -370,44 +374,98 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         write(x8664InstrType.POP, x8664Operand.Size.QUAD_WORD, operand);
     }
 
-    public void call(String label, List<x8664Store> arguments, Map<x8664Register, x8664Store> alternativeSources) {
-        List<x8664Register> argRegs = x8664Register.ARGUMENT_REGISTERS;
-        int callStackSize = 0;
-        int stackArguments = Math.max(0, arguments.size() - argRegs.size());
-        callStackSize += stackArguments * 8;
-        int misalignmentAfter = (stackMisalignment + stackArguments * 8) % 16;
+    public void call(String label, x8664Store result, List<x8664Store> arguments, Map<x8664Register, x8664Store> backupStores) {
+        int callStackSize = prepareCallStack(arguments);
+
+        Set<x8664Register> backedUp = backupCallerSavedRegisters(backupStores);
+        moveArguments(arguments, backedUp, backupStores);
+
+        write(x8664InstrType.CALL, new x8664Label(label));
+        tearDownCallStack(callStackSize);
+
+        if (result instanceof x8664Register) {
+            backedUp.remove(result);
+        }
+        if (!result.equals(x8664Register.RAX)) {
+            move(result, x8664Register.RAX, x8664Operand.Size.QUAD_WORD);
+        }
+        restoreRegisters(backedUp, backupStores);
+    }
+
+    /** @return the size of the call stack **/
+    private int prepareCallStack(List<x8664Store> arguments) {
+        int stackArgumentCount = Math.max(0, arguments.size() - x8664Register.ARGUMENT_REGISTERS.size());
+        int callStackSize = stackArgumentCount * 8;
+        int misalignmentAfter = (stackMisalignment + stackArgumentCount * 8) % 16;
         if (misalignmentAfter != 0) {
             write(x8664InstrType.SUB, x8664Store.Size.QUAD_WORD, x8664Register.RSP, new x8664Immediate(16 - misalignmentAfter));
         }
         callStackSize += misalignmentAfter;
 
+        return callStackSize;
+    }
+
+    private void tearDownCallStack(int size) {
+        if (size > 0) {
+            write(x8664InstrType.ADD, x8664Store.Size.QUAD_WORD, x8664Register.RSP, new x8664Immediate(size));
+        }
+    }
+
+    /** @return the registers that were backed up */
+    private Set<x8664Register> backupCallerSavedRegisters(Map<x8664Register, x8664Store> backupStores) {
+        Set<x8664Register> backedUp = new HashSet<>();
+        Set<x8664Store> live = getLiveStores();
+        x8664Register.getRegisterSet().stream()
+                .filter(x8664Register::isCallerSaved)
+                .forEach(argReg -> {
+                    if (!live.contains(argReg)) {
+                        return;
+                    }
+                    move(backupStores.get(argReg), argReg, x8664Operand.Size.QUAD_WORD);
+                    backedUp.add(argReg);
+                });
+
+        return backedUp;
+    }
+
+    private void restoreRegisters(Set<x8664Register> registers, Map<x8664Register, x8664Store> backupStores) {
+        for (x8664Register register : registers) {
+            move(register, backupStores.get(register), x8664Operand.Size.QUAD_WORD);
+        }
+    }
+
+    private void moveArguments(List<x8664Store> arguments, Set<x8664Register> backedUp,
+                               Map<x8664Register, x8664Store> backupStores) {
         Set<x8664Register> writtenTo = new HashSet<>();
-        for (int i = 0; i < Math.min(arguments.size(), argRegs.size()); i++) {
-            x8664Register target = argRegs.get(i);
+        Set<x8664Store> sourcesSet = new HashSet<>(arguments);
+
+        int registerArguments = Math.min(x8664Register.ARGUMENT_REGISTERS.size(), arguments.size());
+
+        for (int i = 0; i < registerArguments; i++) {
+            x8664Register target = x8664Register.ARGUMENT_REGISTERS.get(i);
+            x8664Store source = arguments.get(i);
+            if (target.equals(source)) {
+                continue;
+            }
+
+            if (source instanceof x8664Register sourceReg && writtenTo.contains(sourceReg)) {
+                source = backupStores.get(source);
+            }
+
+            if (sourcesSet.contains(target) && writtenTo.add(target) && !backedUp.contains(target)) {
+                move(backupStores.get(target), target, x8664Operand.Size.QUAD_WORD);
+            }
+
+            move(target, source, x8664Operand.Size.QUAD_WORD);
+        }
+
+        for (int i = arguments.size() - 1; i >= registerArguments; i--) {
             x8664Store source = arguments.get(i);
             if (source instanceof x8664Register && writtenTo.contains(source)) {
-                source = alternativeSources.get(source);
+                source = backupStores.get(source);
             }
-            move(target, source, x8664Operand.Size.QUAD_WORD);
-            if (!source.equals(target)) {
-                writtenTo.add(target);
-            }
-        }
 
-        if (stackArguments > 0) {
-            for (var stackArg : arguments
-                    .subList(argRegs.size(), argRegs.size() + stackArguments)
-                    .reversed()) {
-                if (stackArg instanceof x8664Register && writtenTo.contains(stackArg)) {
-                    stackArg = alternativeSources.get(stackArg);
-                }
-                push(stackArg);
-            }
-        }
-
-        write(x8664InstrType.CALL, new x8664Label(label));
-        if (callStackSize != 0) {
-            write(x8664InstrType.ADD, x8664Store.Size.QUAD_WORD, x8664Register.RSP, new x8664Immediate(callStackSize));
+            push(source);
         }
     }
 }
