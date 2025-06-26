@@ -374,7 +374,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         write(x8664InstrType.POP, x8664Operand.Size.QUAD_WORD, operand);
     }
 
-    public void call(String label, x8664Store result, List<x8664Store> arguments, Map<x8664Register, x8664Store> backupStores) {
+    public void call(String label, x8664Store result, List<x8664Operand> arguments, Map<x8664Register, x8664Store> backupStores) {
         int callStackSize = prepareCallStack(arguments);
 
         Set<x8664Register> backedUp = backupCallerSavedRegisters(backupStores);
@@ -393,7 +393,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
     }
 
     /** @return the size of the call stack **/
-    private int prepareCallStack(List<x8664Store> arguments) {
+    private int prepareCallStack(List<x8664Operand> arguments) {
         int stackArgumentCount = Math.max(0, arguments.size() - x8664Register.ARGUMENT_REGISTERS.size());
         int callStackSize = stackArgumentCount * 8;
         int misalignmentAfter = (stackMisalignment + stackArgumentCount * 8) % 16;
@@ -434,16 +434,16 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         }
     }
 
-    private void moveArguments(List<x8664Store> arguments, Set<x8664Register> backedUp,
+    private void moveArguments(List<x8664Operand> arguments, Set<x8664Register> backedUp,
                                Map<x8664Register, x8664Store> backupStores) {
         Set<x8664Register> writtenTo = new HashSet<>();
-        Set<x8664Store> sourcesSet = new HashSet<>(arguments);
+        Set<x8664Operand> sourcesSet = new HashSet<>(arguments);
 
         int registerArguments = Math.min(x8664Register.ARGUMENT_REGISTERS.size(), arguments.size());
 
         for (int i = 0; i < registerArguments; i++) {
             x8664Register target = x8664Register.ARGUMENT_REGISTERS.get(i);
-            x8664Store source = arguments.get(i);
+            x8664Operand source = arguments.get(i);
             if (target.equals(source)) {
                 continue;
             }
@@ -460,7 +460,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         }
 
         for (int i = arguments.size() - 1; i >= registerArguments; i--) {
-            x8664Store source = arguments.get(i);
+            x8664Operand source = arguments.get(i);
             if (source instanceof x8664Register && writtenTo.contains(source)) {
                 source = backupStores.get(source);
             }

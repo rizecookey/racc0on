@@ -5,10 +5,14 @@ import net.rizecookey.racc0on.backend.store.StoreReference;
 import net.rizecookey.racc0on.backend.store.StoreRequestService;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Register;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Store;
+import net.rizecookey.racc0on.backend.x86_64.operand.x8664Immediate;
+import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
 import net.rizecookey.racc0on.backend.x86_64.store.x8664StoreRefResolver;
 import net.rizecookey.racc0on.backend.x86_64.x8664InstructionGenerator;
 import net.rizecookey.racc0on.ir.node.BuiltinCallNode;
 import net.rizecookey.racc0on.ir.node.CallNode;
+import net.rizecookey.racc0on.ir.node.ConstBoolNode;
+import net.rizecookey.racc0on.ir.node.ConstIntNode;
 import net.rizecookey.racc0on.ir.node.Node;
 import net.rizecookey.racc0on.ir.util.NodeSupport;
 
@@ -16,7 +20,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class x8664CallOp implements x8664Op {
     private static final List<x8664Register> CALLER_SAVED_REGS = x8664Register.getRegisterSet().stream()
@@ -45,6 +48,12 @@ public class x8664CallOp implements x8664Op {
     @Override
     public void makeStoreRequests(StoreRequestService<x8664Op, x8664Store> service) {
         for (var arg : arguments) {
+            Node argNode = NodeSupport.skipProj(arg);
+            if (argNode instanceof ConstIntNode || argNode instanceof ConstBoolNode) {
+                // use immediates instead
+                argRefs.add(new StoreReference.Null<>());
+                continue;
+            }
             argRefs.add(service.requestInputStore(this, NodeSupport.skipProj(arg)));
         }
 
@@ -68,10 +77,21 @@ public class x8664CallOp implements x8664Op {
             backupStores.put(register, backupStore);
         }
 
-        List<x8664Store> arguments = argRefs.stream()
-                .map(storeSupplier::resolve)
-                .map(Optional::orElseThrow)
-                .toList();
-        generator.call(target, out, arguments, backupStores);
+        List<x8664Operand> argumentOperands = new ArrayList<>();
+        for (int i = 0; i < argRefs.size(); i++) {
+            x8664Operand operand = storeSupplier.resolve(argRefs.get(i)).orElse(null);
+            if (operand == null) {
+                Node argumentNode = arguments.get(i);
+                int immediate = switch (argumentNode) {
+                    case ConstBoolNode constBoolNode -> constBoolNode.value() ? 1 : 0;
+                    case ConstIntNode constIntNode -> constIntNode.value();
+                    default -> throw new IllegalStateException("No value for reference " + argRefs.get(i) + " found");
+                };
+                operand = new x8664Immediate(immediate);
+            }
+            argumentOperands.add(operand);
+        }
+
+        generator.call(target, out, argumentOperands, backupStores);
     }
 }
