@@ -46,7 +46,7 @@ public class x8664OneOperandDoubleWidthMOp implements x8664Op {
 
     private void forEachTaintedBackupPair(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier,
                                 x8664Store outStore, BiConsumer<x8664Store, x8664Store> consumer) {
-        SequencedSet<x8664Store> live = generator.getLiveAt(this);
+        SequencedSet<x8664Store> live = generator.getLiveStores();
         for (int i = 0; i < tainted.size(); i++) {
             x8664Register taintedReg = tainted.get(i);
             if (!live.contains(taintedReg) || taintedReg.equals(outStore)) {

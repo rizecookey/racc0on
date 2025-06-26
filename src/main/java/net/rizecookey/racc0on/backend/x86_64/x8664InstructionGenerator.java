@@ -104,6 +104,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
     private int stackSize;
     /// rsp % 16
     private int stackMisalignment;
+    private x8664Op currentOp;
     private LivenessMap<x8664Op, x8664Store> livenessMap;
 
     public x8664InstructionGenerator(x8664CodeGenerator codeGenerator, SsaSchedule schedule) {
@@ -138,7 +139,10 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
 
         List<InstructionBlock<x8664Instr>> blocks = new ArrayList<>();
         for (OperationBlock<x8664Op> opBlock : opSchedule.blocks().values()) {
-            opBlock.operations().forEach(op -> op.write(this, ref -> Optional.ofNullable(locations.get(ref))));
+            opBlock.operations().forEach(op -> {
+                currentOp = op;
+                op.write(this, ref -> Optional.ofNullable(locations.get(ref)));
+            });
             blocks.add(new InstructionBlock<>(opBlock.label(), new ArrayList<>(instructions)));
             instructions.clear();
         }
@@ -208,12 +212,14 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         return new OperationSchedule<>(blocks, entry, Collections.unmodifiableSet(exits));
     }
 
-    public SequencedSet<StoreReference<x8664Store>> getReferencesLiveAt(x8664Op at) {
-        return livenessMap.getLiveAt(at);
+    public SequencedSet<StoreReference<x8664Store>> getLiveReferences() {
+        return livenessMap.getLiveAt(currentOp);
     }
 
-    public SequencedSet<x8664Store> getLiveAt(x8664Op at) {
-        return getReferencesLiveAt(at).stream().map(locations::get).collect(Collectors.toCollection(LinkedHashSet::new));
+    public SequencedSet<x8664Store> getLiveStores() {
+        return getLiveReferences().stream()
+                .map(locations::get)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     public static String printAssembly(List<x8664Instr> instructions) {

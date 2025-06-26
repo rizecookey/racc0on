@@ -61,7 +61,7 @@ public class x8664ShiftOp implements x8664Op {
 
         boolean backupRcx = false;
         if (!shiftCount.equals(x8664Register.RCX)) {
-            if (generator.getLiveAt(this).contains(x8664Register.RCX)) {
+            if (generator.getLiveStores().contains(x8664Register.RCX)) {
                 backupRcx = true;
                 generator.move(backup, x8664Register.RCX, x8664Operand.Size.QUAD_WORD);
             }
