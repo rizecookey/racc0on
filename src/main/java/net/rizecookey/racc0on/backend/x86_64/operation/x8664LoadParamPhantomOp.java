@@ -26,9 +26,12 @@ public class x8664LoadParamPhantomOp implements x8664Op {
             store = new x8664StackStore(-(8 * (parameterIndex - x8664Register.ARGUMENT_REGISTERS.size()) + 16));
         }
 
-        service.requestOutputStore(this, parameter, StoreConditions.<x8664Store>builder()
+        StoreConditions<x8664Store> specificStore = StoreConditions.<x8664Store>builder()
                 .targets(store)
-                .build());
+                .build();
+        // ensure that the parameter is live at the start of a function
+        service.requestInputStore(this, parameter, specificStore);
+        service.requestOutputStore(this, parameter, specificStore);
     }
 
     @Override
