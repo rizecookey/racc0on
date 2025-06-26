@@ -54,6 +54,7 @@ class SamplesTest {
 
     @ParameterizedTest
     @MethodSource("samples")
+    @Execution(ExecutionMode.CONCURRENT)
     void assertCompilationDeterministic(SampleInfo sample) {
         System.out.println("Compiling for initial result");
         String initialResult = null;

@@ -3,6 +3,7 @@ package net.rizecookey.racc0on.ir;
 import net.rizecookey.racc0on.ir.node.Block;
 import net.rizecookey.racc0on.ir.node.Node;
 
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -14,9 +15,11 @@ public class IrGraph {
     private final Block startBlock;
     private final Block endBlock;
     private final String name;
+    private final Map<Class<? extends Node>, Integer> nodeIds;
 
     public IrGraph(String name) {
         this.name = name;
+        this.nodeIds = new HashMap<>();
         this.startBlock = new Block(this);
         this.endBlock = new Block(this);
     }
@@ -49,5 +52,9 @@ public class IrGraph {
     /// {@return the name of this graph}
     public String name() {
         return name;
+    }
+
+    public int reserveId(Node node) {
+        return nodeIds.compute(node.getClass(), (_, old) -> old == null ? 0 : old + 1);
     }
 }

@@ -5,17 +5,12 @@ import net.rizecookey.racc0on.ir.node.operation.unary.UnaryOperationNode;
 import net.rizecookey.racc0on.ir.util.DebugInfo;
 import net.rizecookey.racc0on.ir.IrGraph;
 import net.rizecookey.racc0on.ir.util.DebugInfoHelper;
-import net.rizecookey.racc0on.utils.Pair;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /// The base class for all nodes.
 public sealed abstract class Node permits Block, BuiltinCallNode, CallNode, ConstBoolNode, ConstIntNode, IfNode, JumpNode, ParameterNode, Phi, ProjNode, ReturnNode, StartNode, BinaryOperationNode, UnaryOperationNode {
-    private static final Map<Pair<IrGraph, Class<? extends Node>>, Integer> NODE_IDS = new HashMap<>();
-
     private final IrGraph graph;
     private final Block block;
     private final List<Node> predecessors = new ArrayList<>();
@@ -31,7 +26,7 @@ public sealed abstract class Node permits Block, BuiltinCallNode, CallNode, Cons
         }
         this.debugInfo = DebugInfoHelper.getDebugInfo();
 
-        this.nodeId = reserveId(graph);
+        this.nodeId = graph.reserveId(this);
     }
 
     protected Node(IrGraph graph) {
@@ -40,12 +35,7 @@ public sealed abstract class Node permits Block, BuiltinCallNode, CallNode, Cons
         this.block = (Block) this;
         this.debugInfo = DebugInfo.NoInfo.INSTANCE;
 
-        this.nodeId = reserveId(graph);
-    }
-
-    protected int reserveId(IrGraph graph) {
-        return NODE_IDS.compute(new Pair<>(graph, getClass()),
-                (_, old) -> old == null ? 0 : old + 1);
+        this.nodeId = graph.reserveId(this);
     }
 
     public int id() {
