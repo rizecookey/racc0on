@@ -3,6 +3,11 @@ package net.rizecookey.racc0on.backend.x86_64.operand.stored;
 import java.util.List;
 
 public enum x8664Register implements x8664Store {
+    R12(reg64("r12"), SaveType.CALLEE_SAVED),
+    R13(reg64("r13"), SaveType.CALLEE_SAVED),
+    R14(reg64("r14"), SaveType.CALLEE_SAVED),
+    R15(reg64("r15"), SaveType.CALLEE_SAVED),
+
     RBX(reg16("bx"), SaveType.CALLEE_SAVED),
     RCX(reg16("cx"), SaveType.CALLER_SAVED),
     RSI(reg16("si"), SaveType.CALLER_SAVED),
@@ -11,10 +16,6 @@ public enum x8664Register implements x8664Store {
     R8(reg64("r8"), SaveType.CALLER_SAVED),
     R9(reg64("r9"), SaveType.CALLER_SAVED),
     R10(reg64("r10"), SaveType.CALLER_SAVED),
-    R12(reg64("r12"), SaveType.CALLEE_SAVED),
-    R13(reg64("r13"), SaveType.CALLEE_SAVED),
-    R14(reg64("r14"), SaveType.CALLEE_SAVED),
-    R15(reg64("r15"), SaveType.CALLEE_SAVED),
 
     RAX(reg16("ax"), SaveType.CALLER_SAVED), // move down to make allocation prefer other registers
     RDX(reg16("dx"), SaveType.CALLER_SAVED),

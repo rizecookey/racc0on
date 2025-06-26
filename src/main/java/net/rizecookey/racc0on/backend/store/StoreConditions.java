@@ -32,6 +32,7 @@ public record StoreConditions<U extends VariableStore>(List<U> targetedStores, L
             collidesWith = new ArrayList<>();
         }
 
+        // TODO potentially add optional targets for optimizations
         public Builder<U> targets(U store) {
             targetedStores.add(store);
             return this;
