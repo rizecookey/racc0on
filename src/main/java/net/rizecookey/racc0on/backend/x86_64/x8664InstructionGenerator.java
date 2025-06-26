@@ -99,6 +99,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
     private final List<x8664Instr> instructions;
     private final x8664CodeGenerator codeGenerator;
     private final Map<StoreReference<x8664Store>, x8664Store> locations;
+    private final SequencedSet<x8664Store> writtenTo;
     private final Map<Block, String> blockLabels;
     private int stackSize;
     /// rsp % 16
@@ -109,6 +110,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         this.schedule = schedule;
         this.codeGenerator = codeGenerator;
         this.locations = new HashMap<>();
+        this.writtenTo = new LinkedHashSet<>();
         this.stackSize = 0;
 
         this.instructions = new ArrayList<>();
@@ -130,6 +132,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         x8664StoreAllocator allocator = new x8664StoreAllocator();
         x8664StoreAllocator.Allocation allocation = allocator.allocate(opSchedule, requestService);
         locations.putAll(allocation.allocations());
+        writtenTo.addAll(locations.values());
         stackSize = allocation.stackSize();
         livenessMap = allocation.livenessMap();
 
@@ -234,6 +237,10 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
             write(x8664InstrType.SUB, x8664Operand.Size.QUAD_WORD, x8664Register.RSP, new x8664Immediate(stackSize));
         }
         stackMisalignment = stackSize % 16;
+    }
+
+    public SequencedSet<x8664Store> getWrittenTo() {
+        return Collections.unmodifiableSequencedSet(writtenTo);
     }
 
     public void tearDownStack() {

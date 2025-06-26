@@ -10,6 +10,8 @@ import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Store;
 import net.rizecookey.racc0on.backend.x86_64.store.x8664StoreRefResolver;
 import net.rizecookey.racc0on.backend.x86_64.x8664InstructionGenerator;
 
+import java.util.Set;
+
 public class x8664RetOp implements x8664Op {
     private final Node returnValue;
     private StoreReference<x8664Store> inRef;
@@ -31,9 +33,11 @@ public class x8664RetOp implements x8664Op {
             generator.move(x8664Register.RAX, returnLocation, x8664Operand.Size.QUAD_WORD);
         }
 
+        Set<x8664Store> writtenTo = generator.getWrittenTo();
         x8664Register.getRegisterSet().stream()
                 .filter(x8664Register::isCalleeSaved)
-                .forEach(generator::pop); // TODO see x8664EnterOp.java
+                .filter(writtenTo::contains)
+                .forEach(generator::pop);
 
         generator.tearDownStack();
         generator.write(x8664InstrType.RET);
