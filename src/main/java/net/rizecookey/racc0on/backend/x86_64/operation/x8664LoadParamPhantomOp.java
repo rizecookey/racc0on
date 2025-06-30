@@ -17,7 +17,7 @@ public class x8664LoadParamPhantomOp implements x8664Op {
     }
 
     @Override
-    public void makeStoreRequests(StoreRequestService<x8664Op, x8664Store> service) {
+    public void requestStores(StoreRequestService<x8664Op, x8664Store> service) {
         x8664Store store;
         int parameterIndex = parameter.index();
         if (parameterIndex < x8664Register.ARGUMENT_REGISTERS.size()) {

@@ -10,7 +10,7 @@ import java.util.Set;
 
 public class x8664EnterOp implements x8664Op {
     @Override
-    public void makeStoreRequests(StoreRequestService<x8664Op, x8664Store> service) {
+    public void requestStores(StoreRequestService<x8664Op, x8664Store> service) {
 
     }
 

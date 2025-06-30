@@ -168,7 +168,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
             List<x8664Op> blockOperations = new ArrayList<>();
             for (Node node : schedule.nodeSchedules().get(block)) {
                 List<x8664Op> nodeOperations = selectOperations(node);
-                nodeOperations.forEach(op -> op.makeStoreRequests(storeRequests));
+                nodeOperations.forEach(op -> op.requestStores(storeRequests));
                 blockOperations.addAll(nodeOperations);
             }
 

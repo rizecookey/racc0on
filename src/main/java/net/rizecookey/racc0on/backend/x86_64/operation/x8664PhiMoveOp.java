@@ -21,7 +21,7 @@ public class x8664PhiMoveOp implements x8664Op {
     }
 
     @Override
-    public void makeStoreRequests(StoreRequestService<x8664Op, x8664Store> service) {
+    public void requestStores(StoreRequestService<x8664Op, x8664Store> service) {
         inRef = service.requestInputStore(this, value);
         outRef = service.requestOutputStore(this, phi);
     }

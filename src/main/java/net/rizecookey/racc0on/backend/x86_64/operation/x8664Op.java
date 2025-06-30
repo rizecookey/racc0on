@@ -10,7 +10,7 @@ import net.rizecookey.racc0on.backend.x86_64.x8664InstructionGenerator;
 import java.util.List;
 
 public interface x8664Op extends Operation<x8664Operand, x8664Store>, x8664OpLike {
-    void makeStoreRequests(StoreRequestService<x8664Op, x8664Store> service);
+    void requestStores(StoreRequestService<x8664Op, x8664Store> service);
 
     void write(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier);
 

@@ -28,7 +28,7 @@ public class x8664TwoOperandRmMrOrMiOp implements x8664Op {
     }
 
     @Override
-    public void makeStoreRequests(StoreRequestService<x8664Op, x8664Store> service) {
+    public void requestStores(StoreRequestService<x8664Op, x8664Store> service) {
         outRef = service.requestOutputStore(this, out);
         if (!(inLeft instanceof ConstIntNode)) {
             inLeftRef = service.requestInputStore(this, inLeft);

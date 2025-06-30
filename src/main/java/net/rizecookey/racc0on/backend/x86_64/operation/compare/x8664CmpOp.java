@@ -28,7 +28,7 @@ public abstract class x8664CmpOp implements x8664Op {
     }
 
     @Override
-    public void makeStoreRequests(StoreRequestService<x8664Op, x8664Store> service) {
+    public void requestStores(StoreRequestService<x8664Op, x8664Store> service) {
         inLeftRef = service.requestInputStore(this, inLeft);
         inRightRef = service.requestInputStore(this, inRight);
         outRef = service.requestOutputStore(this, out);
