@@ -18,6 +18,7 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class InterferenceGraph<T extends Operation<?, U>, U extends VariableStore> extends Graph<StoreReference<U>> {
     private final List<T> operations;
@@ -30,15 +31,15 @@ public class InterferenceGraph<T extends Operation<?, U>, U extends VariableStor
         this.requests = requests;
     }
 
-    public List<StoreReference<U>> getSimplicialEliminationOrdering() {
+    public List<StoreReference<U>> getSimplicialEliminationOrdering(Map<StoreReference<U>, StoreConditions<U>> conditions) {
         Map<StoreReference<U>, Integer> currentWeight = new HashMap<>();
         PriorityQueue<Weighted<StoreReference<U>>> priorityQueue =
                 new PriorityQueue<>(Comparator.<Weighted<StoreReference<U>>>comparingInt(Weighted::weight).reversed());
         List<StoreReference<U>> ordering = new ArrayList<>(this.getNodes().stream()
-                .filter(store -> !requests.getConditions(store).targetedStores().isEmpty())
+                .filter(store -> !conditions.get(store).targetedStores().isEmpty())
                 .toList());
         this.getNodes().stream()
-                .filter(store -> requests.getConditions(store).targetedStores().isEmpty())
+                .filter(store -> conditions.get(store).targetedStores().isEmpty())
                 .map(store -> new Weighted<>(store, 0))
                 .forEach(value -> {
                     currentWeight.put(value.value(), value.weight());
@@ -68,7 +69,10 @@ public class InterferenceGraph<T extends Operation<?, U>, U extends VariableStor
     }
 
     public Map<StoreReference<U>, U> createColoring(List<U> initiallyAvailable, Supplier<U> newStoreProvider) {
-        List<StoreReference<U>> ordering = getSimplicialEliminationOrdering();
+        Map<StoreReference<U>, StoreConditions<U>> conditions = getNodes().stream()
+                .map(ref -> Map.entry(ref, requests.getConditionSupplier(ref).supply(ref, livenessMap)))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        List<StoreReference<U>> ordering = getSimplicialEliminationOrdering(conditions);
         Map<StoreReference<U>, U> coloring = new HashMap<>();
         List<U> availableStores = new ArrayList<>(initiallyAvailable);
 
@@ -78,7 +82,11 @@ public class InterferenceGraph<T extends Operation<?, U>, U extends VariableStor
                     .map(coloring::get)
                     .collect(Collectors.toSet());
 
-            U color = colorWithExisting(store, availableStores, neighborsColors).orElseGet(() -> {
+            StoreConditions<U> storeConditions = conditions.get(store);
+            if (!storeConditions.shouldAllocate()) {
+                continue;
+            }
+            U color = colorWithExisting(conditions.get(store), availableStores, neighborsColors).orElseGet(() -> {
                 U newColor = newStoreProvider.get();
                 availableStores.add(newColor);
                 return newColor;
@@ -92,7 +100,8 @@ public class InterferenceGraph<T extends Operation<?, U>, U extends VariableStor
         return coloring;
     }
 
-    private void allocateAdditional(List<U> initiallyAvailable, Supplier<U> newStoreProvider, Map<StoreReference<U>, U> coloring) {
+    private void allocateAdditional(List<U> initiallyAvailable, Supplier<U> newStoreProvider,
+                                    Map<StoreReference<U>, U> coloring) {
         for (T operation : operations) {
             Set<U> forbiddenStores = livenessMap.getLiveAt(operation).stream()
                     .map(coloring::get)
@@ -102,7 +111,12 @@ public class InterferenceGraph<T extends Operation<?, U>, U extends VariableStor
             }
 
             for (StoreReference<U> additionalStore : requests.getAdditionalStores(operation)) {
-                U color = colorWithExisting(additionalStore, initiallyAvailable, forbiddenStores).orElseGet(() -> {
+                StoreConditions<U> storeConditions = requests.getConditionSupplier(additionalStore)
+                        .supply(additionalStore, livenessMap);
+                if (!storeConditions.shouldAllocate()) {
+                    continue;
+                }
+                U color = colorWithExisting(storeConditions, initiallyAvailable, forbiddenStores).orElseGet(() -> {
                     U newColor = newStoreProvider.get();
                     initiallyAvailable.add(newColor);
                     return newColor;
@@ -117,26 +131,24 @@ public class InterferenceGraph<T extends Operation<?, U>, U extends VariableStor
     /**
      * Color a reference with one of the available stores, not using any of the forbidden colors, if possible.
      *
-     * @param store the store reference to color
+     * @param conditions the conditions to adhere to when coloring
      * @param availableStores the available stores for coloring
      * @param forbiddenColors colors that cannot be used for coloring
      *
      * @return a valid coloring for the provided reference (wrapped in an {@link Optional}, or empty if not enough
      * colors are available
      */
-    private Optional<U> colorWithExisting(StoreReference<U> store, List<U> availableStores, Set<U> forbiddenColors) {
-        StoreConditions<U> conditions = requests.getConditions(store);
-
-        if (!conditions.targetedStores().isEmpty()) {
+    private Optional<U> colorWithExisting(StoreConditions<U> conditions, List<U> availableStores,
+                                          Set<U> forbiddenColors) {
+        if (!conditions.targetedStores().isEmpty() && conditions.targetsOptional()) {
             return Optional.of(conditions.targetedStores().stream()
                     .filter(color -> !forbiddenColors.contains(color))
                     .filter(color -> !conditions.collisions().contains(color))
                     .findFirst()
                     .orElseThrow(() -> new IllegalStateException("All targeted stores are reserved")));
-            // TODO avoid erroring out
         }
 
-        return availableStores.stream()
+        return Stream.concat(conditions.targetedStores().stream(), availableStores.stream())
                 .filter(color -> !forbiddenColors.contains(color))
                 .filter(color -> !conditions.collisions().contains(color))
                 .findFirst();

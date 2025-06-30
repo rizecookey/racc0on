@@ -8,18 +8,24 @@ public interface StoreRequestService<T extends Operation<?, U>, U extends Variab
     default StoreReference<U> requestInputStore(T location, Node node) {
         return requestInputStore(location, node, StoreConditions.empty());
     }
-    StoreReference<U> requestInputStore(T location, Node node, StoreConditions<U> conditions);
+    default StoreReference<U> requestInputStore(T location, Node node, StoreConditions<U> conditions) {
+        return requestInputStore(location, node, (_, _) -> conditions);
+    }
+    StoreReference<U> requestInputStore(T location, Node node, StoreConditions.Supplier<T, U> conditionsSupplier);
 
     default StoreReference<U> requestOutputStore(T location, Node node) {
         return requestOutputStore(location, node, StoreConditions.empty());
     }
-    StoreReference<U> requestOutputStore(T location, Node node, StoreConditions<U> conditions);
+    default StoreReference<U> requestOutputStore(T location, Node node, StoreConditions<U> conditions) {
+        return requestOutputStore(location, node, (_, _) -> conditions);
+    }
+    StoreReference<U> requestOutputStore(T location, Node node, StoreConditions.Supplier<T, U> conditionsSupplier);
 
     default StoreReference<U> requestAdditional(T location) {
         return requestAdditional(location, StoreConditions.empty());
     }
-    StoreReference<U> requestAdditional(T location, StoreConditions<U> conditions);
-
-    StoreReference<U> resolveOutputIfAllocated(T location, Node node);
-
+    default  StoreReference<U> requestAdditional(T location, StoreConditions<U> conditions) {
+        return requestAdditional(location, (_, _) -> conditions);
+    }
+    StoreReference<U> requestAdditional(T location, StoreConditions.Supplier<T, U> conditionsSupplier);
 }

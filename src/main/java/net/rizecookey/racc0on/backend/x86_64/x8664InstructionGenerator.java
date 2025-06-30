@@ -421,6 +421,9 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
                     if (!live.contains(argReg)) {
                         return;
                     }
+                    if (!backupStores.containsKey(argReg)) {
+                        throw new IllegalStateException("No backup store found");
+                    }
                     move(backupStores.get(argReg), argReg, x8664Operand.Size.QUAD_WORD);
                     backedUp.add(argReg);
                 });

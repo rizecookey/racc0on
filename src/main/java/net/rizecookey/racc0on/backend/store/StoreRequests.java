@@ -13,9 +13,7 @@ public class StoreRequests<T extends Operation<?, U>, U extends VariableStore> i
     private final Map<T, SequencedSet<StoreReference<U>>> inputStores;
     private final Map<T, StoreReference<U>> outputStores;
     private final Map<T, SequencedSet<StoreReference<U>>> additionalStores;
-    private final Map<StoreReference<U>, StoreConditions<U>> storeConditions;
-
-    private final Map<StoreReference<U>, T> pendingStores;
+    private final Map<StoreReference<U>, StoreConditions.Supplier<T, U>> storeConditions;
 
     private int additionalStoreId;
 
@@ -25,8 +23,6 @@ public class StoreRequests<T extends Operation<?, U>, U extends VariableStore> i
         additionalStores = new HashMap<>();
         storeConditions = new HashMap<>();
 
-        pendingStores = new HashMap<>();
-
         additionalStoreId = 0;
     }
 
@@ -34,47 +30,30 @@ public class StoreRequests<T extends Operation<?, U>, U extends VariableStore> i
     private record AdditionalStore<U extends VariableStore>(int id) implements StoreReference<U> {}
 
     @Override
-    public StoreReference<U> requestInputStore(T location, Node node, StoreConditions<U> conditions) {
+    public StoreReference<U> requestInputStore(T location, Node node, StoreConditions.Supplier<T, U> conditions) {
         RegularStore<U> nodeStore = new RegularStore<>(node);
         inputStores.computeIfAbsent(location, _ -> new LinkedHashSet<>()).add(nodeStore);
-        storeConditions.merge(nodeStore, conditions, StoreConditions::merge);
-
-        if (pendingStores.containsKey(nodeStore)) {
-            T pendingLoc = pendingStores.get(nodeStore);
-            pendingStores.remove(nodeStore);
-            outputStores.put(pendingLoc, nodeStore);
-        }
+        storeConditions.merge(nodeStore, conditions, this::mergeConditionSuppliers);
 
         return nodeStore;
     }
 
     @Override
-    public StoreReference<U> requestOutputStore(T location, Node node, StoreConditions<U> conditions) {
+    public StoreReference<U> requestOutputStore(T location, Node node, StoreConditions.Supplier<T, U> conditions) {
         RegularStore<U> nodeStore = new RegularStore<>(node);
         outputStores.put(location, nodeStore);
-        storeConditions.merge(nodeStore, conditions, StoreConditions::merge);
+        storeConditions.merge(nodeStore, conditions, this::mergeConditionSuppliers);
 
         return nodeStore;
     }
 
     @Override
-    public StoreReference<U> requestAdditional(T location, StoreConditions<U> conditions) {
+    public StoreReference<U> requestAdditional(T location, StoreConditions.Supplier<T, U> conditions) {
         AdditionalStore<U> additionalStore = new AdditionalStore<>(additionalStoreId++);
         additionalStores.computeIfAbsent(location, _ -> new LinkedHashSet<>()).add(additionalStore);
-        storeConditions.merge(additionalStore, conditions, StoreConditions::merge);
+        storeConditions.merge(additionalStore, conditions, this::mergeConditionSuppliers);
 
         return additionalStore;
-    }
-
-    @Override
-    public StoreReference<U> resolveOutputIfAllocated(T location, Node node) {
-        RegularStore<U> nodeStore = new RegularStore<>(node);
-        if (storeConditions.containsKey(nodeStore)) {
-            outputStores.put(location, nodeStore);
-            return nodeStore;
-        }
-        pendingStores.put(nodeStore, location);
-        return nodeStore;
     }
 
     public SequencedSet<StoreReference<U>> getInputStores(T location) {
@@ -93,7 +72,13 @@ public class StoreRequests<T extends Operation<?, U>, U extends VariableStore> i
         return additionalStores.containsKey(location) ? additionalStores.get(location) : new LinkedHashSet<>();
     }
 
-    public StoreConditions<U> getConditions(StoreReference<U> reference) {
-        return storeConditions.containsKey(reference) ? storeConditions.get(reference) : StoreConditions.empty();
+    public StoreConditions.Supplier<T, U> getConditionSupplier(StoreReference<U> reference) {
+        return storeConditions.containsKey(reference) ? storeConditions.get(reference) : (_, _) -> StoreConditions.empty();
+    }
+
+    private StoreConditions.Supplier<T, U> mergeConditionSuppliers(StoreConditions.Supplier<T, U> first,
+                                                                   StoreConditions.Supplier<T, U> second) {
+        return (store, liveness) ->
+                first.supply(store, liveness).merge(second.supply(store, liveness));
     }
 }

@@ -1,5 +1,6 @@
 package net.rizecookey.racc0on.backend.x86_64.operation;
 
+import net.rizecookey.racc0on.backend.store.StoreConditions;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
 import net.rizecookey.racc0on.ir.node.ConstBoolNode;
 import net.rizecookey.racc0on.ir.node.ConstIntNode;
@@ -34,7 +35,7 @@ public class x8664LoadConstPhantomOp implements x8664Op {
 
     @Override
     public void requestStores(StoreRequestService<x8664Op, x8664Store> service) {
-        outWeakRef = service.resolveOutputIfAllocated(this, out);
+        outWeakRef = service.requestOutputStore(this, out, StoreConditions.noAllocation());
     }
 
     @Override
