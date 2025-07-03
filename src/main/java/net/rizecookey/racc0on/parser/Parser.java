@@ -1,9 +1,17 @@
 package net.rizecookey.racc0on.parser;
 
+import net.rizecookey.racc0on.lexer.AmbiguousSymbol;
 import net.rizecookey.racc0on.lexer.keyword.BuiltinFunctionsKeywordType;
+import net.rizecookey.racc0on.lexer.keyword.ComposedTypeKeywordType;
+import net.rizecookey.racc0on.parser.ast.FieldTree;
 import net.rizecookey.racc0on.parser.ast.ParameterTree;
+import net.rizecookey.racc0on.parser.ast.StructTree;
 import net.rizecookey.racc0on.parser.ast.call.BuiltinCallTree;
 import net.rizecookey.racc0on.parser.ast.call.FunctionCallTree;
+import net.rizecookey.racc0on.parser.type.ArrayType;
+import net.rizecookey.racc0on.parser.type.PointerType;
+import net.rizecookey.racc0on.parser.type.StructType;
+import net.rizecookey.racc0on.parser.type.Type;
 import net.rizecookey.racc0on.utils.Pair;
 import net.rizecookey.racc0on.utils.Position;
 import net.rizecookey.racc0on.lexer.BooleanLiteral;
@@ -57,30 +65,91 @@ public class Parser {
     }
 
     public ProgramTree parseProgram() {
+        List<StructTree> structs = new ArrayList<>();
         List<FunctionTree> functions = new ArrayList<>();
         while (this.tokenSource.hasMore()) {
-            functions.add(parseFunction());
+            TypeTree type = parseType();
+            if (!(type.type() instanceof StructType(Identifier name)) || !this.tokenSource.peek().isSeparator(SeparatorType.BRACE_OPEN)) {
+                functions.add(parseFunctionRest(type));
+                continue;
+            }
+
+            structs.add(parseStructDeclarationRest(type, name));
         }
-        return new ProgramTree(null /* TODO */, List.copyOf(functions));
+        return new ProgramTree(List.copyOf(structs), List.copyOf(functions));
     }
 
-    private FunctionTree parseFunction() {
+    private TypeTree parseType() {
+        Span currentSpan;
+        Type currentType;
+        if (this.tokenSource.peek().isKeyword(ComposedTypeKeywordType.STRUCT)) {
+            Token token = this.tokenSource.consume();
+            Identifier identifier = this.tokenSource.expectIdentifier();
+            currentSpan = token.span().merge(identifier.span());
+            currentType = new StructType(identifier);
+        } else {
+            Pair<Keyword, BasicTypeKeywordType> typePair = this.tokenSource.expectBasicType();
+            currentSpan = typePair.first().span();
+            currentType = typePair.second().type();
+        }
+
+        for (Token token = this.tokenSource.peek();
+             token.isAmbiguous(AmbiguousSymbol.SymbolType.STAR) || token.isSeparator(SeparatorType.BRACKET_OPEN);
+             token = this.tokenSource.peek()) {
+            switch (token) {
+                case AmbiguousSymbol(var type, var span) when type.equals(AmbiguousSymbol.SymbolType.STAR) -> {
+                    currentSpan = currentSpan.merge(span);
+                    currentType = new PointerType<>(currentType);
+                    this.tokenSource.consume();
+                }
+                case Separator(var type, _) when type.equals(SeparatorType.BRACKET_OPEN) -> {
+                    this.tokenSource.consume();
+                    Separator sep = this.tokenSource.expectSeparator(SeparatorType.BRACKET_CLOSE);
+                    currentSpan = currentSpan.merge(sep.span());
+                    currentType = new ArrayType<>(currentType);
+                }
+                default -> throw new IllegalStateException("Invalid type token");
+            }
+        }
+
+        return new TypeTree(currentType, currentSpan);
+    }
+
+    private StructTree parseStructDeclarationRest(TypeTree type, Identifier identifier) {
+        List<FieldTree> fields = parseFieldList();
+        Separator sep = this.tokenSource.expectSeparator(SeparatorType.SEMICOLON);
+        return new StructTree(name(identifier), fields, type.span().merge(sep.span()));
+    }
+
+    private List<FieldTree> parseFieldList() {
+        this.tokenSource.expectSeparator(SeparatorType.BRACE_OPEN);
+        List<FieldTree> fields = new ArrayList<>();
+        while (!this.tokenSource.peek().isSeparator(SeparatorType.BRACE_CLOSE)) {
+            fields.add(parseField());
+            this.tokenSource.expectSeparator(SeparatorType.SEMICOLON);
+        }
+        this.tokenSource.expectSeparator(SeparatorType.BRACE_CLOSE);
+        return List.copyOf(fields);
+    }
+
+    private FieldTree parseField() {
         TypeTree type = parseType();
+        NameTree name = name(this.tokenSource.expectIdentifier());
+
+        return new FieldTree(type, name);
+    }
+
+    private FunctionTree parseFunctionRest(TypeTree type) {
         Identifier identifier = this.tokenSource.expectIdentifier();
 
         List<ParameterTree> parameters = parseParameterList();
         BlockTree body = parseBlock();
         return new FunctionTree(
-            type,
-            name(identifier),
-            parameters,
-            body
+                type,
+                name(identifier),
+                parameters,
+                body
         );
-    }
-
-    private TypeTree parseType() {
-        Pair<Keyword, BasicTypeKeywordType> typePair = this.tokenSource.expectType();
-        return new TypeTree(typePair.second().type(), typePair.first().span());
     }
 
     private List<ParameterTree> parseParameterList() {

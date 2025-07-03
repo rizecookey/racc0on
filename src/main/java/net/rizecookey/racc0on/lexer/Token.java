@@ -11,6 +11,10 @@ public sealed interface Token permits BooleanLiteral, ErrorToken, Identifier, Ke
         return false;
     }
 
+    default boolean isComposedTypeKeyword() {
+        return false;
+    }
+
     default boolean isControlKeyword() {
         return false;
     }
@@ -28,6 +32,10 @@ public sealed interface Token permits BooleanLiteral, ErrorToken, Identifier, Ke
     }
 
     default boolean isSeparator(Separator.SeparatorType separatorType) {
+        return false;
+    }
+
+    default boolean isAmbiguous(AmbiguousSymbol.SymbolType symbolType) {
         return false;
     }
 

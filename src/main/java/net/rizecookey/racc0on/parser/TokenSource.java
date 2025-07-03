@@ -2,6 +2,7 @@ package net.rizecookey.racc0on.parser;
 
 import net.rizecookey.racc0on.lexer.Identifier;
 import net.rizecookey.racc0on.lexer.Keyword;
+import net.rizecookey.racc0on.lexer.keyword.ComposedTypeKeywordType;
 import net.rizecookey.racc0on.lexer.keyword.ControlKeywordType;
 import net.rizecookey.racc0on.lexer.keyword.KeywordType;
 import net.rizecookey.racc0on.lexer.Lexer;
@@ -40,7 +41,7 @@ public class TokenSource {
         return this.tokens.get(this.idx);
     }
 
-    public Pair<Keyword, BasicTypeKeywordType> expectType() {
+    public Pair<Keyword, BasicTypeKeywordType> expectBasicType() {
         Token token = peek();
         if (!(token instanceof Keyword kw) || !kw.isBasicTypeKeyword()) {
             throw new ParseException(token.span(), "expected one of " + Arrays.toString(BasicTypeKeywordType.values()) + " but got " + token.asString());
@@ -48,6 +49,16 @@ public class TokenSource {
 
         this.idx++;
         return new Pair<>(kw, (BasicTypeKeywordType) kw.type());
+    }
+
+    public Pair<Keyword, ComposedTypeKeywordType> expectComposedType() {
+        Token token = peek();
+        if (!(token instanceof Keyword kw) || !kw.isComposedTypeKeyword()) {
+            throw new ParseException(token.span(), "expected one of " + Arrays.toString(ComposedTypeKeywordType.values()) + " but got " + token.asString());
+        }
+
+        this.idx++;
+        return new Pair<>(kw, (ComposedTypeKeywordType) kw.type());
     }
 
     public Pair<Keyword, ControlKeywordType> expectControl() {

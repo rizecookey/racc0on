@@ -19,6 +19,11 @@ public record AmbiguousSymbol(SymbolType type, Span span) implements Token {
     }
 
     @Override
+    public boolean isAmbiguous(SymbolType symbolType) {
+        return type().equals(symbolType);
+    }
+
+    @Override
     public String asString() {
         return type.toString();
     }
