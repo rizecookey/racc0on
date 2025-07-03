@@ -36,11 +36,25 @@ public class Lexer {
             case ')' -> separator(SeparatorType.PAREN_CLOSE);
             case '{' -> separator(SeparatorType.BRACE_OPEN);
             case '}' -> separator(SeparatorType.BRACE_CLOSE);
+            case '[' -> separator(SeparatorType.BRACKET_OPEN);
+            case ']' -> separator(SeparatorType.BRACKET_CLOSE);
+            case '.' -> new Operator(OperatorType.Pointer.FIELD_ACCESS, buildSpan(1));
             case ',' -> separator(SeparatorType.COMMA);
             case ';' -> separator(SeparatorType.SEMICOLON);
-            case '-' -> singleOrFollowedByEq(OperatorType.Ambiguous.MINUS, OperatorType.Assignment.MINUS);
+            case '-' -> {
+                if (peek(1) == '>') {
+                    yield new Operator(OperatorType.Pointer.ARROW, buildSpan(2));
+                }
+                yield singleOrFollowedByEq(OperatorType.Ambiguous.MINUS, OperatorType.Assignment.MINUS);
+            }
             case '+' -> singleOrFollowedByEq(OperatorType.Binary.PLUS, OperatorType.Assignment.PLUS);
-            case '*' -> singleOrFollowedByEq(OperatorType.Binary.MUL, OperatorType.Assignment.MUL);
+            case '*' -> {
+                if (peek(1) == '=') {
+                    yield new Operator(OperatorType.Assignment.MUL, buildSpan(2));
+                }
+
+                yield new AmbiguousSymbol(AmbiguousSymbol.SymbolType.STAR, buildSpan(1));
+            }
             case '/' -> singleOrFollowedByEq(OperatorType.Binary.DIV, OperatorType.Assignment.DIV);
             case '%' -> singleOrFollowedByEq(OperatorType.Binary.MOD, OperatorType.Assignment.MOD);
             case '^' -> singleOrFollowedByEq(OperatorType.Binary.BITWISE_XOR, OperatorType.Assignment.BITWISE_XOR);
