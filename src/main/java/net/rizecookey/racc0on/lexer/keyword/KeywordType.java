@@ -7,8 +7,9 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public sealed interface KeywordType permits BasicTypeKeywordType, BoolLiteralKeywordType, BuiltinFunctionsKeywordType, ComposedTypeKeywordType, ControlKeywordType, PointerLiteralKeywordType, ReservedKeywordType {
+public sealed interface KeywordType permits AllocKeywordType, BasicTypeKeywordType, BoolLiteralKeywordType, BuiltinFunctionsKeywordType, ComposedTypeKeywordType, ControlKeywordType, PointerLiteralKeywordType, ReservedKeywordType {
   Set<KeywordType> VALUES = join(Set.of(
+          AllocKeywordType.values(),
           BoolLiteralKeywordType.values(),
           BuiltinFunctionsKeywordType.values(),
           ComposedTypeKeywordType.values(),

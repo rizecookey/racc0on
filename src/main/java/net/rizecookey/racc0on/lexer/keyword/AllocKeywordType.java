@@ -1,13 +1,12 @@
 package net.rizecookey.racc0on.lexer.keyword;
 
-public enum BuiltinFunctionsKeywordType implements KeywordType {
-    PRINT("print"),
-    READ("read"),
-    FLUSH("flush"),
+public enum AllocKeywordType implements KeywordType {
+    ALLOC("alloc"),
+    ALLOC_ARRAY("alloc_array"),
     ;
 
     private final String keyword;
-    BuiltinFunctionsKeywordType(String keyword) {
+    AllocKeywordType(String keyword) {
         this.keyword = keyword;
     }
 
