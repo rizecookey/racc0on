@@ -259,6 +259,7 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
         List<Type> parameterTypes = switch (builtinCallTree.type()) {
             case PRINT -> List.of(BasicType.INT);
             case READ, FLUSH -> List.of();
+            case ALLOC, ALLOC_ARRAY -> throw new UnsupportedOperationException(); // TODO
         };
 
         if (parameterTypes.size() != builtinCallTree.arguments().size()) {
@@ -274,6 +275,7 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
 
         return Optional.of(switch (builtinCallTree.type()) {
             case PRINT, READ, FLUSH -> BasicType.INT;
+            case ALLOC, ALLOC_ARRAY -> throw new UnsupportedOperationException(); // TODO
         });
     }
 

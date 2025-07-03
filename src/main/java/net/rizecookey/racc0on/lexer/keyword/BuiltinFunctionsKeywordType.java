@@ -4,6 +4,8 @@ public enum BuiltinFunctionsKeywordType implements KeywordType {
     PRINT("print"),
     READ("read"),
     FLUSH("flush"),
+    ALLOC("alloc"),
+    ALLOC_ARRAY("alloc_array"),
     ;
 
     private final String keyword;

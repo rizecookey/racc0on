@@ -19,8 +19,11 @@ public record Separator(SeparatorType type, Span span) implements Token {
         PAREN_CLOSE(")"),
         BRACE_OPEN("{"),
         BRACE_CLOSE("}"),
+        BRACKET_OPEN("["),
+        BRACKET_CLOSE("]"),
         COMMA(","),
-        SEMICOLON(";");
+        SEMICOLON(";"),
+        ;
 
         private final String value;
 

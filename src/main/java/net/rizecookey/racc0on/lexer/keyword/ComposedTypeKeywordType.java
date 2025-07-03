@@ -1,14 +1,11 @@
 package net.rizecookey.racc0on.lexer.keyword;
 
-public enum ReservedKeywordType implements KeywordType {
-    ASSERT("assert"),
-    VOID("void"),
-    CHAR("char"),
-    STRING("string"),
+public enum ComposedTypeKeywordType implements KeywordType {
+    STRUCT("struct"),
     ;
 
     private final String keyword;
-    ReservedKeywordType(String keyword) {
+    ComposedTypeKeywordType(String keyword) {
         this.keyword = keyword;
     }
 

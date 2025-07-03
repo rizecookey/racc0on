@@ -7,11 +7,13 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public sealed interface KeywordType permits BoolLiteralKeywordType, BuiltinFunctionsKeywordType, ControlKeywordType, ReservedKeywordType, BasicTypeKeywordType {
+public sealed interface KeywordType permits BasicTypeKeywordType, BoolLiteralKeywordType, BuiltinFunctionsKeywordType, ComposedTypeKeywordType, ControlKeywordType, PointerLiteralKeywordType, ReservedKeywordType {
   Set<KeywordType> VALUES = join(Set.of(
           BoolLiteralKeywordType.values(),
           BuiltinFunctionsKeywordType.values(),
+          ComposedTypeKeywordType.values(),
           ControlKeywordType.values(),
+          PointerLiteralKeywordType.values(),
           ReservedKeywordType.values(),
           BasicTypeKeywordType.values()
   ));

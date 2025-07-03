@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-public sealed interface OperatorType permits OperatorType.Ambiguous, OperatorType.Assignment, OperatorType.Binary, OperatorType.Ternary, OperatorType.Unary {
+public sealed interface OperatorType permits OperatorType.Ambiguous, OperatorType.Assignment, OperatorType.Binary, OperatorType.Pointer, OperatorType.Ternary, OperatorType.Unary {
     default boolean isAssignment() {
         return false;
     }
@@ -155,6 +155,22 @@ public sealed interface OperatorType permits OperatorType.Ambiguous, OperatorTyp
 
         private final String value;
         Ternary(String value) {
+            this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            return value;
+        }
+    }
+
+    enum Pointer implements OperatorType {
+        ARROW("->"),
+        FIELD_ACCESS("."),
+        ;
+
+        private final String value;
+        Pointer(String value) {
             this.value = value;
         }
 
