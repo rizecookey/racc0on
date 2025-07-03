@@ -219,12 +219,14 @@ public class Printer {
                 printTree(structTree.name());
                 print(" {");
                 lineBreak();
+                this.indentDepth++;
                 for (FieldTree field : structTree.fields()) {
                     printTree(field);
                     semicolon();
                     lineBreak();
                 }
-                print("}");
+                this.indentDepth--;
+                print("};");
             }
             case ExpressionArrayAccessTree expressionArrayAccessTree -> {
                 printTree(expressionArrayAccessTree.array());
