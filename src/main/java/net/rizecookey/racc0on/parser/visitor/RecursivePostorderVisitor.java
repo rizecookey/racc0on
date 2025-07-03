@@ -123,7 +123,7 @@ public class RecursivePostorderVisitor<T, R> implements Visitor<T, R> {
     public R visit(ProgramTree programTree, T data) {
         R r;
         T d = data;
-        for (FunctionTree tree : programTree.topLevelTrees()) {
+        for (FunctionTree tree : programTree.functions()) {
             r = tree.accept(this, d);
             d = accumulate(data, r);
         }

@@ -6,19 +6,19 @@ import net.rizecookey.racc0on.parser.visitor.Visitor;
 
 import java.util.List;
 
-public record ProgramTree(List<FunctionTree> topLevelTrees) implements Tree {
+public record ProgramTree(List<FunctionTree> functions) implements Tree {
     public ProgramTree {
-        topLevelTrees = List.copyOf(topLevelTrees);
+        functions = List.copyOf(functions);
     }
     @Override
     public Span span() {
-        if (topLevelTrees.isEmpty()) {
+        if (functions.isEmpty()) {
             Position zero = new Position.SimplePosition(0, 0);
             return new Span.SimpleSpan(zero, zero);
         }
 
-        var first = topLevelTrees.getFirst();
-        var last = topLevelTrees.getLast();
+        var first = functions.getFirst();
+        var last = functions.getLast();
         return new Span.SimpleSpan(first.span().start(), last.span().end());
     }
 

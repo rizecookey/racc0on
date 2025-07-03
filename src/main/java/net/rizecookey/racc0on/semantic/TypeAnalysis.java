@@ -145,7 +145,7 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
     @Override
     public Optional<Type> visit(ProgramTree programTree, FunctionInfo info) {
         boolean mainFound = false;
-        for (FunctionTree function : programTree.topLevelTrees()) {
+        for (FunctionTree function : programTree.functions()) {
             if (function.name().name().asString().equals("main")) {
                 expectType(function.returnType().span(), BasicType.INT, function.returnType().accept(this, info).orElseThrow());
                 if (!function.parameters().isEmpty()) {
@@ -168,8 +168,8 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
             throw new SemanticException(span, "missing main function");
         }
         functionNamespace = new Namespace<>();
-        programTree.topLevelTrees().forEach(t -> functionNamespace.put(t.name().name(), t));
-        programTree.topLevelTrees().forEach(t -> t.accept(this, new FunctionInfo(t)));
+        programTree.functions().forEach(t -> functionNamespace.put(t.name().name(), t));
+        programTree.functions().forEach(t -> t.accept(this, new FunctionInfo(t)));
         return Optional.empty();
     }
 

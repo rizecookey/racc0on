@@ -39,7 +39,7 @@ class ControlFlowAnalysis implements NoOpVisitor<ControlFlowAnalysis.ControlFlow
 
     @Override
     public Unit visit(ProgramTree programTree, ControlFlowState data) {
-        programTree.topLevelTrees().forEach(t -> t.accept(this, new ControlFlowState(false, false)));
+        programTree.functions().forEach(t -> t.accept(this, new ControlFlowState(false, false)));
         return NoOpVisitor.super.visit(programTree, data);
     }
 

@@ -157,7 +157,7 @@ class VariableStatusAnalysis extends RecursivePostorderVisitor<Namespace<Variabl
 
     @Override
     public Unit visit(ProgramTree programTree, Namespace<VariableStatus> data) {
-        programTree.topLevelTrees().forEach(t -> t.accept(this, new Namespace<>()));
+        programTree.functions().forEach(t -> t.accept(this, new Namespace<>()));
         return Unit.INSTANCE;
     }
 

@@ -92,7 +92,7 @@ public final class Racc0onCompilation {
     private List<IrGraph> translateToSsa(ProgramTree program) {
         List<IrGraph> functions = new ArrayList<>();
 
-        for (FunctionTree function : program.topLevelTrees()) {
+        for (FunctionTree function : program.functions()) {
             SsaTranslation translator = new SsaTranslation(function, new LocalValueNumbering());
             functions.add(translator.translate());
         }
