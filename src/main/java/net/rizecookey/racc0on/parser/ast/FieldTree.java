@@ -1,12 +1,12 @@
 package net.rizecookey.racc0on.parser.ast;
 
-import net.rizecookey.racc0on.utils.Span;
 import net.rizecookey.racc0on.parser.visitor.Visitor;
+import net.rizecookey.racc0on.utils.Span;
 
-public record LValueIdentTree(NameTree name) implements LValueTree {
+public record FieldTree(TypeTree type, NameTree name) implements Tree {
     @Override
     public Span span() {
-        return name().span();
+        return type.span().merge(name.span());
     }
 
     @Override

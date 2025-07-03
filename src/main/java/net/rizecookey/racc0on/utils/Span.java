@@ -17,4 +17,22 @@ public sealed interface Span {
             return "[" + start() + "|" + end() + "]";
         }
     }
+
+    static Position min(Position first, Position second) {
+        int lineDiff = first.line() - second.line();
+        if (lineDiff != 0) {
+            return lineDiff < 0 ? first : second;
+        }
+
+        return first.column() <= second.column() ? first : second;
+    }
+
+    static Position max(Position first, Position second) {
+        int lineDiff = first.line() - second.line();
+        if (lineDiff != 0) {
+            return lineDiff > 0 ? first : second;
+        }
+
+        return first.column() >= second.column() ? first : second;
+    }
 }

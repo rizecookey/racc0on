@@ -6,7 +6,7 @@ import net.rizecookey.racc0on.parser.visitor.Visitor;
 
 import java.util.List;
 
-public record ProgramTree(List<FunctionTree> functions) implements Tree {
+public record ProgramTree(List<StructTree> structs, List<FunctionTree> functions) implements Tree {
     public ProgramTree {
         functions = List.copyOf(functions);
     }
@@ -17,9 +17,9 @@ public record ProgramTree(List<FunctionTree> functions) implements Tree {
             return new Span.SimpleSpan(zero, zero);
         }
 
-        var first = functions.getFirst();
-        var last = functions.getLast();
-        return new Span.SimpleSpan(first.span().start(), last.span().end());
+        var start = Span.min(functions.getFirst().span().start(), structs.getFirst().span().start());
+        var end = Span.max(functions.getLast().span().end(), structs.getLast().span().end());
+        return new Span.SimpleSpan(start, end);
     }
 
     @Override

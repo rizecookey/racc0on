@@ -1,10 +1,10 @@
 package net.rizecookey.racc0on.parser.ast;
 
-import net.rizecookey.racc0on.parser.ast.exp.ExpressionTree;
+import net.rizecookey.racc0on.parser.ast.lvalue.LValueTree;
 import net.rizecookey.racc0on.utils.Span;
 import net.rizecookey.racc0on.parser.visitor.Visitor;
 
-public sealed interface Tree permits ExpressionTree, FunctionTree, LValueTree, NameTree, ParameterTree, ProgramTree, StatementTree, TypeTree {
+public sealed interface Tree permits FieldTree, FunctionTree, LValueTree, NameTree, ParameterTree, ProgramTree, StatementTree, StructTree, TypeTree, net.rizecookey.racc0on.parser.ast.exp.ExpressionTree {
 
     Span span();
 

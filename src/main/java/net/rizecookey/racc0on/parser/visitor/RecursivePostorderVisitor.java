@@ -1,6 +1,16 @@
 package net.rizecookey.racc0on.parser.visitor;
 
+import net.rizecookey.racc0on.parser.ast.FieldTree;
+import net.rizecookey.racc0on.parser.ast.StructTree;
+import net.rizecookey.racc0on.parser.ast.call.AllocArrayCallTree;
+import net.rizecookey.racc0on.parser.ast.call.AllocCallTree;
+import net.rizecookey.racc0on.parser.ast.exp.ExpressionArrayAccessTree;
+import net.rizecookey.racc0on.parser.ast.exp.ExpressionDereferenceTree;
+import net.rizecookey.racc0on.parser.ast.exp.ExpressionFieldTree;
 import net.rizecookey.racc0on.parser.ast.exp.ExpressionTree;
+import net.rizecookey.racc0on.parser.ast.lvalue.LValueArrayAccessTree;
+import net.rizecookey.racc0on.parser.ast.lvalue.LValueDereferenceTree;
+import net.rizecookey.racc0on.parser.ast.lvalue.LValueFieldTree;
 import net.rizecookey.racc0on.parser.ast.simp.AssignmentTree;
 import net.rizecookey.racc0on.parser.ast.exp.BinaryOperationTree;
 import net.rizecookey.racc0on.parser.ast.BlockTree;
@@ -9,7 +19,7 @@ import net.rizecookey.racc0on.parser.ast.call.BuiltinCallTree;
 import net.rizecookey.racc0on.parser.ast.simp.DeclarationTree;
 import net.rizecookey.racc0on.parser.ast.FunctionTree;
 import net.rizecookey.racc0on.parser.ast.exp.IdentExpressionTree;
-import net.rizecookey.racc0on.parser.ast.LValueIdentTree;
+import net.rizecookey.racc0on.parser.ast.lvalue.LValueIdentTree;
 import net.rizecookey.racc0on.parser.ast.exp.IntLiteralTree;
 import net.rizecookey.racc0on.parser.ast.ParameterTree;
 import net.rizecookey.racc0on.parser.ast.exp.TernaryExpressionTree;
@@ -133,6 +143,10 @@ public class RecursivePostorderVisitor<T, R> implements Visitor<T, R> {
     public R visit(ProgramTree programTree, T data) {
         R r;
         T d = data;
+        for (StructTree tree : programTree.structs()) {
+            r = tree.accept(this, d);
+            d = accumulate(data, r);
+        }
         for (FunctionTree tree : programTree.functions()) {
             r = tree.accept(this, d);
             d = accumulate(data, r);
@@ -248,6 +262,98 @@ public class RecursivePostorderVisitor<T, R> implements Visitor<T, R> {
         }
         r = this.visitor.visit(builtinCallTree, d);
         return r;
+    }
+
+    @Override
+    public R visit(StructTree structTree, T data) {
+        R r;
+        T d = data;
+        for (FieldTree field : structTree.fields()) {
+            r = field.accept(this, d);
+            d = accumulate(d, r);
+        }
+
+        return this.visitor.visit(structTree, d);
+    }
+
+    @Override
+    public R visit(FieldTree fieldTree, T data) {
+        R r = fieldTree.type().accept(this, data);
+        T d = accumulate(data, r);
+        r = fieldTree.name().accept(this, d);
+        d = accumulate(d, r);
+
+        return this.visitor.visit(fieldTree, d);
+    }
+
+    @Override
+    public R visit(ExpressionArrayAccessTree expressionArrayAccessTree, T data) {
+        R r = expressionArrayAccessTree.array().accept(this, data);
+        T d = accumulate(data, r);
+        r = expressionArrayAccessTree.index().accept(this, d);
+        d = accumulate(d, r);
+
+        return this.visitor.visit(expressionArrayAccessTree, d);
+    }
+
+    @Override
+    public R visit(ExpressionDereferenceTree expressionDereferenceTree, T data) {
+        R r = expressionDereferenceTree.pointer().accept(this, data);
+
+        return this.visitor.visit(expressionDereferenceTree, accumulate(data, r));
+    }
+
+    @Override
+    public R visit(ExpressionFieldTree expressionFieldTree, T data) {
+        R r = expressionFieldTree.struct().accept(this, data);
+        T d = accumulate(data, r);
+        r = expressionFieldTree.fieldName().accept(this, d);
+        d = accumulate(d, r);
+
+        return this.visitor.visit(expressionFieldTree, d);
+    }
+
+    @Override
+    public R visit(LValueArrayAccessTree lValueArrayAccessTree, T data) {
+        R r = lValueArrayAccessTree.array().accept(this, data);
+        T d = accumulate(data, r);
+        r = lValueArrayAccessTree.index().accept(this, d);
+        d = accumulate(d, r);
+
+        return this.visitor.visit(lValueArrayAccessTree, d);
+    }
+
+    @Override
+    public R visit(LValueDereferenceTree lValueDereferenceTree, T data) {
+        R r = lValueDereferenceTree.pointer().accept(this, data);
+
+        return this.visitor.visit(lValueDereferenceTree, accumulate(data, r));
+    }
+
+    @Override
+    public R visit(LValueFieldTree lValueFieldTree, T data) {
+        R r = lValueFieldTree.struct().accept(this, data);
+        T d = accumulate(data, r);
+        r = lValueFieldTree.fieldName().accept(this, d);
+        d = accumulate(d, r);
+
+        return this.visitor.visit(lValueFieldTree, d);
+    }
+
+    @Override
+    public R visit(AllocCallTree allocCallTree, T data) {
+        R r = allocCallTree.type().accept(this, data);
+
+        return this.visitor.visit(allocCallTree, accumulate(data, r));
+    }
+
+    @Override
+    public R visit(AllocArrayCallTree allocArrayCallTree, T data) {
+        R r = allocArrayCallTree.type().accept(this, data);
+        T d = accumulate(data, r);
+        r = allocArrayCallTree.elementCount().accept(this, d);
+
+        return this.visitor.visit(allocArrayCallTree, accumulate(d, r));
     }
 
     protected T accumulate(T data, R value) {

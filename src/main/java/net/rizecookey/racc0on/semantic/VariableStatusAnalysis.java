@@ -4,11 +4,14 @@ import net.rizecookey.racc0on.lexer.OperatorType;
 import net.rizecookey.racc0on.parser.ast.FunctionTree;
 import net.rizecookey.racc0on.parser.ast.ParameterTree;
 import net.rizecookey.racc0on.parser.ast.ProgramTree;
+import net.rizecookey.racc0on.parser.ast.lvalue.LValueArrayAccessTree;
+import net.rizecookey.racc0on.parser.ast.lvalue.LValueDereferenceTree;
+import net.rizecookey.racc0on.parser.ast.lvalue.LValueFieldTree;
 import net.rizecookey.racc0on.parser.ast.simp.AssignmentTree;
 import net.rizecookey.racc0on.parser.ast.BlockTree;
 import net.rizecookey.racc0on.parser.ast.simp.DeclarationTree;
 import net.rizecookey.racc0on.parser.ast.exp.IdentExpressionTree;
-import net.rizecookey.racc0on.parser.ast.LValueIdentTree;
+import net.rizecookey.racc0on.parser.ast.lvalue.LValueIdentTree;
 import net.rizecookey.racc0on.parser.ast.NameTree;
 import net.rizecookey.racc0on.parser.ast.control.ForTree;
 import net.rizecookey.racc0on.parser.ast.control.IfElseTree;
@@ -118,6 +121,7 @@ class VariableStatusAnalysis extends RecursivePostorderVisitor<Namespace<Variabl
                     updateStatus(data, VariableStatus.INITIALIZED, name);
                 }
             }
+            case LValueArrayAccessTree _, LValueDereferenceTree _, LValueFieldTree _ -> throw new UnsupportedOperationException(); // TODO
         }
         return Unit.INSTANCE;
     }

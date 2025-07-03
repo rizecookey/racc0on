@@ -1,11 +1,21 @@
 package net.rizecookey.racc0on.parser;
 
+import net.rizecookey.racc0on.parser.ast.FieldTree;
+import net.rizecookey.racc0on.parser.ast.StructTree;
+import net.rizecookey.racc0on.parser.ast.call.AllocArrayCallTree;
+import net.rizecookey.racc0on.parser.ast.call.AllocCallTree;
+import net.rizecookey.racc0on.parser.ast.exp.ExpressionArrayAccessTree;
+import net.rizecookey.racc0on.parser.ast.exp.ExpressionDereferenceTree;
+import net.rizecookey.racc0on.parser.ast.exp.ExpressionFieldTree;
+import net.rizecookey.racc0on.parser.ast.lvalue.LValueArrayAccessTree;
+import net.rizecookey.racc0on.parser.ast.lvalue.LValueDereferenceTree;
+import net.rizecookey.racc0on.parser.ast.lvalue.LValueFieldTree;
 import net.rizecookey.racc0on.parser.ast.simp.AssignmentTree;
 import net.rizecookey.racc0on.parser.ast.exp.BinaryOperationTree;
 import net.rizecookey.racc0on.parser.ast.BlockTree;
 import net.rizecookey.racc0on.parser.ast.exp.BoolLiteralTree;
 import net.rizecookey.racc0on.parser.ast.exp.IdentExpressionTree;
-import net.rizecookey.racc0on.parser.ast.LValueIdentTree;
+import net.rizecookey.racc0on.parser.ast.lvalue.LValueIdentTree;
 import net.rizecookey.racc0on.parser.ast.exp.IntLiteralTree;
 import net.rizecookey.racc0on.parser.ast.ParameterTree;
 import net.rizecookey.racc0on.parser.ast.call.CallTree;
@@ -82,8 +92,12 @@ public class Printer {
                 printTree(body);
             }
             case NameTree(var name, _) -> print(name.asString());
-            case ProgramTree(var topLevelTrees) -> {
-                for (FunctionTree function : topLevelTrees) {
+            case ProgramTree(var structs, var functions) -> {
+                for (StructTree struct : structs) {
+                    printTree(struct);
+                    lineBreak();
+                }
+                for (FunctionTree function : functions) {
                     printTree(function);
                     lineBreak();
                 }
@@ -195,6 +209,26 @@ public class Printer {
                 }
                 print(")");
             }
+            case FieldTree fieldTree -> {
+                printTree(fieldTree.type());
+                space();
+                printTree(fieldTree.name());
+            }
+            case StructTree structTree -> {
+                print("struct ");
+                printTree(structTree.name());
+                print(" {");
+                lineBreak();
+                for (FieldTree field : structTree.fields()) {
+                    printTree(field);
+                    semicolon();
+                    lineBreak();
+                }
+                print("}");
+            }
+            case ExpressionArrayAccessTree _, ExpressionDereferenceTree _, ExpressionFieldTree _, LValueArrayAccessTree _,
+                 LValueDereferenceTree _, LValueFieldTree _, AllocCallTree _, AllocArrayCallTree _
+                    -> throw new UnsupportedOperationException(); // TODO
         }
     }
 
