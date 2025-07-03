@@ -167,6 +167,7 @@ public sealed interface OperatorType permits OperatorType.Ambiguous, OperatorTyp
     enum Pointer implements OperatorType {
         ARROW("->"),
         FIELD_ACCESS("."),
+        DEREFERENCE("*"),
         ;
 
         private final String value;
