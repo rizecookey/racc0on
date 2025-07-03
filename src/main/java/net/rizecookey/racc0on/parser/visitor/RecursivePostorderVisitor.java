@@ -38,16 +38,20 @@ public class RecursivePostorderVisitor<T, R> implements Visitor<T, R> {
     @Override
     public R visit(AssignmentTree assignmentTree, T data) {
         R r = assignmentTree.lValue().accept(this, data);
-        r = assignmentTree.expression().accept(this, accumulate(data, r));
-        r = this.visitor.visit(assignmentTree, accumulate(data, r));
+        T d = accumulate(data, r);
+        r = assignmentTree.expression().accept(this, d);
+        d = accumulate(d, r);
+        r = this.visitor.visit(assignmentTree, d);
         return r;
     }
 
     @Override
     public R visit(BinaryOperationTree binaryOperationTree, T data) {
         R r = binaryOperationTree.lhs().accept(this, data);
-        r = binaryOperationTree.rhs().accept(this, accumulate(data, r));
-        r = this.visitor.visit(binaryOperationTree, accumulate(data, r));
+        T d = accumulate(data, r);
+        r = binaryOperationTree.rhs().accept(this, d);
+        d = accumulate(d, r);
+        r = this.visitor.visit(binaryOperationTree, d);
         return r;
     }
 
@@ -66,20 +70,26 @@ public class RecursivePostorderVisitor<T, R> implements Visitor<T, R> {
     @Override
     public R visit(DeclarationTree declarationTree, T data) {
         R r = declarationTree.type().accept(this, data);
-        r = declarationTree.name().accept(this, accumulate(data, r));
+        T d = accumulate(data, r);
+        r = declarationTree.name().accept(this, d);
+        d = accumulate(d, r);
         if (declarationTree.initializer() != null) {
-            r = declarationTree.initializer().accept(this, accumulate(data, r));
+            r = declarationTree.initializer().accept(this, d);
+            d = accumulate(d, r);
         }
-        r = this.visitor.visit(declarationTree, accumulate(data, r));
+        r = this.visitor.visit(declarationTree, d);
         return r;
     }
 
     @Override
     public R visit(FunctionTree functionTree, T data) {
         R r = functionTree.returnType().accept(this, data);
-        r = functionTree.name().accept(this, accumulate(data, r));
-        r = functionTree.body().accept(this, accumulate(data, r));
-        r = this.visitor.visit(functionTree, accumulate(data, r));
+        T d = accumulate(data, r);
+        r = functionTree.name().accept(this, d);
+        d = accumulate(d, r);
+        r = functionTree.body().accept(this, d);
+        d = accumulate(d, r);
+        r = this.visitor.visit(functionTree, d);
         return r;
     }
 
@@ -151,73 +161,92 @@ public class RecursivePostorderVisitor<T, R> implements Visitor<T, R> {
     @Override
     public R visit(IfElseTree ifElseTree, T data) {
         R r = ifElseTree.condition().accept(this, data);
-        r = ifElseTree.thenBranch().accept(this, accumulate(data, r));
+        T d = accumulate(data, r);
+        r = ifElseTree.thenBranch().accept(this, d);
+        d = accumulate(d, r);
         if (ifElseTree.elseBranch() != null) {
-            r = ifElseTree.elseBranch().accept(this, accumulate(data, r));
+            r = ifElseTree.elseBranch().accept(this, d);
+            d = accumulate(d, r);
         }
-        r = this.visitor.visit(ifElseTree, accumulate(data, r));
+        r = this.visitor.visit(ifElseTree, d);
         return r;
     }
 
     @Override
     public R visit(WhileTree whileTree, T data) {
         R r = whileTree.condition().accept(this, data);
-        r = whileTree.body().accept(this, accumulate(data, r));
-        r = this.visitor.visit(whileTree, accumulate(data, r));
+        T d = accumulate(data, r);
+        r = whileTree.body().accept(this, d);
+        d = accumulate(d, r);
+        r = this.visitor.visit(whileTree, d);
         return r;
     }
 
     @Override
     public R visit(ForTree forTree, T data) {
-        R r = null;
+        R r;
+        T d = data;
         if (forTree.initializer() != null) {
-            r = forTree.initializer().accept(this, data);
+            r = forTree.initializer().accept(this, d);
+            d = accumulate(d, r);
         }
 
-        r = forTree.condition().accept(this, r != null ? accumulate(data, r) : data);
-        r = forTree.body().accept(this, accumulate(data, r));
+        r = forTree.condition().accept(this, d);
+        d = accumulate(d, r);
+        r = forTree.body().accept(this, d);
+        d = accumulate(d, r);
         if (forTree.step() != null) {
-            r = forTree.step().accept(this, accumulate(data, r));
+            r = forTree.step().accept(this, d);
+            d = accumulate(d, r);
         }
-        r = this.visitor.visit(forTree, accumulate(data, r));
+        r = this.visitor.visit(forTree, d);
         return r;
     }
 
     @Override
     public R visit(TernaryExpressionTree ternaryExpressionTree, T data) {
         R r = ternaryExpressionTree.condition().accept(this, data);
-        r = ternaryExpressionTree.ifBranch().accept(this, accumulate(data, r));
-        r = ternaryExpressionTree.elseBranch().accept(this, accumulate(data, r));
-        r = this.visitor.visit(ternaryExpressionTree, accumulate(data, r));
+        T d = accumulate(data, r);
+        r = ternaryExpressionTree.ifBranch().accept(this, d);
+        d = accumulate(d, r);
+        r = ternaryExpressionTree.elseBranch().accept(this, d);
+        d = accumulate(d, r);
+        r = this.visitor.visit(ternaryExpressionTree, d);
         return r;
     }
 
     @Override
     public R visit(ParameterTree parameterTree, T data) {
         R r = parameterTree.type().accept(this, data);
-        r = parameterTree.name().accept(this, accumulate(data, r));
+        T d = accumulate(data, r);
+        r = parameterTree.name().accept(this, d);
+        d = accumulate(d, r);
 
-        r = this.visitor.visit(parameterTree, accumulate(data, r));
+        r = this.visitor.visit(parameterTree, d);
         return r;
     }
 
     @Override
     public R visit(FunctionCallTree functionCallTree, T data) {
         R r = functionCallTree.name().accept(this, data);
+        T d = accumulate(data, r);
         for (ExpressionTree arg : functionCallTree.arguments()) {
-            r = arg.accept(this, accumulate(data, r));
+            r = arg.accept(this, d);
+            d = accumulate(d, r);
         }
-        r = this.visitor.visit(functionCallTree, accumulate(data, r));
+        r = this.visitor.visit(functionCallTree, d);
         return r;
     }
 
     @Override
     public R visit(BuiltinCallTree builtinCallTree, T data) {
-        R r = null;
+        R r;
+        T d = data;
         for (ExpressionTree arg : builtinCallTree.arguments()) {
-            r = arg.accept(this, r == null ? data : accumulate(data, r));
+            r = arg.accept(this, d);
+            d = accumulate(d, r);
         }
-        r = this.visitor.visit(builtinCallTree, r == null ? data : accumulate(data, r));
+        r = this.visitor.visit(builtinCallTree, d);
         return r;
     }
 
