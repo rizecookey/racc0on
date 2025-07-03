@@ -226,9 +226,48 @@ public class Printer {
                 }
                 print("}");
             }
-            case ExpressionArrayAccessTree _, ExpressionDereferenceTree _, ExpressionFieldTree _, LValueArrayAccessTree _,
-                 LValueDereferenceTree _, LValueFieldTree _, AllocCallTree _, AllocArrayCallTree _
-                    -> throw new UnsupportedOperationException(); // TODO
+            case ExpressionArrayAccessTree expressionArrayAccessTree -> {
+                printTree(expressionArrayAccessTree.array());
+                print("[");
+                printTree(expressionArrayAccessTree.index());
+                print("]");
+            }
+            case LValueArrayAccessTree lValueArrayAccessTree -> {
+                printTree(lValueArrayAccessTree.array());
+                print("[");
+                printTree(lValueArrayAccessTree.index());
+                print("]");
+            }
+            case ExpressionDereferenceTree expressionDereferenceTree -> {
+                print("*");
+                printTree(expressionDereferenceTree.pointer());
+            }
+            case LValueDereferenceTree lValueDereferenceTree -> {
+                print("*");
+                printTree(lValueDereferenceTree.pointer());
+            }
+            case ExpressionFieldTree expressionFieldTree -> {
+                printTree(expressionFieldTree.struct());
+                print(".");
+                printTree(expressionFieldTree.fieldName());
+            }
+            case LValueFieldTree lValueFieldTree -> {
+                printTree(lValueFieldTree.struct());
+                print(".");
+                printTree(lValueFieldTree.fieldName());
+            }
+            case AllocCallTree allocCallTree -> {
+                print("alloc(");
+                printTree(allocCallTree.type());
+                print(")");
+            }
+            case AllocArrayCallTree allocArrayCallTree -> {
+                print("alloc_array(");
+                printTree(allocArrayCallTree.type());
+                print(", ");
+                printTree(allocArrayCallTree.elementCount());
+                print(")");
+            }
         }
     }
 
