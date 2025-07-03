@@ -10,7 +10,7 @@ import net.rizecookey.racc0on.lexer.OperatorType;
 import net.rizecookey.racc0on.lexer.Separator;
 import net.rizecookey.racc0on.lexer.Separator.SeparatorType;
 import net.rizecookey.racc0on.lexer.Token;
-import net.rizecookey.racc0on.lexer.keyword.TypeKeywordType;
+import net.rizecookey.racc0on.lexer.keyword.BasicTypeKeywordType;
 import net.rizecookey.racc0on.utils.Pair;
 import net.rizecookey.racc0on.utils.Position;
 import net.rizecookey.racc0on.utils.Span;
@@ -40,14 +40,14 @@ public class TokenSource {
         return this.tokens.get(this.idx);
     }
 
-    public Pair<Keyword, TypeKeywordType> expectType() {
+    public Pair<Keyword, BasicTypeKeywordType> expectType() {
         Token token = peek();
-        if (!(token instanceof Keyword kw) || !kw.isTypeKeyword()) {
-            throw new ParseException(token.span(), "expected one of " + Arrays.toString(TypeKeywordType.values()) + " but got " + token.asString());
+        if (!(token instanceof Keyword kw) || !kw.isBasicTypeKeyword()) {
+            throw new ParseException(token.span(), "expected one of " + Arrays.toString(BasicTypeKeywordType.values()) + " but got " + token.asString());
         }
 
         this.idx++;
-        return new Pair<>(kw, (TypeKeywordType) kw.type());
+        return new Pair<>(kw, (BasicTypeKeywordType) kw.type());
     }
 
     public Pair<Keyword, ControlKeywordType> expectControl() {

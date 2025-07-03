@@ -7,7 +7,7 @@ public sealed interface Token permits ErrorToken, Identifier, Keyword, NumberLit
 
     Span span();
 
-    default boolean isTypeKeyword() {
+    default boolean isBasicTypeKeyword() {
         return false;
     }
 

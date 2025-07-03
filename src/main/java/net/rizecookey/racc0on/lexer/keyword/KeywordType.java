@@ -7,13 +7,13 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public sealed interface KeywordType permits BoolLiteralKeywordType, BuiltinFunctionsKeywordType, ControlKeywordType, ReservedKeywordType, TypeKeywordType {
+public sealed interface KeywordType permits BoolLiteralKeywordType, BuiltinFunctionsKeywordType, ControlKeywordType, ReservedKeywordType, BasicTypeKeywordType {
   Set<KeywordType> VALUES = join(Set.of(
           BoolLiteralKeywordType.values(),
           BuiltinFunctionsKeywordType.values(),
           ControlKeywordType.values(),
           ReservedKeywordType.values(),
-          TypeKeywordType.values()
+          BasicTypeKeywordType.values()
   ));
 
   Map<String, KeywordType> STRING_TO_KEYWORD = VALUES.stream()

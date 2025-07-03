@@ -17,7 +17,7 @@ import net.rizecookey.racc0on.lexer.Separator;
 import net.rizecookey.racc0on.lexer.Separator.SeparatorType;
 import net.rizecookey.racc0on.utils.Span;
 import net.rizecookey.racc0on.lexer.Token;
-import net.rizecookey.racc0on.lexer.keyword.TypeKeywordType;
+import net.rizecookey.racc0on.lexer.keyword.BasicTypeKeywordType;
 import net.rizecookey.racc0on.parser.ast.simp.AssignmentTree;
 import net.rizecookey.racc0on.parser.ast.exp.BinaryOperationTree;
 import net.rizecookey.racc0on.parser.ast.BlockTree;
@@ -78,7 +78,7 @@ public class Parser {
     }
 
     private TypeTree parseType() {
-        Pair<Keyword, TypeKeywordType> typePair = this.tokenSource.expectType();
+        Pair<Keyword, BasicTypeKeywordType> typePair = this.tokenSource.expectType();
         return new TypeTree(typePair.second().type(), typePair.first().span());
     }
 
@@ -142,7 +142,7 @@ public class Parser {
 
     private SimpleStatementTree parseSimple() {
         Token next = this.tokenSource.peek();
-        if (next.isTypeKeyword()) {
+        if (next.isBasicTypeKeyword()) {
             return parseDeclaration();
         }
 
