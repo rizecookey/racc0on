@@ -70,11 +70,11 @@ public class Parser {
         while (this.tokenSource.hasMore()) {
             TypeTree type = parseType();
             if (!(type.type() instanceof StructType(Identifier name)) || !this.tokenSource.peek().isSeparator(SeparatorType.BRACE_OPEN)) {
-                functions.add(parseFunctionRest(type));
+                functions.add(parseFunctionPastType(type));
                 continue;
             }
 
-            structs.add(parseStructDeclarationRest(type, name));
+            structs.add(parseStructDeclarationPastType(type, name));
         }
         return new ProgramTree(List.copyOf(structs), List.copyOf(functions));
     }
@@ -115,7 +115,7 @@ public class Parser {
         return new TypeTree(currentType, currentSpan);
     }
 
-    private StructDeclarationTree parseStructDeclarationRest(TypeTree type, Identifier identifier) {
+    private StructDeclarationTree parseStructDeclarationPastType(TypeTree type, Identifier identifier) {
         List<FieldDeclarationTree> fields = parseFieldList();
         Separator sep = this.tokenSource.expectSeparator(SeparatorType.SEMICOLON);
         return new StructDeclarationTree(name(identifier), fields, type.span().merge(sep.span()));
@@ -139,7 +139,7 @@ public class Parser {
         return new FieldDeclarationTree(type, name);
     }
 
-    private FunctionTree parseFunctionRest(TypeTree type) {
+    private FunctionTree parseFunctionPastType(TypeTree type) {
         Identifier identifier = this.tokenSource.expectIdentifier();
 
         List<ParameterTree> parameters = parseParameterList();
