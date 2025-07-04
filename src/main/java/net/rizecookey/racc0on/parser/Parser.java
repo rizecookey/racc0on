@@ -240,7 +240,7 @@ public class Parser {
             return op;
         }
         Token token = this.tokenSource.peek();
-        throw new ParseException(token.span(), "expected assignment but got " + token.asString());
+        throw new ParseException(token.span(), "expected assignment but got '" + token.asString() + "'");
     }
 
     private LValueTree parseLValue() {
