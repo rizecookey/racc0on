@@ -42,10 +42,16 @@ public class Lexer {
             case ',' -> separator(SeparatorType.COMMA);
             case ';' -> separator(SeparatorType.SEMICOLON);
             case '-' -> {
-                if (peek(1) == '>') {
-                    yield new Operator(OperatorType.Pointer.ARROW, buildSpan(2));
+                if (hasMore(1)) {
+                    char lookahead = peek(1);
+                    if (lookahead == '>') {
+                        yield new Operator(OperatorType.Pointer.ARROW, buildSpan(2));
+                    }
+                    if (lookahead == '=') {
+                        yield new Operator(OperatorType.Assignment.MINUS, buildSpan(2));
+                    }
                 }
-                yield singleOrFollowedByEq(OperatorType.Ambiguous.MINUS, OperatorType.Assignment.MINUS);
+                yield new AmbiguousSymbol(AmbiguousSymbol.SymbolType.MINUS, buildSpan(1));
             }
             case '+' -> singleOrFollowedByEq(OperatorType.Binary.PLUS, OperatorType.Assignment.PLUS);
             case '*' -> {

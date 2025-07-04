@@ -12,6 +12,12 @@ import net.rizecookey.racc0on.parser.ast.call.AllocCallTree;
 import net.rizecookey.racc0on.parser.ast.call.BuiltinCallTree;
 import net.rizecookey.racc0on.parser.ast.call.CallTree;
 import net.rizecookey.racc0on.parser.ast.call.FunctionCallTree;
+import net.rizecookey.racc0on.parser.ast.exp.ExpArrayAccessTree;
+import net.rizecookey.racc0on.parser.ast.exp.ExpDereferenceTree;
+import net.rizecookey.racc0on.parser.ast.exp.ExpFieldAccessTree;
+import net.rizecookey.racc0on.parser.ast.lvalue.LValueArrayAccessTree;
+import net.rizecookey.racc0on.parser.ast.lvalue.LValueDereferenceTree;
+import net.rizecookey.racc0on.parser.ast.lvalue.LValueFieldAccessTree;
 import net.rizecookey.racc0on.parser.type.ArrayType;
 import net.rizecookey.racc0on.parser.type.PointerType;
 import net.rizecookey.racc0on.parser.type.StructType;
@@ -60,7 +66,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-// TODO parsing of new types etc
 public class Parser {
     private final TokenSource tokenSource;
 
@@ -216,7 +221,7 @@ public class Parser {
 
     private SimpleStatementTree parseSimple() {
         Token next = this.tokenSource.peek();
-        if (next.isBasicTypeKeyword()) {
+        if (next.isTypeKeyword()) {
             return parseDeclaration();
         }
 
@@ -274,14 +279,50 @@ public class Parser {
     }
 
     private LValueTree parseLValue() {
-        if (this.tokenSource.peek().isSeparator(SeparatorType.PAREN_OPEN)) {
-            this.tokenSource.expectSeparator(SeparatorType.PAREN_OPEN);
-            LValueTree inner = parseLValue();
-            this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
-            return inner;
-        }
-        Identifier identifier = this.tokenSource.expectIdentifier();
-        return new LValueIdentTree(name(identifier));
+        LValueTree baseLValue = parseBaseLValue();
+
+        return switch (this.tokenSource.peek()) {
+            case Separator(SeparatorType type, _) when type.equals(SeparatorType.BRACKET_OPEN) -> {
+                this.tokenSource.consume();
+                ExpressionTree index = parseExpression();
+                Span end = this.tokenSource.expectSeparator(SeparatorType.BRACKET_CLOSE).span();
+                yield new LValueArrayAccessTree(baseLValue, index, baseLValue.span().merge(end));
+            }
+            case Operator(OperatorType.Pointer type, _) when !type.equals(OperatorType.Pointer.DEREFERENCE) -> {
+                Token token = this.tokenSource.consume();
+                NameTree field = name(this.tokenSource.expectIdentifier());
+
+                yield switch (type) {
+                    case ARROW -> new LValueFieldAccessTree(
+                            new LValueDereferenceTree(baseLValue, baseLValue.span().merge(token.span())),
+                            field
+                    );
+                    case FIELD_ACCESS -> new LValueFieldAccessTree(baseLValue, field);
+                    case DEREFERENCE -> throw new IllegalStateException("unreachable");
+                };
+            }
+            default -> baseLValue;
+        };
+    }
+
+    private LValueTree parseBaseLValue() {
+        Token token = peekUnary();
+        return switch (token) {
+            case Separator(SeparatorType type, _) when type.equals(SeparatorType.PAREN_OPEN) -> {
+                this.tokenSource.consume();
+                LValueTree inner = parseLValue();
+                this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
+                yield inner;
+            }
+            case Operator(OperatorType.Pointer type, _) when type.equals(OperatorType.Pointer.DEREFERENCE) -> {
+                this.tokenSource.consume();
+                yield parseBaseLValue(); // highest precedence!
+            }
+            default -> {
+                Identifier identifier = this.tokenSource.expectIdentifier();
+                yield new LValueIdentTree(name(identifier));
+            }
+        };
     }
 
     private ControlTree parseControl() {
@@ -364,8 +405,9 @@ public class Parser {
 
         ExpressionTree lhs = parseExpression(level + 1);
         while (true) {
+            Token token = peekBinary();
             Optional<OperatorType.Binary> binary;
-            if (this.tokenSource.peek() instanceof Operator(OperatorType type, _) && (binary = type.as(OperatorType.Binary.class)).isPresent()
+            if (token instanceof Operator(OperatorType type, _) && (binary = type.as(OperatorType.Binary.class)).isPresent()
                     && OperatorType.Binary.PRECEDENCE.get(level).contains(binary.get())) {
                 this.tokenSource.consume();
                 lhs = new BinaryOperationTree(lhs, parseExpression(level + 1), binary.get());
@@ -376,7 +418,39 @@ public class Parser {
     }
 
     private ExpressionTree parseFactor() {
+        ExpressionTree baseExp = parseBaseFactor();
+
         return switch (this.tokenSource.peek()) {
+            case Separator(var type, _) when type.equals(SeparatorType.BRACKET_OPEN) -> {
+                this.tokenSource.consume();
+                ExpressionTree index = parseExpression();
+                Span end = this.tokenSource.expectSeparator(SeparatorType.BRACKET_CLOSE).span();
+                yield new ExpArrayAccessTree(baseExp, index, baseExp.span().merge(end));
+            }
+            case Operator(OperatorType.Pointer type, _) when !type.equals(OperatorType.Pointer.DEREFERENCE) -> parseBinaryPointerOp(baseExp);
+            default -> baseExp;
+        };
+    }
+
+    private ExpressionTree parseBinaryPointerOp(ExpressionTree base) {
+        Token token = this.tokenSource.peek();
+        if (!(token instanceof Operator(OperatorType.Pointer type, _))) {
+            throw new ParseException(token.span(), "expected binary pointer operation but got '" + token.asString() + "'");
+        }
+        this.tokenSource.consume();
+
+        return switch (type) {
+            case ARROW -> new ExpFieldAccessTree(new ExpDereferenceTree(base, base.span().merge(token.span())), name(this.tokenSource.expectIdentifier()));
+            case FIELD_ACCESS -> {
+                NameTree field = name(this.tokenSource.expectIdentifier());
+                yield new ExpFieldAccessTree(base, field);
+            }
+            case DEREFERENCE -> throw new ParseException(token.span(), "expected binary pointer operation but got '" + token.asString() + "'");
+        };
+    }
+
+    private ExpressionTree parseBaseFactor() {
+        return switch (peekUnary()) {
             case Separator(var type, _) when type == SeparatorType.PAREN_OPEN -> {
                 this.tokenSource.consume();
                 ExpressionTree expression = parseExpression();
@@ -387,9 +461,10 @@ public class Parser {
                 Span span = this.tokenSource.consume().span();
                 yield new UnaryOperationTree(type, parseFactor(), span);
             }
-            case Operator(OperatorType.Ambiguous ambiguous, _) when ambiguous == OperatorType.Ambiguous.MINUS -> {
-                Span span = this.tokenSource.consume().span();
-                yield new UnaryOperationTree(OperatorType.Unary.NEGATION, parseFactor(), span);
+            case Operator(OperatorType.Pointer type, _) when type.equals(OperatorType.Pointer.DEREFERENCE) -> {
+                Span start = this.tokenSource.consume().span();
+                ExpressionTree baseFactor = parseBaseFactor(); // highest precedence!
+                yield new ExpDereferenceTree(baseFactor, start.merge(baseFactor.span()));
             }
             case Keyword(BuiltinFunctionsKeywordType type, _) -> {
                 Keyword kw = (Keyword) this.tokenSource.consume();
@@ -436,6 +511,32 @@ public class Parser {
 
         Token end = this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
         return new Pair<>(List.copyOf(args), start.span().merge(end.span()));
+    }
+
+    /** Disambiguate any ambiguous tokens to their binary counterpart. **/
+    private Token peekBinary() {
+        Token token = this.tokenSource.peek();
+        if (token instanceof AmbiguousSymbol(var type, var span)) {
+            return switch (type) {
+                case STAR -> new Operator(OperatorType.Binary.MUL, span);
+                case MINUS -> new Operator(OperatorType.Binary.MINUS, span);
+            };
+        }
+
+        return token;
+    }
+
+    /** Disambiguate any ambiguous tokens to their unary counterpart. **/
+    private Token peekUnary() {
+        Token token = this.tokenSource.peek();
+        if (token instanceof AmbiguousSymbol(var type, var span)) {
+            return switch (type) {
+                case STAR -> new Operator(OperatorType.Pointer.DEREFERENCE, span);
+                case MINUS -> new Operator(OperatorType.Unary.NEGATION, span);
+            };
+        }
+
+        return token;
     }
 
     private static NameTree name(Identifier ident) {

@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-public sealed interface OperatorType permits OperatorType.Ambiguous, OperatorType.Assignment, OperatorType.Binary, OperatorType.Pointer, OperatorType.Ternary, OperatorType.Unary {
+public sealed interface OperatorType permits OperatorType.Assignment, OperatorType.Binary, OperatorType.Pointer, OperatorType.Ternary, OperatorType.Unary {
     default boolean isAssignment() {
         return false;
     }
@@ -22,35 +22,6 @@ public sealed interface OperatorType permits OperatorType.Ambiguous, OperatorTyp
     }
 
     String toString();
-
-    enum Ambiguous implements OperatorType {
-        MINUS("-", Unary.NEGATION, Binary.MINUS),
-        ;
-
-        private final String value;
-        private final List<OperatorType> potentialInstances;
-        Ambiguous(String value, OperatorType... potentialInstances) {
-            this.value = value;
-            this.potentialInstances = List.of(potentialInstances);
-        }
-
-        @Override
-        public String toString() {
-            return value;
-        }
-
-        @Override
-        public <T extends OperatorType> Optional<T> as(Class<T> type) {
-            return potentialInstances().stream()
-                    .filter(inst -> type.isAssignableFrom(inst.getClass()))
-                    .map(type::cast)
-                    .findFirst();
-        }
-
-        public List<OperatorType> potentialInstances() {
-            return potentialInstances;
-        }
-    }
 
     enum Unary implements OperatorType {
         NEGATION("-"),

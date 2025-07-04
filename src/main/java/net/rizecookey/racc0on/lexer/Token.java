@@ -7,6 +7,10 @@ public sealed interface Token permits BooleanLiteral, ErrorToken, Identifier, Ke
 
     Span span();
 
+    default boolean isTypeKeyword() {
+        return isBasicTypeKeyword() || isComposedTypeKeyword();
+    }
+
     default boolean isBasicTypeKeyword() {
         return false;
     }
