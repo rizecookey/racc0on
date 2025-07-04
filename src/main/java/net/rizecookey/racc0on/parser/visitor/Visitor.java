@@ -1,15 +1,15 @@
 package net.rizecookey.racc0on.parser.visitor;
 
-import net.rizecookey.racc0on.parser.ast.FieldTree;
+import net.rizecookey.racc0on.parser.ast.FieldDeclarationTree;
 import net.rizecookey.racc0on.parser.ast.StructDeclarationTree;
 import net.rizecookey.racc0on.parser.ast.call.AllocArrayCallTree;
 import net.rizecookey.racc0on.parser.ast.call.AllocCallTree;
-import net.rizecookey.racc0on.parser.ast.exp.ExpressionFieldTree;
-import net.rizecookey.racc0on.parser.ast.exp.ExpressionDereferenceTree;
-import net.rizecookey.racc0on.parser.ast.exp.ExpressionArrayAccessTree;
+import net.rizecookey.racc0on.parser.ast.exp.ExpFieldAccessTree;
+import net.rizecookey.racc0on.parser.ast.exp.ExpDereferenceTree;
+import net.rizecookey.racc0on.parser.ast.exp.ExpArrayAccessTree;
 import net.rizecookey.racc0on.parser.ast.lvalue.LValueArrayAccessTree;
 import net.rizecookey.racc0on.parser.ast.lvalue.LValueDereferenceTree;
-import net.rizecookey.racc0on.parser.ast.lvalue.LValueFieldTree;
+import net.rizecookey.racc0on.parser.ast.lvalue.LValueFieldAccessTree;
 import net.rizecookey.racc0on.parser.ast.simp.AssignmentTree;
 import net.rizecookey.racc0on.parser.ast.exp.BinaryOperationTree;
 import net.rizecookey.racc0on.parser.ast.BlockTree;
@@ -81,19 +81,19 @@ public interface Visitor<T, R> {
 
     R visit(StructDeclarationTree structDeclarationTree, T data);
 
-    R visit(FieldTree fieldTree, T data);
+    R visit(FieldDeclarationTree fieldDeclarationTree, T data);
 
-    R visit(ExpressionArrayAccessTree expressionArrayAccessTree, T data);
+    R visit(ExpArrayAccessTree expArrayAccessTree, T data);
 
-    R visit(ExpressionDereferenceTree expressionDereferenceTree, T data);
+    R visit(ExpDereferenceTree expDereferenceTree, T data);
 
-    R visit(ExpressionFieldTree expressionFieldTree, T data);
+    R visit(ExpFieldAccessTree expFieldAccessTree, T data);
 
     R visit(LValueArrayAccessTree lValueArrayAccessTree, T data);
 
     R visit(LValueDereferenceTree lValueDereferenceTree, T data);
 
-    R visit(LValueFieldTree lValueFieldTree, T data);
+    R visit(LValueFieldAccessTree lValueFieldAccessTree, T data);
 
     R visit(AllocCallTree allocCallTree, T data);
 

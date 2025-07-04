@@ -1,15 +1,15 @@
 package net.rizecookey.racc0on.parser.visitor;
 
-import net.rizecookey.racc0on.parser.ast.FieldTree;
+import net.rizecookey.racc0on.parser.ast.FieldDeclarationTree;
 import net.rizecookey.racc0on.parser.ast.StructDeclarationTree;
 import net.rizecookey.racc0on.parser.ast.call.AllocArrayCallTree;
 import net.rizecookey.racc0on.parser.ast.call.AllocCallTree;
-import net.rizecookey.racc0on.parser.ast.exp.ExpressionArrayAccessTree;
-import net.rizecookey.racc0on.parser.ast.exp.ExpressionDereferenceTree;
-import net.rizecookey.racc0on.parser.ast.exp.ExpressionFieldTree;
+import net.rizecookey.racc0on.parser.ast.exp.ExpArrayAccessTree;
+import net.rizecookey.racc0on.parser.ast.exp.ExpDereferenceTree;
+import net.rizecookey.racc0on.parser.ast.exp.ExpFieldAccessTree;
 import net.rizecookey.racc0on.parser.ast.lvalue.LValueArrayAccessTree;
 import net.rizecookey.racc0on.parser.ast.lvalue.LValueDereferenceTree;
-import net.rizecookey.racc0on.parser.ast.lvalue.LValueFieldTree;
+import net.rizecookey.racc0on.parser.ast.lvalue.LValueFieldAccessTree;
 import net.rizecookey.racc0on.parser.ast.simp.AssignmentTree;
 import net.rizecookey.racc0on.parser.ast.exp.BinaryOperationTree;
 import net.rizecookey.racc0on.parser.ast.BlockTree;
@@ -153,22 +153,22 @@ public interface NoOpVisitor<T> extends Visitor<T, Unit> {
     }
 
     @Override
-    default Unit visit(FieldTree fieldTree, T data) {
+    default Unit visit(FieldDeclarationTree fieldDeclarationTree, T data) {
         return Unit.INSTANCE;
     }
 
     @Override
-    default Unit visit(ExpressionArrayAccessTree expressionArrayAccessTree, T data) {
+    default Unit visit(ExpArrayAccessTree expArrayAccessTree, T data) {
         return Unit.INSTANCE;
     }
 
     @Override
-    default Unit visit(ExpressionDereferenceTree expressionDereferenceTree, T data) {
+    default Unit visit(ExpDereferenceTree expDereferenceTree, T data) {
         return Unit.INSTANCE;
     }
 
     @Override
-    default Unit visit(ExpressionFieldTree expressionFieldTree, T data) {
+    default Unit visit(ExpFieldAccessTree expFieldAccessTree, T data) {
         return Unit.INSTANCE;
     }
 
@@ -183,7 +183,7 @@ public interface NoOpVisitor<T> extends Visitor<T, Unit> {
     }
 
     @Override
-    default Unit visit(LValueFieldTree lValueFieldTree, T data) {
+    default Unit visit(LValueFieldAccessTree lValueFieldAccessTree, T data) {
         return Unit.INSTANCE;
     }
 

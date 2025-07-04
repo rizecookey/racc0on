@@ -1,11 +1,9 @@
-package net.rizecookey.racc0on.parser.ast;
+package net.rizecookey.racc0on.parser.ast.exp;
 
 import net.rizecookey.racc0on.parser.visitor.Visitor;
 import net.rizecookey.racc0on.utils.Span;
 
-import java.util.List;
-
-public record StructDeclarationTree(NameTree name, List<FieldDeclarationTree> fields, Span span) implements Tree {
+public record ExpArrayAccessTree(ExpressionTree array, ExpressionTree index, Span span) implements ExpressionTree {
     @Override
     public <T, R> R accept(Visitor<T, R> visitor, T data) {
         return visitor.visit(this, data);

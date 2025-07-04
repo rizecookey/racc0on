@@ -8,16 +8,16 @@ import net.rizecookey.racc0on.ir.util.DebugInfo;
 import net.rizecookey.racc0on.ir.util.DebugInfoHelper;
 import net.rizecookey.racc0on.ir.util.NodeSupport;
 import net.rizecookey.racc0on.lexer.OperatorType;
-import net.rizecookey.racc0on.parser.ast.FieldTree;
+import net.rizecookey.racc0on.parser.ast.FieldDeclarationTree;
 import net.rizecookey.racc0on.parser.ast.StructDeclarationTree;
 import net.rizecookey.racc0on.parser.ast.call.AllocArrayCallTree;
 import net.rizecookey.racc0on.parser.ast.call.AllocCallTree;
-import net.rizecookey.racc0on.parser.ast.exp.ExpressionArrayAccessTree;
-import net.rizecookey.racc0on.parser.ast.exp.ExpressionDereferenceTree;
-import net.rizecookey.racc0on.parser.ast.exp.ExpressionFieldTree;
+import net.rizecookey.racc0on.parser.ast.exp.ExpArrayAccessTree;
+import net.rizecookey.racc0on.parser.ast.exp.ExpDereferenceTree;
+import net.rizecookey.racc0on.parser.ast.exp.ExpFieldAccessTree;
 import net.rizecookey.racc0on.parser.ast.lvalue.LValueArrayAccessTree;
 import net.rizecookey.racc0on.parser.ast.lvalue.LValueDereferenceTree;
-import net.rizecookey.racc0on.parser.ast.lvalue.LValueFieldTree;
+import net.rizecookey.racc0on.parser.ast.lvalue.LValueFieldAccessTree;
 import net.rizecookey.racc0on.parser.ast.simp.AssignmentTree;
 import net.rizecookey.racc0on.parser.ast.exp.BinaryOperationTree;
 import net.rizecookey.racc0on.parser.ast.BlockTree;
@@ -173,7 +173,7 @@ public class SsaTranslation {
                     }
                     data.writeVariable(name.name(), data.currentBlock(), rhs);
                 }
-                case LValueArrayAccessTree _, LValueDereferenceTree _, LValueFieldTree _ -> throw new UnsupportedOperationException(); // TODO
+                case LValueArrayAccessTree _, LValueDereferenceTree _, LValueFieldAccessTree _ -> throw new UnsupportedOperationException(); // TODO
             }
             popSpan();
             return NOT_AN_EXPRESSION;
@@ -518,22 +518,22 @@ public class SsaTranslation {
         }
 
         @Override
-        public Optional<Node> visit(FieldTree fieldTree, SsaTranslation data) {
+        public Optional<Node> visit(FieldDeclarationTree fieldDeclarationTree, SsaTranslation data) {
             throw new UnsupportedOperationException(); // TODO
         }
 
         @Override
-        public Optional<Node> visit(ExpressionArrayAccessTree expressionArrayAccessTree, SsaTranslation data) {
+        public Optional<Node> visit(ExpArrayAccessTree expArrayAccessTree, SsaTranslation data) {
             throw new UnsupportedOperationException(); // TODO
         }
 
         @Override
-        public Optional<Node> visit(ExpressionDereferenceTree expressionDereferenceTree, SsaTranslation data) {
+        public Optional<Node> visit(ExpDereferenceTree expDereferenceTree, SsaTranslation data) {
             throw new UnsupportedOperationException(); // TODO
         }
 
         @Override
-        public Optional<Node> visit(ExpressionFieldTree expressionFieldTree, SsaTranslation data) {
+        public Optional<Node> visit(ExpFieldAccessTree expFieldAccessTree, SsaTranslation data) {
             throw new UnsupportedOperationException(); // TODO
         }
 
@@ -548,7 +548,7 @@ public class SsaTranslation {
         }
 
         @Override
-        public Optional<Node> visit(LValueFieldTree lValueFieldTree, SsaTranslation data) {
+        public Optional<Node> visit(LValueFieldAccessTree lValueFieldAccessTree, SsaTranslation data) {
             throw new UnsupportedOperationException(); // TODO
         }
 

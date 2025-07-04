@@ -3,7 +3,7 @@ package net.rizecookey.racc0on.parser;
 import net.rizecookey.racc0on.lexer.AmbiguousSymbol;
 import net.rizecookey.racc0on.lexer.keyword.BuiltinFunctionsKeywordType;
 import net.rizecookey.racc0on.lexer.keyword.ComposedTypeKeywordType;
-import net.rizecookey.racc0on.parser.ast.FieldTree;
+import net.rizecookey.racc0on.parser.ast.FieldDeclarationTree;
 import net.rizecookey.racc0on.parser.ast.ParameterTree;
 import net.rizecookey.racc0on.parser.ast.StructDeclarationTree;
 import net.rizecookey.racc0on.parser.ast.call.BuiltinCallTree;
@@ -116,14 +116,14 @@ public class Parser {
     }
 
     private StructDeclarationTree parseStructDeclarationRest(TypeTree type, Identifier identifier) {
-        List<FieldTree> fields = parseFieldList();
+        List<FieldDeclarationTree> fields = parseFieldList();
         Separator sep = this.tokenSource.expectSeparator(SeparatorType.SEMICOLON);
         return new StructDeclarationTree(name(identifier), fields, type.span().merge(sep.span()));
     }
 
-    private List<FieldTree> parseFieldList() {
+    private List<FieldDeclarationTree> parseFieldList() {
         this.tokenSource.expectSeparator(SeparatorType.BRACE_OPEN);
-        List<FieldTree> fields = new ArrayList<>();
+        List<FieldDeclarationTree> fields = new ArrayList<>();
         while (!this.tokenSource.peek().isSeparator(SeparatorType.BRACE_CLOSE)) {
             fields.add(parseField());
             this.tokenSource.expectSeparator(SeparatorType.SEMICOLON);
@@ -132,11 +132,11 @@ public class Parser {
         return List.copyOf(fields);
     }
 
-    private FieldTree parseField() {
+    private FieldDeclarationTree parseField() {
         TypeTree type = parseType();
         NameTree name = name(this.tokenSource.expectIdentifier());
 
-        return new FieldTree(type, name);
+        return new FieldDeclarationTree(type, name);
     }
 
     private FunctionTree parseFunctionRest(TypeTree type) {

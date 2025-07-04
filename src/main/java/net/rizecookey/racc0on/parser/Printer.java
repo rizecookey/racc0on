@@ -1,15 +1,15 @@
 package net.rizecookey.racc0on.parser;
 
-import net.rizecookey.racc0on.parser.ast.FieldTree;
+import net.rizecookey.racc0on.parser.ast.FieldDeclarationTree;
 import net.rizecookey.racc0on.parser.ast.StructDeclarationTree;
 import net.rizecookey.racc0on.parser.ast.call.AllocArrayCallTree;
 import net.rizecookey.racc0on.parser.ast.call.AllocCallTree;
-import net.rizecookey.racc0on.parser.ast.exp.ExpressionArrayAccessTree;
-import net.rizecookey.racc0on.parser.ast.exp.ExpressionDereferenceTree;
-import net.rizecookey.racc0on.parser.ast.exp.ExpressionFieldTree;
+import net.rizecookey.racc0on.parser.ast.exp.ExpArrayAccessTree;
+import net.rizecookey.racc0on.parser.ast.exp.ExpDereferenceTree;
+import net.rizecookey.racc0on.parser.ast.exp.ExpFieldAccessTree;
 import net.rizecookey.racc0on.parser.ast.lvalue.LValueArrayAccessTree;
 import net.rizecookey.racc0on.parser.ast.lvalue.LValueDereferenceTree;
-import net.rizecookey.racc0on.parser.ast.lvalue.LValueFieldTree;
+import net.rizecookey.racc0on.parser.ast.lvalue.LValueFieldAccessTree;
 import net.rizecookey.racc0on.parser.ast.simp.AssignmentTree;
 import net.rizecookey.racc0on.parser.ast.exp.BinaryOperationTree;
 import net.rizecookey.racc0on.parser.ast.BlockTree;
@@ -221,10 +221,10 @@ public class Printer {
                 }
                 print(")");
             }
-            case FieldTree fieldTree -> {
-                printTree(fieldTree.type());
+            case FieldDeclarationTree fieldDeclarationTree -> {
+                printTree(fieldDeclarationTree.type());
                 space();
-                printTree(fieldTree.name());
+                printTree(fieldDeclarationTree.name());
             }
             case StructDeclarationTree structDeclarationTree -> {
                 print("struct ");
@@ -232,7 +232,7 @@ public class Printer {
                 print(" {");
                 lineBreak();
                 this.indentDepth++;
-                for (FieldTree field : structDeclarationTree.fields()) {
+                for (FieldDeclarationTree field : structDeclarationTree.fields()) {
                     printTree(field);
                     semicolon();
                     lineBreak();
@@ -240,10 +240,10 @@ public class Printer {
                 this.indentDepth--;
                 print("};");
             }
-            case ExpressionArrayAccessTree expressionArrayAccessTree -> {
-                printTree(expressionArrayAccessTree.array());
+            case ExpArrayAccessTree expArrayAccessTree -> {
+                printTree(expArrayAccessTree.array());
                 print("[");
-                printTree(expressionArrayAccessTree.index());
+                printTree(expArrayAccessTree.index());
                 print("]");
             }
             case LValueArrayAccessTree lValueArrayAccessTree -> {
@@ -252,23 +252,23 @@ public class Printer {
                 printTree(lValueArrayAccessTree.index());
                 print("]");
             }
-            case ExpressionDereferenceTree expressionDereferenceTree -> {
+            case ExpDereferenceTree expDereferenceTree -> {
                 print("*");
-                printTree(expressionDereferenceTree.pointer());
+                printTree(expDereferenceTree.pointer());
             }
             case LValueDereferenceTree lValueDereferenceTree -> {
                 print("*");
                 printTree(lValueDereferenceTree.pointer());
             }
-            case ExpressionFieldTree expressionFieldTree -> {
-                printTree(expressionFieldTree.struct());
+            case ExpFieldAccessTree expFieldAccessTree -> {
+                printTree(expFieldAccessTree.struct());
                 print(".");
-                printTree(expressionFieldTree.fieldName());
+                printTree(expFieldAccessTree.fieldName());
             }
-            case LValueFieldTree lValueFieldTree -> {
-                printTree(lValueFieldTree.struct());
+            case LValueFieldAccessTree lValueFieldAccessTree -> {
+                printTree(lValueFieldAccessTree.struct());
                 print(".");
-                printTree(lValueFieldTree.fieldName());
+                printTree(lValueFieldAccessTree.fieldName());
             }
         }
     }

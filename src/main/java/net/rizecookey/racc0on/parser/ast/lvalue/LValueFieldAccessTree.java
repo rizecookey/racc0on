@@ -1,12 +1,13 @@
-package net.rizecookey.racc0on.parser.ast;
+package net.rizecookey.racc0on.parser.ast.lvalue;
 
+import net.rizecookey.racc0on.parser.ast.NameTree;
 import net.rizecookey.racc0on.parser.visitor.Visitor;
 import net.rizecookey.racc0on.utils.Span;
 
-public record FieldTree(TypeTree type, NameTree name) implements Tree {
+public record LValueFieldAccessTree(LValueTree struct, NameTree fieldName) implements LValueTree {
     @Override
     public Span span() {
-        return type.span().merge(name.span());
+        return struct.span().merge(fieldName.span());
     }
 
     @Override
