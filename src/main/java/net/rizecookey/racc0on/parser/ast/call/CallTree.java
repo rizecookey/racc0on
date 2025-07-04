@@ -6,7 +6,7 @@ import net.rizecookey.racc0on.parser.symbol.Name;
 
 import java.util.List;
 
-public sealed interface CallTree extends ExpressionTree, SimpleStatementTree permits BuiltinCallTree, FunctionCallTree {
+public sealed interface CallTree extends ExpressionTree, SimpleStatementTree permits AllocArrayCallTree, AllocCallTree, BuiltinCallTree, FunctionCallTree {
     Name functionName();
     List<ExpressionTree> arguments();
 }
