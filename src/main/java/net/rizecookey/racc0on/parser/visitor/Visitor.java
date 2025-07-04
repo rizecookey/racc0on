@@ -1,7 +1,7 @@
 package net.rizecookey.racc0on.parser.visitor;
 
 import net.rizecookey.racc0on.parser.ast.FieldTree;
-import net.rizecookey.racc0on.parser.ast.StructTree;
+import net.rizecookey.racc0on.parser.ast.StructDeclarationTree;
 import net.rizecookey.racc0on.parser.ast.call.AllocArrayCallTree;
 import net.rizecookey.racc0on.parser.ast.call.AllocCallTree;
 import net.rizecookey.racc0on.parser.ast.exp.ExpressionFieldTree;
@@ -79,7 +79,7 @@ public interface Visitor<T, R> {
 
     R visit(BuiltinCallTree builtinCallTree, T data);
 
-    R visit(StructTree structTree, T data);
+    R visit(StructDeclarationTree structDeclarationTree, T data);
 
     R visit(FieldTree fieldTree, T data);
 

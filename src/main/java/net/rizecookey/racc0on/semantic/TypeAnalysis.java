@@ -2,7 +2,7 @@ package net.rizecookey.racc0on.semantic;
 
 import net.rizecookey.racc0on.parser.ast.FieldTree;
 import net.rizecookey.racc0on.parser.ast.ParameterTree;
-import net.rizecookey.racc0on.parser.ast.StructTree;
+import net.rizecookey.racc0on.parser.ast.StructDeclarationTree;
 import net.rizecookey.racc0on.parser.ast.call.AllocArrayCallTree;
 import net.rizecookey.racc0on.parser.ast.call.AllocCallTree;
 import net.rizecookey.racc0on.parser.ast.call.BuiltinCallTree;
@@ -288,7 +288,7 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
     }
 
     @Override
-    public Optional<Type> visit(StructTree structTree, FunctionInfo data) {
+    public Optional<Type> visit(StructDeclarationTree structDeclarationTree, FunctionInfo data) {
         throw new UnsupportedOperationException(); // TODO
     }
 

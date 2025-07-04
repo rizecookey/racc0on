@@ -1,7 +1,7 @@
 package net.rizecookey.racc0on.parser.visitor;
 
 import net.rizecookey.racc0on.parser.ast.FieldTree;
-import net.rizecookey.racc0on.parser.ast.StructTree;
+import net.rizecookey.racc0on.parser.ast.StructDeclarationTree;
 import net.rizecookey.racc0on.parser.ast.call.AllocArrayCallTree;
 import net.rizecookey.racc0on.parser.ast.call.AllocCallTree;
 import net.rizecookey.racc0on.parser.ast.exp.ExpressionArrayAccessTree;
@@ -143,7 +143,7 @@ public class RecursivePostorderVisitor<T, R> implements Visitor<T, R> {
     public R visit(ProgramTree programTree, T data) {
         R r;
         T d = data;
-        for (StructTree tree : programTree.structs()) {
+        for (StructDeclarationTree tree : programTree.structs()) {
             r = tree.accept(this, d);
             d = accumulate(data, r);
         }
@@ -265,15 +265,15 @@ public class RecursivePostorderVisitor<T, R> implements Visitor<T, R> {
     }
 
     @Override
-    public R visit(StructTree structTree, T data) {
+    public R visit(StructDeclarationTree structDeclarationTree, T data) {
         R r;
         T d = data;
-        for (FieldTree field : structTree.fields()) {
+        for (FieldTree field : structDeclarationTree.fields()) {
             r = field.accept(this, d);
             d = accumulate(d, r);
         }
 
-        return this.visitor.visit(structTree, d);
+        return this.visitor.visit(structDeclarationTree, d);
     }
 
     @Override

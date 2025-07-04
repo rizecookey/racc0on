@@ -6,7 +6,7 @@ import net.rizecookey.racc0on.parser.visitor.Visitor;
 
 import java.util.List;
 
-public record ProgramTree(List<StructTree> structs, List<FunctionTree> functions) implements Tree {
+public record ProgramTree(List<StructDeclarationTree> structs, List<FunctionTree> functions) implements Tree {
     public ProgramTree {
         functions = List.copyOf(functions);
     }

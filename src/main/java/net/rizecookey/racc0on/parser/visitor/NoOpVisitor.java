@@ -1,7 +1,7 @@
 package net.rizecookey.racc0on.parser.visitor;
 
 import net.rizecookey.racc0on.parser.ast.FieldTree;
-import net.rizecookey.racc0on.parser.ast.StructTree;
+import net.rizecookey.racc0on.parser.ast.StructDeclarationTree;
 import net.rizecookey.racc0on.parser.ast.call.AllocArrayCallTree;
 import net.rizecookey.racc0on.parser.ast.call.AllocCallTree;
 import net.rizecookey.racc0on.parser.ast.exp.ExpressionArrayAccessTree;
@@ -148,7 +148,7 @@ public interface NoOpVisitor<T> extends Visitor<T, Unit> {
     }
 
     @Override
-    default Unit visit(StructTree structTree, T data) {
+    default Unit visit(StructDeclarationTree structDeclarationTree, T data) {
         return Unit.INSTANCE;
     }
 

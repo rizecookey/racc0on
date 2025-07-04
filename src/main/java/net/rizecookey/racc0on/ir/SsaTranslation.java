@@ -9,7 +9,7 @@ import net.rizecookey.racc0on.ir.util.DebugInfoHelper;
 import net.rizecookey.racc0on.ir.util.NodeSupport;
 import net.rizecookey.racc0on.lexer.OperatorType;
 import net.rizecookey.racc0on.parser.ast.FieldTree;
-import net.rizecookey.racc0on.parser.ast.StructTree;
+import net.rizecookey.racc0on.parser.ast.StructDeclarationTree;
 import net.rizecookey.racc0on.parser.ast.call.AllocArrayCallTree;
 import net.rizecookey.racc0on.parser.ast.call.AllocCallTree;
 import net.rizecookey.racc0on.parser.ast.exp.ExpressionArrayAccessTree;
@@ -513,7 +513,7 @@ public class SsaTranslation {
         }
 
         @Override
-        public Optional<Node> visit(StructTree structTree, SsaTranslation data) {
+        public Optional<Node> visit(StructDeclarationTree structDeclarationTree, SsaTranslation data) {
             throw new UnsupportedOperationException(); // TODO
         }
 

@@ -1,7 +1,7 @@
 package net.rizecookey.racc0on.parser;
 
 import net.rizecookey.racc0on.parser.ast.FieldTree;
-import net.rizecookey.racc0on.parser.ast.StructTree;
+import net.rizecookey.racc0on.parser.ast.StructDeclarationTree;
 import net.rizecookey.racc0on.parser.ast.call.AllocArrayCallTree;
 import net.rizecookey.racc0on.parser.ast.call.AllocCallTree;
 import net.rizecookey.racc0on.parser.ast.exp.ExpressionArrayAccessTree;
@@ -93,7 +93,7 @@ public class Printer {
             }
             case NameTree(var name, _) -> print(name.asString());
             case ProgramTree(var structs, var functions) -> {
-                for (StructTree struct : structs) {
+                for (StructDeclarationTree struct : structs) {
                     printTree(struct);
                     lineBreak();
                 }
@@ -214,13 +214,13 @@ public class Printer {
                 space();
                 printTree(fieldTree.name());
             }
-            case StructTree structTree -> {
+            case StructDeclarationTree structDeclarationTree -> {
                 print("struct ");
-                printTree(structTree.name());
+                printTree(structDeclarationTree.name());
                 print(" {");
                 lineBreak();
                 this.indentDepth++;
-                for (FieldTree field : structTree.fields()) {
+                for (FieldTree field : structDeclarationTree.fields()) {
                     printTree(field);
                     semicolon();
                     lineBreak();

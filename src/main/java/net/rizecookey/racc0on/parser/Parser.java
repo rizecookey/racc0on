@@ -5,7 +5,7 @@ import net.rizecookey.racc0on.lexer.keyword.BuiltinFunctionsKeywordType;
 import net.rizecookey.racc0on.lexer.keyword.ComposedTypeKeywordType;
 import net.rizecookey.racc0on.parser.ast.FieldTree;
 import net.rizecookey.racc0on.parser.ast.ParameterTree;
-import net.rizecookey.racc0on.parser.ast.StructTree;
+import net.rizecookey.racc0on.parser.ast.StructDeclarationTree;
 import net.rizecookey.racc0on.parser.ast.call.BuiltinCallTree;
 import net.rizecookey.racc0on.parser.ast.call.FunctionCallTree;
 import net.rizecookey.racc0on.parser.type.ArrayType;
@@ -65,7 +65,7 @@ public class Parser {
     }
 
     public ProgramTree parseProgram() {
-        List<StructTree> structs = new ArrayList<>();
+        List<StructDeclarationTree> structs = new ArrayList<>();
         List<FunctionTree> functions = new ArrayList<>();
         while (this.tokenSource.hasMore()) {
             TypeTree type = parseType();
@@ -115,10 +115,10 @@ public class Parser {
         return new TypeTree(currentType, currentSpan);
     }
 
-    private StructTree parseStructDeclarationRest(TypeTree type, Identifier identifier) {
+    private StructDeclarationTree parseStructDeclarationRest(TypeTree type, Identifier identifier) {
         List<FieldTree> fields = parseFieldList();
         Separator sep = this.tokenSource.expectSeparator(SeparatorType.SEMICOLON);
-        return new StructTree(name(identifier), fields, type.span().merge(sep.span()));
+        return new StructDeclarationTree(name(identifier), fields, type.span().merge(sep.span()));
     }
 
     private List<FieldTree> parseFieldList() {
