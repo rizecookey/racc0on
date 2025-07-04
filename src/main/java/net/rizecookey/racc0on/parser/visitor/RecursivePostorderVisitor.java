@@ -8,6 +8,7 @@ import net.rizecookey.racc0on.parser.ast.exp.ExpArrayAccessTree;
 import net.rizecookey.racc0on.parser.ast.exp.ExpDereferenceTree;
 import net.rizecookey.racc0on.parser.ast.exp.ExpFieldAccessTree;
 import net.rizecookey.racc0on.parser.ast.exp.ExpressionTree;
+import net.rizecookey.racc0on.parser.ast.exp.PointerLiteralTree;
 import net.rizecookey.racc0on.parser.ast.lvalue.LValueArrayAccessTree;
 import net.rizecookey.racc0on.parser.ast.lvalue.LValueDereferenceTree;
 import net.rizecookey.racc0on.parser.ast.lvalue.LValueFieldAccessTree;
@@ -354,6 +355,11 @@ public class RecursivePostorderVisitor<T, R> implements Visitor<T, R> {
         r = allocArrayCallTree.elementCount().accept(this, d);
 
         return this.visitor.visit(allocArrayCallTree, accumulate(d, r));
+    }
+
+    @Override
+    public R visit(PointerLiteralTree pointerLiteralTree, T data) {
+        return this.visitor.visit(pointerLiteralTree, data);
     }
 
     protected T accumulate(T data, R value) {

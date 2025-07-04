@@ -4,6 +4,7 @@ import net.rizecookey.racc0on.lexer.AmbiguousSymbol;
 import net.rizecookey.racc0on.lexer.keyword.AllocKeywordType;
 import net.rizecookey.racc0on.lexer.keyword.BuiltinFunctionsKeywordType;
 import net.rizecookey.racc0on.lexer.keyword.ComposedTypeKeywordType;
+import net.rizecookey.racc0on.lexer.keyword.PointerLiteralKeywordType;
 import net.rizecookey.racc0on.parser.ast.FieldDeclarationTree;
 import net.rizecookey.racc0on.parser.ast.ParameterTree;
 import net.rizecookey.racc0on.parser.ast.StructDeclarationTree;
@@ -15,6 +16,7 @@ import net.rizecookey.racc0on.parser.ast.call.FunctionCallTree;
 import net.rizecookey.racc0on.parser.ast.exp.ExpArrayAccessTree;
 import net.rizecookey.racc0on.parser.ast.exp.ExpDereferenceTree;
 import net.rizecookey.racc0on.parser.ast.exp.ExpFieldAccessTree;
+import net.rizecookey.racc0on.parser.ast.exp.PointerLiteralTree;
 import net.rizecookey.racc0on.parser.ast.lvalue.LValueArrayAccessTree;
 import net.rizecookey.racc0on.parser.ast.lvalue.LValueDereferenceTree;
 import net.rizecookey.racc0on.parser.ast.lvalue.LValueFieldAccessTree;
@@ -481,6 +483,10 @@ public class Parser {
                 }
 
                 yield new IdentExpressionTree(name(ident));
+            }
+            case Keyword(PointerLiteralKeywordType type, Span span) -> {
+                this.tokenSource.consume();
+                yield new PointerLiteralTree(type, span);
             }
             case NumberLiteral(String value, int base, Span span) -> {
                 this.tokenSource.consume();

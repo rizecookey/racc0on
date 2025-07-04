@@ -15,6 +15,7 @@ import net.rizecookey.racc0on.parser.ast.call.AllocCallTree;
 import net.rizecookey.racc0on.parser.ast.exp.ExpArrayAccessTree;
 import net.rizecookey.racc0on.parser.ast.exp.ExpDereferenceTree;
 import net.rizecookey.racc0on.parser.ast.exp.ExpFieldAccessTree;
+import net.rizecookey.racc0on.parser.ast.exp.PointerLiteralTree;
 import net.rizecookey.racc0on.parser.ast.lvalue.LValueArrayAccessTree;
 import net.rizecookey.racc0on.parser.ast.lvalue.LValueDereferenceTree;
 import net.rizecookey.racc0on.parser.ast.lvalue.LValueFieldAccessTree;
@@ -559,6 +560,11 @@ public class SsaTranslation {
 
         @Override
         public Optional<Node> visit(AllocArrayCallTree allocArrayCallTree, SsaTranslation data) {
+            throw new UnsupportedOperationException(); // TODO
+        }
+
+        @Override
+        public Optional<Node> visit(PointerLiteralTree pointerLiteralTree, SsaTranslation data) {
             throw new UnsupportedOperationException(); // TODO
         }
 

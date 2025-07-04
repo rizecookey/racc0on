@@ -11,6 +11,7 @@ import net.rizecookey.racc0on.parser.ast.exp.ExpArrayAccessTree;
 import net.rizecookey.racc0on.parser.ast.exp.ExpDereferenceTree;
 import net.rizecookey.racc0on.parser.ast.exp.ExpFieldAccessTree;
 import net.rizecookey.racc0on.parser.ast.exp.ExpressionTree;
+import net.rizecookey.racc0on.parser.ast.exp.PointerLiteralTree;
 import net.rizecookey.racc0on.parser.ast.lvalue.LValueArrayAccessTree;
 import net.rizecookey.racc0on.parser.ast.lvalue.LValueDereferenceTree;
 import net.rizecookey.racc0on.parser.ast.lvalue.LValueFieldAccessTree;
@@ -334,6 +335,11 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
 
     @Override
     public Optional<Type> visit(AllocArrayCallTree allocArrayCallTree, FunctionInfo data) {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public Optional<Type> visit(PointerLiteralTree pointerLiteralTree, FunctionInfo data) {
         throw new UnsupportedOperationException(); // TODO
     }
 
