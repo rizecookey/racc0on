@@ -197,6 +197,18 @@ public class Printer {
                 space();
                 printTree(parameterTree.name());
             }
+            case AllocCallTree allocCallTree -> {
+                print("alloc(");
+                printTree(allocCallTree.type());
+                print(")");
+            }
+            case AllocArrayCallTree allocArrayCallTree -> {
+                print("alloc_array(");
+                printTree(allocArrayCallTree.type());
+                print(", ");
+                printTree(allocArrayCallTree.elementCount());
+                print(")");
+            }
             case CallTree callTree -> {
                 print(callTree.functionName().asString());
                 print("(");
@@ -257,18 +269,6 @@ public class Printer {
                 printTree(lValueFieldTree.struct());
                 print(".");
                 printTree(lValueFieldTree.fieldName());
-            }
-            case AllocCallTree allocCallTree -> {
-                print("alloc(");
-                printTree(allocCallTree.type());
-                print(")");
-            }
-            case AllocArrayCallTree allocArrayCallTree -> {
-                print("alloc_array(");
-                printTree(allocArrayCallTree.type());
-                print(", ");
-                printTree(allocArrayCallTree.elementCount());
-                print(")");
             }
         }
     }
