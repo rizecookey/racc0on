@@ -1,12 +1,16 @@
 package net.rizecookey.racc0on.parser;
 
 import net.rizecookey.racc0on.lexer.AmbiguousSymbol;
+import net.rizecookey.racc0on.lexer.keyword.AllocKeywordType;
 import net.rizecookey.racc0on.lexer.keyword.BuiltinFunctionsKeywordType;
 import net.rizecookey.racc0on.lexer.keyword.ComposedTypeKeywordType;
 import net.rizecookey.racc0on.parser.ast.FieldDeclarationTree;
 import net.rizecookey.racc0on.parser.ast.ParameterTree;
 import net.rizecookey.racc0on.parser.ast.StructDeclarationTree;
+import net.rizecookey.racc0on.parser.ast.call.AllocArrayCallTree;
+import net.rizecookey.racc0on.parser.ast.call.AllocCallTree;
 import net.rizecookey.racc0on.parser.ast.call.BuiltinCallTree;
+import net.rizecookey.racc0on.parser.ast.call.CallTree;
 import net.rizecookey.racc0on.parser.ast.call.FunctionCallTree;
 import net.rizecookey.racc0on.parser.type.ArrayType;
 import net.rizecookey.racc0on.parser.type.PointerType;
@@ -222,6 +226,10 @@ public class Parser {
             return new BuiltinCallTree(type, List.copyOf(argsPair.first()), next.span().merge(argsPair.second()));
         }
 
+        if (next instanceof Keyword(AllocKeywordType _, _)) {
+            return parseAllocTypeCall();
+        }
+
         LValueTree lValue = parseLValue();
         if (next instanceof Identifier ident && this.tokenSource.peek().isSeparator(SeparatorType.PAREN_OPEN)) {
             Pair<List<ExpressionTree>, Span> argsPair = parseArgumentList();
@@ -232,6 +240,28 @@ public class Parser {
         OperatorType.Assignment assignment = assignmentOperator.type().as(OperatorType.Assignment.class).orElseThrow();
         ExpressionTree expression = parseExpression();
         return new AssignmentTree(lValue, expression, assignment);
+    }
+
+    private CallTree parseAllocTypeCall() {
+        Token token = this.tokenSource.consume();
+        if (!(token instanceof Keyword(AllocKeywordType allocType, Span span))) {
+            throw new ParseException(token.span(), "expected allocation type call but got '" + token.asString() + "'");
+        }
+
+        this.tokenSource.expectSeparator(SeparatorType.PAREN_OPEN);
+        TypeTree type = parseType();
+        return switch (allocType) {
+            case ALLOC -> {
+                Separator end = this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
+                yield new AllocCallTree(type, token.span().merge(end.span()));
+            }
+            case ALLOC_ARRAY -> {
+                this.tokenSource.expectSeparator(SeparatorType.COMMA);
+                ExpressionTree count = parseExpression();
+                Separator end = this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
+                yield new AllocArrayCallTree(type, count, token.span().merge(end.span()));
+            }
+        };
     }
 
     private Operator parseAssignmentOperator() {
@@ -367,6 +397,7 @@ public class Parser {
 
                 yield new BuiltinCallTree(type, List.copyOf(argsPair.first()), kw.span().merge(argsPair.second()));
             }
+            case Keyword(AllocKeywordType _, _) -> parseAllocTypeCall();
             case Identifier ident -> {
                 this.tokenSource.consume();
                 if (this.tokenSource.peek().isSeparator(SeparatorType.PAREN_OPEN)) {
