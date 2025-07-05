@@ -93,7 +93,7 @@ public class Printer {
                 printTree(body);
             }
             case NameTree(var name, _) -> print(name.asString());
-            case ProgramTree(var structs, var functions) -> {
+            case ProgramTree(var structs, var functions, _) -> {
                 for (StructDeclarationTree struct : structs) {
                     printTree(struct);
                     lineBreak();

@@ -78,16 +78,22 @@ public class Parser {
     public ProgramTree parseProgram() {
         List<StructDeclarationTree> structs = new ArrayList<>();
         List<FunctionTree> functions = new ArrayList<>();
+        Position start = this.tokenSource.hasMore() ? this.tokenSource.peek().span().start() : new Position.SimplePosition(0, 0);
+        Position end = start;
         while (this.tokenSource.hasMore()) {
             TypeTree type = parseType();
             if (!(type.type() instanceof StructType) || !this.tokenSource.peek().isSeparator(SeparatorType.BRACE_OPEN)) {
-                functions.add(parseFunctionPastType(type));
+                FunctionTree function = parseFunctionPastType(type);
+                functions.add(function);
+                end = function.span().end();
                 continue;
             }
 
-            structs.add(parseStructDeclarationPastType(type));
+            StructDeclarationTree struct = parseStructDeclarationPastType(type);
+            structs.add(struct);
+            end = struct.span().end();
         }
-        return new ProgramTree(List.copyOf(structs), List.copyOf(functions));
+        return new ProgramTree(List.copyOf(structs), List.copyOf(functions), new Span.SimpleSpan(start, end));
     }
 
     private TypeTree parseType() {
