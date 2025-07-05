@@ -7,6 +7,7 @@ import net.rizecookey.racc0on.parser.ast.ProgramTree;
 import net.rizecookey.racc0on.parser.ast.lvalue.LValueArrayAccessTree;
 import net.rizecookey.racc0on.parser.ast.lvalue.LValueDereferenceTree;
 import net.rizecookey.racc0on.parser.ast.lvalue.LValueFieldAccessTree;
+import net.rizecookey.racc0on.parser.ast.lvalue.LValueTree;
 import net.rizecookey.racc0on.parser.ast.simp.AssignmentTree;
 import net.rizecookey.racc0on.parser.ast.BlockTree;
 import net.rizecookey.racc0on.parser.ast.simp.DeclarationTree;
@@ -108,20 +109,24 @@ class VariableStatusAnalysis extends RecursivePostorderVisitor<Namespace<Variabl
     @Override
     public Unit visit(AssignmentTree assignmentTree, Namespace<VariableStatus> data) {
         assignmentTree.expression().accept(this, data);
-        switch (assignmentTree.lValue()) {
-            case LValueIdentTree(var name) -> {
-                VariableStatus status = data.get(name);
-                if (assignmentTree.type() == OperatorType.Assignment.DEFAULT) {
-                    checkDeclared(name, status);
-                } else {
-                    checkInitialized(name, status);
-                }
-                if (status != VariableStatus.INITIALIZED) {
-                    // only update when needed, reassignment is totally fine
-                    updateStatus(data, VariableStatus.INITIALIZED, name);
-                }
-            }
-            case LValueArrayAccessTree _, LValueDereferenceTree _, LValueFieldAccessTree _ -> throw new UnsupportedOperationException(); // TODO
+        LValueTree lValue = assignmentTree.lValue();
+        while (!(lValue instanceof LValueIdentTree(var name))) {
+            lValue = switch (lValue) {
+                case LValueArrayAccessTree(var array, _, _) -> array;
+                case LValueDereferenceTree(var pointer, _) -> pointer;
+                case LValueFieldAccessTree(var struct, _) -> struct;
+                case LValueIdentTree _ -> throw new IllegalStateException("unreachable");
+            };
+        }
+        VariableStatus status = data.get(name);
+        if (assignmentTree.type() == OperatorType.Assignment.DEFAULT) {
+            checkDeclared(name, status);
+        } else {
+            checkInitialized(name, status);
+        }
+        if (status != VariableStatus.INITIALIZED) {
+            // only update when needed, reassignment is totally fine
+            updateStatus(data, VariableStatus.INITIALIZED, name);
         }
         return Unit.INSTANCE;
     }

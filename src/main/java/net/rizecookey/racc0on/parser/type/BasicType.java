@@ -10,4 +10,12 @@ public enum BasicType implements Type {
     public String asString() {
         return name().toLowerCase(Locale.ROOT);
     }
+
+    @Override
+    public boolean matches(Type other) {
+        if (other == Type.WILDCARD) {
+            return true;
+        }
+        return equals(other);
+    }
 }

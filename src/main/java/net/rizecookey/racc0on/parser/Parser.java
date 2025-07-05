@@ -23,7 +23,7 @@ import net.rizecookey.racc0on.parser.ast.lvalue.LValueFieldAccessTree;
 import net.rizecookey.racc0on.parser.type.ArrayType;
 import net.rizecookey.racc0on.parser.type.PointerType;
 import net.rizecookey.racc0on.parser.type.StructType;
-import net.rizecookey.racc0on.parser.type.Type;
+import net.rizecookey.racc0on.semantic.SemanticException;
 import net.rizecookey.racc0on.utils.Pair;
 import net.rizecookey.racc0on.utils.Position;
 import net.rizecookey.racc0on.lexer.BooleanLiteral;
@@ -80,28 +80,28 @@ public class Parser {
         List<FunctionTree> functions = new ArrayList<>();
         while (this.tokenSource.hasMore()) {
             TypeTree type = parseType();
-            if (!(type.type() instanceof StructType(Identifier name)) || !this.tokenSource.peek().isSeparator(SeparatorType.BRACE_OPEN)) {
+            if (!(type.type() instanceof StructType) || !this.tokenSource.peek().isSeparator(SeparatorType.BRACE_OPEN)) {
                 functions.add(parseFunctionPastType(type));
                 continue;
             }
 
-            structs.add(parseStructDeclarationPastType(type, name));
+            structs.add(parseStructDeclarationPastType(type));
         }
         return new ProgramTree(List.copyOf(structs), List.copyOf(functions));
     }
 
     private TypeTree parseType() {
-        Span currentSpan;
-        Type currentType;
+        TypeTree currentTree;
         if (this.tokenSource.peek().isKeyword(ComposedTypeKeywordType.STRUCT)) {
             Token token = this.tokenSource.consume();
             Identifier identifier = this.tokenSource.expectIdentifier();
-            currentSpan = token.span().merge(identifier.span());
-            currentType = new StructType(identifier);
+            currentTree = new TypeTree(
+                    new StructType(Name.forIdentifier(identifier)),
+                    new TypeTree.Struct(name(identifier)),
+                    token.span().merge(identifier.span()));
         } else {
             Pair<Keyword, BasicTypeKeywordType> typePair = this.tokenSource.expectBasicType();
-            currentSpan = typePair.first().span();
-            currentType = typePair.second().type();
+            currentTree = new TypeTree(typePair.second().type(), TypeTree.BASE, typePair.first().span());
         }
 
         for (Token token = this.tokenSource.peek();
@@ -109,27 +109,37 @@ public class Parser {
              token = this.tokenSource.peek()) {
             switch (token) {
                 case AmbiguousSymbol(var type, var span) when type.equals(AmbiguousSymbol.SymbolType.STAR) -> {
-                    currentSpan = currentSpan.merge(span);
-                    currentType = new PointerType<>(currentType);
+                    currentTree = new TypeTree(
+                            new PointerType<>(currentTree.type()),
+                            new TypeTree.Pointer(currentTree),
+                            currentTree.span().merge(span)
+                    );
                     this.tokenSource.consume();
                 }
                 case Separator(var type, _) when type.equals(SeparatorType.BRACKET_OPEN) -> {
                     this.tokenSource.consume();
                     Separator sep = this.tokenSource.expectSeparator(SeparatorType.BRACKET_CLOSE);
-                    currentSpan = currentSpan.merge(sep.span());
-                    currentType = new ArrayType<>(currentType);
+                    currentTree = new TypeTree(
+                            new ArrayType<>(currentTree.type()),
+                            new TypeTree.Array(currentTree),
+                            currentTree.span().merge(sep.span())
+                    );
                 }
                 default -> throw new IllegalStateException("Invalid type token");
             }
         }
 
-        return new TypeTree(currentType, currentSpan);
+        return currentTree;
     }
 
-    private StructDeclarationTree parseStructDeclarationPastType(TypeTree type, Identifier identifier) {
+    private StructDeclarationTree parseStructDeclarationPastType(TypeTree type) {
+        TypeTree.Kind kind = type.kind();
+        if (!(kind instanceof TypeTree.Struct(NameTree name))) {
+            throw new SemanticException(type.span(), "expected struct type but got " + type.type().asString());
+        }
         List<FieldDeclarationTree> fields = parseFieldList();
         Separator sep = this.tokenSource.expectSeparator(SeparatorType.SEMICOLON);
-        return new StructDeclarationTree(name(identifier), fields, type.span().merge(sep.span()));
+        return new StructDeclarationTree(name, fields, type.span().merge(sep.span()));
     }
 
     private List<FieldDeclarationTree> parseFieldList() {
@@ -318,7 +328,8 @@ public class Parser {
             }
             case Operator(OperatorType.Pointer type, _) when type.equals(OperatorType.Pointer.DEREFERENCE) -> {
                 this.tokenSource.consume();
-                yield parseBaseLValue(); // highest precedence!
+                LValueTree inner = parseBaseLValue(); // highest precedence!
+                yield new LValueDereferenceTree(inner, token.span().merge(inner.span()));
             }
             default -> {
                 Identifier identifier = this.tokenSource.expectIdentifier();

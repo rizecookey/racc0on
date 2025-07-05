@@ -103,7 +103,7 @@ public class Printer {
                     lineBreak();
                 }
             }
-            case TypeTree(var type, _) -> print(type.asString());
+            case TypeTree(var type, _, _) -> print(type.asString());
             case BinaryOperationTree(var lhs, var rhs, var op) -> {
                 print("(");
                 printTree(lhs);

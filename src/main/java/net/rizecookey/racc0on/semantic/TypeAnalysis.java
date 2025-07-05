@@ -15,6 +15,10 @@ import net.rizecookey.racc0on.parser.ast.exp.PointerLiteralTree;
 import net.rizecookey.racc0on.parser.ast.lvalue.LValueArrayAccessTree;
 import net.rizecookey.racc0on.parser.ast.lvalue.LValueDereferenceTree;
 import net.rizecookey.racc0on.parser.ast.lvalue.LValueFieldAccessTree;
+import net.rizecookey.racc0on.parser.symbol.Name;
+import net.rizecookey.racc0on.parser.type.ArrayType;
+import net.rizecookey.racc0on.parser.type.PointerType;
+import net.rizecookey.racc0on.parser.type.StructType;
 import net.rizecookey.racc0on.utils.Span;
 import net.rizecookey.racc0on.parser.ast.simp.AssignmentTree;
 import net.rizecookey.racc0on.parser.ast.exp.BinaryOperationTree;
@@ -42,11 +46,14 @@ import net.rizecookey.racc0on.parser.type.Type;
 import net.rizecookey.racc0on.parser.visitor.Visitor;
 import org.jspecify.annotations.Nullable;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>> {
     private Namespace<FunctionTree> functionNamespace = new Namespace<>();
+    private Namespace<StructDeclarationTree> structDeclarations = new Namespace<>();
 
     static class FunctionInfo {
         @Nullable FunctionTree function;
@@ -60,7 +67,7 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
 
     @Override
     public Optional<Type> visit(AssignmentTree assignmentTree, FunctionInfo info) {
-        Type type = expectTypeSame(info, assignmentTree.lValue(), assignmentTree.expression());
+        Type type = expectType(info, assignmentTree.lValue(), assignmentTree.expression());
         type = switch (assignmentTree.type()) {
             case MINUS, PLUS, MUL, DIV, MOD, BITWISE_AND, BITWISE_OR, BITWISE_XOR, SHIFT_LEFT, SHIFT_RIGHT
                     -> expectType(assignmentTree.span(), BasicType.INT, type);
@@ -103,7 +110,7 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
     @Override
     public Optional<Type> visit(DeclarationTree declarationTree, FunctionInfo info) {
         Type type = declarationTree.initializer() != null
-                ? expectTypeSame(info, declarationTree.type(), declarationTree.initializer())
+                ? expectType(info, declarationTree.type(), declarationTree.initializer())
                 : declarationTree.type().accept(this, info).orElseThrow();
         info.namespace.put(declarationTree.name().name(), type);
         return Optional.empty();
@@ -155,7 +162,17 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
 
     @Override
     public Optional<Type> visit(ProgramTree programTree, FunctionInfo info) {
+        functionNamespace = new Namespace<>();
+        structDeclarations = new Namespace<>();
         boolean mainFound = false;
+        for (StructDeclarationTree struct : programTree.structs()) {
+            if (structDeclarations.get(struct.name()) != null) {
+                throw new SemanticException(struct.name().span(), "a struct with the name "
+                        + struct.name().name().asString() + " already exists");
+            }
+
+            structDeclarations.put(struct.name().name(), struct);
+        }
         for (FunctionTree function : programTree.functions()) {
             if (function.name().name().asString().equals("main")) {
                 expectType(function.returnType().span(), BasicType.INT, function.returnType().accept(this, info).orElseThrow());
@@ -178,8 +195,7 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
             Span span = new Span.SimpleSpan(programTree.span().end(), programTree.span().end());
             throw new SemanticException(span, "missing main function");
         }
-        functionNamespace = new Namespace<>();
-        programTree.functions().forEach(t -> functionNamespace.put(t.name().name(), t));
+        programTree.structs().forEach(t -> t.accept(this, info));
         programTree.functions().forEach(t -> t.accept(this, new FunctionInfo(t)));
         return Optional.empty();
     }
@@ -290,57 +306,64 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
 
     @Override
     public Optional<Type> visit(StructDeclarationTree structDeclarationTree, FunctionInfo data) {
-        throw new UnsupportedOperationException(); // TODO
+        Set<Name> fieldNames = new HashSet<>();
+        for (FieldDeclarationTree field : structDeclarationTree.fields()) {
+            if (!fieldNames.add(field.name().name())) {
+                throw new SemanticException(field.name().span(), "struct already contains a field with the name " + field.name().name().asString());
+            }
+        }
+
+        return Optional.of(new StructType(structDeclarationTree.name().name()));
     }
 
     @Override
     public Optional<Type> visit(FieldDeclarationTree fieldDeclarationTree, FunctionInfo data) {
-        throw new UnsupportedOperationException(); // TODO
+        return Optional.of(fieldDeclarationTree.type().type());
     }
 
     @Override
     public Optional<Type> visit(ExpArrayAccessTree expArrayAccessTree, FunctionInfo data) {
-        throw new UnsupportedOperationException(); // TODO
+        return Optional.of(expectArrayAccess(data, expArrayAccessTree.array(), expArrayAccessTree.index()));
     }
 
     @Override
     public Optional<Type> visit(ExpDereferenceTree expDereferenceTree, FunctionInfo data) {
-        throw new UnsupportedOperationException(); // TODO
+        return Optional.of(expectDereference(data, expDereferenceTree.pointer()));
     }
 
     @Override
     public Optional<Type> visit(ExpFieldAccessTree expFieldAccessTree, FunctionInfo data) {
-        throw new UnsupportedOperationException(); // TODO
+        return Optional.of(expectFieldAccess(data, expFieldAccessTree.struct(), expFieldAccessTree.fieldName()));
     }
 
     @Override
     public Optional<Type> visit(LValueArrayAccessTree lValueArrayAccessTree, FunctionInfo data) {
-        throw new UnsupportedOperationException(); // TODO
+        return Optional.of(expectArrayAccess(data, lValueArrayAccessTree.array(), lValueArrayAccessTree.index()));
     }
 
     @Override
     public Optional<Type> visit(LValueDereferenceTree lValueDereferenceTree, FunctionInfo data) {
-        throw new UnsupportedOperationException(); // TODO
+        return Optional.of(expectDereference(data, lValueDereferenceTree.pointer()));
     }
 
     @Override
     public Optional<Type> visit(LValueFieldAccessTree lValueFieldAccessTree, FunctionInfo data) {
-        throw new UnsupportedOperationException(); // TODO
+        return Optional.of(expectFieldAccess(data, lValueFieldAccessTree.struct(), lValueFieldAccessTree.fieldName()));
     }
 
     @Override
     public Optional<Type> visit(AllocCallTree allocCallTree, FunctionInfo data) {
-        throw new UnsupportedOperationException(); // TODO
+        return Optional.of(new PointerType<>(allocCallTree.type().accept(this, data).orElseThrow()));
     }
 
     @Override
     public Optional<Type> visit(AllocArrayCallTree allocArrayCallTree, FunctionInfo data) {
-        throw new UnsupportedOperationException(); // TODO
+        return Optional.of(new ArrayType<>(allocArrayCallTree.type().accept(this, data).orElseThrow()));
     }
 
     @Override
     public Optional<Type> visit(PointerLiteralTree pointerLiteralTree, FunctionInfo data) {
-        throw new UnsupportedOperationException(); // TODO
+        return Optional.of(new PointerType<>(Type.WILDCARD));
     }
 
     private Type expectType(FunctionInfo info, Tree expected, Tree actual) {
@@ -352,7 +375,7 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
     }
 
     private Type expectType(Span span, Type expected, Type actual) {
-        if (!expected.equals(actual)) {
+        if (!expected.matches(actual)) {
             throw new SemanticException(span, "expected type " + expected.asString() + " but got " + actual.asString());
         }
         return expected;
@@ -361,10 +384,47 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
     private Type expectTypeSame(FunctionInfo info, Tree first, Tree second) {
         Type firstType = first.accept(this, info).orElseThrow();
         Type secondType = second.accept(this, info).orElseThrow();
-        if (!firstType.equals(secondType)) {
+        if (!firstType.matches(secondType)) {
             throw new SemanticException(first.span().merge(second.span()), "mismatched types, expected type to be the same");
         }
 
         return firstType;
+    }
+
+    private Type expectArrayAccess(FunctionInfo info, Tree array, Tree index) {
+        Type arrayType = array.accept(this, info).orElseThrow();
+        if (!(arrayType instanceof ArrayType<?>(Type elementType))) {
+            throw new SemanticException(array.span(), "expected an array type but got " + arrayType.asString());
+        }
+        expectType(info, BasicType.INT, index);
+
+        return elementType;
+    }
+
+    private Type expectDereference(FunctionInfo info, Tree pointer) {
+        Type type = pointer.accept(this, info).orElseThrow();
+        if (!(type instanceof PointerType<?>(Type pointerType))) {
+            throw new SemanticException(pointer.span(), "expected a pointer type but got " + type.asString());
+        }
+
+        return pointerType;
+    }
+
+    private Type expectFieldAccess(FunctionInfo info, Tree struct, NameTree field) {
+        Type type = struct.accept(this, info).orElseThrow();
+        if (!(type instanceof StructType(Name name))) {
+            throw new SemanticException(struct.span(), "expected a struct type but got " + type.asString());
+        }
+        StructDeclarationTree declarationTree = structDeclarations.get(name);
+        if (declarationTree == null) {
+            throw new SemanticException(struct.span(), "unknown struct type '" + name.asString() + "'");
+        }
+
+        FieldDeclarationTree fieldDeclaration = declarationTree.fields().stream()
+                .filter(decl -> decl.name().name().equals(field.name()))
+                .findFirst()
+                .orElseThrow(() -> new SemanticException(field.span(), "unknown struct field '" + field.name().asString() + "'"));
+
+        return fieldDeclaration.type().accept(this, info).orElseThrow();
     }
 }
