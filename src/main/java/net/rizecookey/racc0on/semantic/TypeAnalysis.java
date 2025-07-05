@@ -111,7 +111,7 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
     public Optional<Type> visit(DeclarationTree declarationTree, FunctionInfo info) {
         Type type = declarationTree.initializer() != null
                 ? expectType(info, expectSmall(info, declarationTree.type()), declarationTree.initializer())
-                : declarationTree.type().accept(this, info).orElseThrow();
+                : expectSmall(info, declarationTree.type());
         info.namespace.put(declarationTree.name().name(), type);
         return Optional.empty();
     }
