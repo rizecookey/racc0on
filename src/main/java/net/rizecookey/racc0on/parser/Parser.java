@@ -299,28 +299,34 @@ public class Parser {
     private LValueTree parseLValue() {
         LValueTree baseLValue = parseBaseLValue();
 
-        return switch (this.tokenSource.peek()) {
-            case Separator(SeparatorType type, _) when type.equals(SeparatorType.BRACKET_OPEN) -> {
-                this.tokenSource.consume();
-                ExpressionTree index = parseExpression();
-                Span end = this.tokenSource.expectSeparator(SeparatorType.BRACKET_CLOSE).span();
-                yield new LValueArrayAccessTree(baseLValue, index, baseLValue.span().merge(end));
-            }
-            case Operator(OperatorType.Pointer type, _) when !type.equals(OperatorType.Pointer.DEREFERENCE) -> {
-                Token token = this.tokenSource.consume();
-                NameTree field = name(this.tokenSource.expectIdentifier());
+        loop:
+        while (true) {
+            switch (this.tokenSource.peek()) {
+                case Separator(SeparatorType type, _) when type.equals(SeparatorType.BRACKET_OPEN) -> {
+                    this.tokenSource.consume();
+                    ExpressionTree index = parseExpression();
+                    Span end = this.tokenSource.expectSeparator(SeparatorType.BRACKET_CLOSE).span();
+                    baseLValue = new LValueArrayAccessTree(baseLValue, index, baseLValue.span().merge(end));
+                }
+                case Operator(OperatorType.Pointer type, _) when !type.equals(OperatorType.Pointer.DEREFERENCE) -> {
+                    Token token = this.tokenSource.consume();
+                    NameTree field = name(this.tokenSource.expectIdentifier());
 
-                yield switch (type) {
-                    case ARROW -> new LValueFieldAccessTree(
-                            new LValueDereferenceTree(baseLValue, baseLValue.span().merge(token.span())),
-                            field
-                    );
-                    case FIELD_ACCESS -> new LValueFieldAccessTree(baseLValue, field);
-                    case DEREFERENCE -> throw new IllegalStateException("unreachable");
-                };
+                    baseLValue = switch (type) {
+                        case ARROW -> new LValueFieldAccessTree(
+                                new LValueDereferenceTree(baseLValue, baseLValue.span().merge(token.span())),
+                                field
+                        );
+                        case FIELD_ACCESS -> new LValueFieldAccessTree(baseLValue, field);
+                        case DEREFERENCE -> throw new IllegalStateException("unreachable");
+                    };
+                }
+                default -> {
+                    break loop;
+                }
             }
-            default -> baseLValue;
-        };
+        }
+        return baseLValue;
     }
 
     private LValueTree parseBaseLValue() {
@@ -438,17 +444,23 @@ public class Parser {
 
     private ExpressionTree parseFactor() {
         ExpressionTree baseExp = parseBaseFactor();
-
-        return switch (this.tokenSource.peek()) {
-            case Separator(var type, _) when type.equals(SeparatorType.BRACKET_OPEN) -> {
-                this.tokenSource.consume();
-                ExpressionTree index = parseExpression();
-                Span end = this.tokenSource.expectSeparator(SeparatorType.BRACKET_CLOSE).span();
-                yield new ExpArrayAccessTree(baseExp, index, baseExp.span().merge(end));
+        loop:
+        while (true) {
+            switch (this.tokenSource.peek()) {
+                case Separator(var type, _) when type.equals(SeparatorType.BRACKET_OPEN) -> {
+                    this.tokenSource.consume();
+                    ExpressionTree index = parseExpression();
+                    Span end = this.tokenSource.expectSeparator(SeparatorType.BRACKET_CLOSE).span();
+                    baseExp = new ExpArrayAccessTree(baseExp, index, baseExp.span().merge(end));
+                }
+                case Operator(OperatorType.Pointer type, _) when !type.equals(OperatorType.Pointer.DEREFERENCE) ->
+                        baseExp = parseBinaryPointerOp(baseExp);
+                default -> {
+                    break loop;
+                }
             }
-            case Operator(OperatorType.Pointer type, _) when !type.equals(OperatorType.Pointer.DEREFERENCE) -> parseBinaryPointerOp(baseExp);
-            default -> baseExp;
-        };
+        }
+        return baseExp;
     }
 
     private ExpressionTree parseBinaryPointerOp(ExpressionTree base) {
