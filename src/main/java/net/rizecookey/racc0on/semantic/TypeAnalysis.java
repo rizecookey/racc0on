@@ -407,6 +407,10 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
             throw new SemanticException(pointer.span(), "expected a pointer type but got " + type.asString());
         }
 
+        if (pointerType.equals(Type.WILDCARD)) {
+            throw new SemanticException(pointer.span(), "NULL dereference not allowed");
+        }
+
         return pointerType;
     }
 
