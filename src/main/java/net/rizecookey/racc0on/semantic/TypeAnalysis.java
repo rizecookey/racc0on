@@ -67,7 +67,7 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
 
     @Override
     public Optional<Type> visit(AssignmentTree assignmentTree, FunctionInfo info) {
-        Type type = expectType(info, assignmentTree.lValue(), assignmentTree.expression());
+        Type type = expectType(info, expectSmall(info, assignmentTree.lValue()), assignmentTree.expression());
         type = switch (assignmentTree.type()) {
             case MINUS, PLUS, MUL, DIV, MOD, BITWISE_AND, BITWISE_OR, BITWISE_XOR, SHIFT_LEFT, SHIFT_RIGHT
                     -> expectType(assignmentTree.span(), BasicType.INT, type);
@@ -110,7 +110,7 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
     @Override
     public Optional<Type> visit(DeclarationTree declarationTree, FunctionInfo info) {
         Type type = declarationTree.initializer() != null
-                ? expectType(info, declarationTree.type(), declarationTree.initializer())
+                ? expectType(info, expectSmall(info, declarationTree.type()), declarationTree.initializer())
                 : declarationTree.type().accept(this, info).orElseThrow();
         info.namespace.put(declarationTree.name().name(), type);
         return Optional.empty();
@@ -118,9 +118,9 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
 
     @Override
     public Optional<Type> visit(FunctionTree functionTree, FunctionInfo info) {
-        functionTree.parameters().forEach(p -> info.namespace.put(p.name().name(), p.type().type()));
+        functionTree.parameters().forEach(p -> info.namespace.put(p.name().name(), expectSmall(info, p)));
         functionTree.body().accept(this, info);
-        return functionTree.returnType().accept(this, info);
+        return Optional.of(expectSmall(info, functionTree.returnType()));
     }
 
     @Override
@@ -426,5 +426,17 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
                 .orElseThrow(() -> new SemanticException(field.span(), "unknown struct field '" + field.name().asString() + "'"));
 
         return fieldDeclaration.type().accept(this, info).orElseThrow();
+    }
+
+    private Type expectSmall(Span span, Type type) {
+        if (!type.isSmallType()) {
+            throw new SemanticException(span, "expected a small type but got " + type.asString());
+        }
+
+        return type;
+    }
+
+    private Type expectSmall(FunctionInfo info, Tree tree) {
+        return expectSmall(tree.span(), tree.accept(this, info).orElseThrow());
     }
 }

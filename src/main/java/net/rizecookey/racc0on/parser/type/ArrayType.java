@@ -13,4 +13,9 @@ public record ArrayType<T extends Type>(T type) implements Type {
         }
         return other instanceof ArrayType<?>(Type otherInner) && type().matches(otherInner);
     }
+
+    @Override
+    public boolean isSmallType() {
+        return true;
+    }
 }

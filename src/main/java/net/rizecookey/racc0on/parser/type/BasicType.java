@@ -18,4 +18,9 @@ public enum BasicType implements Type {
         }
         return equals(other);
     }
+
+    @Override
+    public boolean isSmallType() {
+        return true;
+    }
 }

@@ -15,4 +15,9 @@ public record StructType(Name name) implements Type {
         }
         return other instanceof StructType(Name otherName) && name().equals(otherName);
     }
+
+    @Override
+    public boolean isSmallType() {
+        return false;
+    }
 }

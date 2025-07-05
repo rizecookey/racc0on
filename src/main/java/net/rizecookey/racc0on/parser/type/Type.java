@@ -5,6 +5,7 @@ public sealed interface Type permits ArrayType, BasicType, PointerType, StructTy
 
     String asString();
     boolean matches(Type other);
+    boolean isSmallType();
 
     final class Wildcard implements Type {
         private Wildcard() {}
@@ -17,6 +18,11 @@ public sealed interface Type permits ArrayType, BasicType, PointerType, StructTy
         @Override
         public boolean matches(Type other) {
             return true;
+        }
+
+        @Override
+        public boolean isSmallType() {
+            return false;
         }
     }
 }

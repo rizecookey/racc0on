@@ -13,4 +13,9 @@ public record PointerType<T extends Type>(T type) implements Type {
         }
         return other instanceof PointerType<?>(Type otherInner) && type().matches(otherInner);
     }
+
+    @Override
+    public boolean isSmallType() {
+        return true;
+    }
 }

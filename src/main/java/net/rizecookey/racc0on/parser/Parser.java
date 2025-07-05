@@ -261,7 +261,7 @@ public class Parser {
 
     private CallTree parseAllocTypeCall() {
         Token token = this.tokenSource.consume();
-        if (!(token instanceof Keyword(AllocKeywordType allocType, Span span))) {
+        if (!(token instanceof Keyword(AllocKeywordType allocType, _))) {
             throw new ParseException(token.span(), "expected allocation type call but got '" + token.asString() + "'");
         }
 
