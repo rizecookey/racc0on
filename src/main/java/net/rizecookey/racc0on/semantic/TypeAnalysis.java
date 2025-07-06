@@ -118,7 +118,7 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
 
     @Override
     public Optional<Type> visit(FunctionTree functionTree, FunctionInfo info) {
-        functionTree.parameters().forEach(p -> info.namespace.put(p.name().name(), expectSmall(info, p)));
+        functionTree.parameters().forEach(p -> p.accept(this, info));
         functionTree.body().accept(this, info);
         return Optional.of(expectSmall(info, functionTree.returnType()));
     }
@@ -205,12 +205,15 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
         if (info.function == null) {
             throw new IllegalStateException("No current function found");
         }
-        expectType(info, info.function.returnType().type(), returnTree.expression());
+        expectType(info, info.function.returnType(), returnTree.expression());
         return Optional.empty();
     }
 
     @Override
     public Optional<Type> visit(TypeTree typeTree, FunctionInfo info) {
+        if (typeTree.type() instanceof StructType(Name name) && structDeclarations.get(name) == null) {
+            throw new SemanticException(typeTree.span(), "unknown struct " + name.asString());
+        }
         return Optional.of(typeTree.type());
     }
 
@@ -257,7 +260,9 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
 
     @Override
     public Optional<Type> visit(ParameterTree parameterTree, FunctionInfo info) {
-        return parameterTree.type().accept(this, info);
+        Type type = expectSmall(info, parameterTree.type());
+        info.namespace.put(parameterTree.name().name(), type);
+        return Optional.of(type);
     }
 
     @Override
@@ -311,6 +316,7 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
             if (!fieldNames.add(field.name().name())) {
                 throw new SemanticException(field.name().span(), "struct already contains a field with the name " + field.name().name().asString());
             }
+            field.accept(this, data);
         }
 
         return Optional.of(new StructType(structDeclarationTree.name().name()));
@@ -318,7 +324,7 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
 
     @Override
     public Optional<Type> visit(FieldDeclarationTree fieldDeclarationTree, FunctionInfo data) {
-        return Optional.of(fieldDeclarationTree.type().type());
+        return fieldDeclarationTree.type().accept(this, data);
     }
 
     @Override
