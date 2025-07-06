@@ -110,7 +110,9 @@ class VariableStatusAnalysis extends RecursivePostorderVisitor<Namespace<Variabl
     public Unit visit(AssignmentTree assignmentTree, Namespace<VariableStatus> data) {
         assignmentTree.expression().accept(this, data);
         LValueTree lValue = assignmentTree.lValue();
+        boolean isDereference = false;
         while (!(lValue instanceof LValueIdentTree(var name))) {
+            isDereference = true;
             lValue = switch (lValue) {
                 case LValueArrayAccessTree(var array, _, _) -> array;
                 case LValueDereferenceTree(var pointer, _) -> pointer;
@@ -119,7 +121,7 @@ class VariableStatusAnalysis extends RecursivePostorderVisitor<Namespace<Variabl
             };
         }
         VariableStatus status = data.get(name);
-        if (assignmentTree.type() == OperatorType.Assignment.DEFAULT) {
+        if (assignmentTree.type() == OperatorType.Assignment.DEFAULT && !isDereference) {
             checkDeclared(name, status);
         } else {
             checkInitialized(name, status);
