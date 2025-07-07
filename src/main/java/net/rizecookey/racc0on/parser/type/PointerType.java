@@ -1,6 +1,6 @@
 package net.rizecookey.racc0on.parser.type;
 
-public record PointerType<T extends Type>(T type) implements Type {
+public record PointerType<T extends Type>(T type) implements SmallType {
     @Override
     public String asString() {
         return type().asString() + "*";
@@ -12,10 +12,5 @@ public record PointerType<T extends Type>(T type) implements Type {
             return true;
         }
         return other instanceof PointerType<?>(Type otherInner) && type().matches(otherInner);
-    }
-
-    @Override
-    public boolean isSmallType() {
-        return true;
     }
 }

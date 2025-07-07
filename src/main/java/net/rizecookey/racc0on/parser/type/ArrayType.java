@@ -1,6 +1,6 @@
 package net.rizecookey.racc0on.parser.type;
 
-public record ArrayType<T extends Type>(T type) implements Type {
+public record ArrayType<T extends Type>(T type) implements SmallType {
     @Override
     public String asString() {
         return type().asString() + "[]";
@@ -12,10 +12,5 @@ public record ArrayType<T extends Type>(T type) implements Type {
             return true;
         }
         return other instanceof ArrayType<?>(Type otherInner) && type().matches(otherInner);
-    }
-
-    @Override
-    public boolean isSmallType() {
-        return true;
     }
 }

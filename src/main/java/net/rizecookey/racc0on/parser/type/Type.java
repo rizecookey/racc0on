@@ -1,11 +1,10 @@
 package net.rizecookey.racc0on.parser.type;
 
-public sealed interface Type permits ArrayType, BasicType, PointerType, StructType, Type.Wildcard {
+public sealed interface Type permits SmallType, StructType, Type.Wildcard {
     Type WILDCARD = new Wildcard();
 
     String asString();
     boolean matches(Type other);
-    boolean isSmallType();
 
     final class Wildcard implements Type {
         private Wildcard() {}
@@ -18,11 +17,6 @@ public sealed interface Type permits ArrayType, BasicType, PointerType, StructTy
         @Override
         public boolean matches(Type other) {
             return true;
-        }
-
-        @Override
-        public boolean isSmallType() {
-            return false;
         }
     }
 }

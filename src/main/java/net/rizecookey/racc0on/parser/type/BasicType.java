@@ -2,7 +2,7 @@ package net.rizecookey.racc0on.parser.type;
 
 import java.util.Locale;
 
-public enum BasicType implements Type {
+public enum BasicType implements SmallType {
     INT,
     BOOL;
 
@@ -17,10 +17,5 @@ public enum BasicType implements Type {
             return true;
         }
         return equals(other);
-    }
-
-    @Override
-    public boolean isSmallType() {
-        return true;
     }
 }

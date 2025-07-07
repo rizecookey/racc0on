@@ -18,6 +18,7 @@ import net.rizecookey.racc0on.parser.ast.lvalue.LValueFieldAccessTree;
 import net.rizecookey.racc0on.parser.symbol.Name;
 import net.rizecookey.racc0on.parser.type.ArrayType;
 import net.rizecookey.racc0on.parser.type.PointerType;
+import net.rizecookey.racc0on.parser.type.SmallType;
 import net.rizecookey.racc0on.parser.type.StructType;
 import net.rizecookey.racc0on.utils.Span;
 import net.rizecookey.racc0on.parser.ast.simp.AssignmentTree;
@@ -439,7 +440,7 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
     }
 
     private Type expectSmall(Span span, Type type) {
-        if (!type.isSmallType()) {
+        if (!(type instanceof SmallType)) {
             throw new SemanticException(span, "expected a small type but got " + type.asString());
         }
 
