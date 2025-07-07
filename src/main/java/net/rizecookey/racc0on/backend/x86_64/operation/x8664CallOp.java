@@ -40,7 +40,7 @@ public class x8664CallOp implements x8664Op {
     }
 
     public x8664CallOp(BuiltinCallNode builtinCallNode) {
-        this.target = "$" + builtinCallNode.type().keyword() + "$";
+        this.target = "$" + builtinCallNode.builtinName() + "$";
         this.arguments = List.copyOf(builtinCallNode.arguments());
         this.out = builtinCallNode;
     }

@@ -1,22 +1,20 @@
 package net.rizecookey.racc0on.ir.node;
 
-import net.rizecookey.racc0on.lexer.keyword.BuiltinFunctionsKeywordType;
-
 import java.util.List;
 import java.util.stream.Stream;
 
 public final class BuiltinCallNode extends Node {
     public static final int SIDE_EFFECT = 0;
 
-    private final BuiltinFunctionsKeywordType type;
+    private final String builtinName;
 
-    public BuiltinCallNode(Block block, BuiltinFunctionsKeywordType type, Node sideEffect, Node... arguments) {
+    public BuiltinCallNode(Block block, String builtinName, Node sideEffect, Node... arguments) {
         super(block, Stream.concat(Stream.of(sideEffect), Stream.of(arguments)).toArray(Node[]::new));
-        this.type = type;
+        this.builtinName = builtinName;
     }
 
-    public BuiltinFunctionsKeywordType type() {
-        return type;
+    public String builtinName() {
+        return builtinName;
     }
 
     public List<? extends Node> arguments() {
@@ -30,7 +28,7 @@ public final class BuiltinCallNode extends Node {
 
     @Override
     protected String info() {
-        return "[" + type().keyword() + "]";
+        return "[" + builtinName() + "]";
     }
 
     @Override

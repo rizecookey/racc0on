@@ -528,7 +528,7 @@ public class SsaTranslation {
                     .toArray(Node[]::new);
             Node result = projResultSideEffectCause(
                     data,
-                    data.constructor.newBuiltinCall(builtinCallTree.type(), args)
+                    data.constructor.newBuiltinCall(builtinCallTree.type().keyword(), args)
             );
             return Optional.of(result);
         }

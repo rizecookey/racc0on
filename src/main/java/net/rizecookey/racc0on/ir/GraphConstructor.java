@@ -31,7 +31,6 @@ import net.rizecookey.racc0on.ir.node.operation.binary.ShiftRightNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.SubNode;
 import net.rizecookey.racc0on.ir.node.operation.unary.NotNode;
 import net.rizecookey.racc0on.ir.optimize.Optimizer;
-import net.rizecookey.racc0on.lexer.keyword.BuiltinFunctionsKeywordType;
 import net.rizecookey.racc0on.parser.symbol.Name;
 import org.jspecify.annotations.Nullable;
 
@@ -238,8 +237,8 @@ class GraphConstructor {
         return new CallNode(currentBlock(), target, returnType, readCurrentSideEffect(), inputs);
     }
 
-    public Node newBuiltinCall(BuiltinFunctionsKeywordType type, Node... inputs) {
-        return new BuiltinCallNode(currentBlock(), type, readCurrentSideEffect(), inputs);
+    public Node newBuiltinCall(String builtinName, Node... inputs) {
+        return new BuiltinCallNode(currentBlock(), builtinName, readCurrentSideEffect(), inputs);
     }
 
     public boolean hasUnconditionalExit() {
