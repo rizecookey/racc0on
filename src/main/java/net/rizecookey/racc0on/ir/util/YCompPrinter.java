@@ -1,21 +1,21 @@
 package net.rizecookey.racc0on.ir.util;
 
 import net.rizecookey.racc0on.ir.IrGraph;
+import net.rizecookey.racc0on.ir.node.Block;
 import net.rizecookey.racc0on.ir.node.BuiltinCallNode;
 import net.rizecookey.racc0on.ir.node.CallNode;
 import net.rizecookey.racc0on.ir.node.ConstBoolNode;
+import net.rizecookey.racc0on.ir.node.ConstIntNode;
 import net.rizecookey.racc0on.ir.node.IfNode;
 import net.rizecookey.racc0on.ir.node.JumpNode;
-import net.rizecookey.racc0on.ir.node.ParameterNode;
-import net.rizecookey.racc0on.ir.node.operation.binary.BinaryOperationNode;
-import net.rizecookey.racc0on.ir.node.Block;
-import net.rizecookey.racc0on.ir.node.ConstIntNode;
 import net.rizecookey.racc0on.ir.node.Node;
+import net.rizecookey.racc0on.ir.node.ParameterNode;
 import net.rizecookey.racc0on.ir.node.Phi;
 import net.rizecookey.racc0on.ir.node.ProjNode;
 import net.rizecookey.racc0on.ir.node.ProjNode.SimpleProjectionInfo;
 import net.rizecookey.racc0on.ir.node.ReturnNode;
 import net.rizecookey.racc0on.ir.node.StartNode;
+import net.rizecookey.racc0on.ir.node.operation.binary.BinaryOperationNode;
 import net.rizecookey.racc0on.ir.node.operation.unary.UnaryOperationNode;
 import net.rizecookey.racc0on.ir.schedule.SsaSchedule;
 import net.rizecookey.racc0on.ir.schedule.SsaScheduler;

@@ -29,4 +29,9 @@ public final class ConstIntNode extends Node {
     protected String info() {
         return "[" + this.value + "]";
     }
+
+    @Override
+    public ValueType valueType() {
+        return ValueType.INT;
+    }
 }

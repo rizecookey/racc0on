@@ -1,8 +1,8 @@
 package net.rizecookey.racc0on.parser.ast.control;
 
-import net.rizecookey.racc0on.utils.Span;
 import net.rizecookey.racc0on.lexer.keyword.ControlKeywordType;
 import net.rizecookey.racc0on.parser.visitor.Visitor;
+import net.rizecookey.racc0on.utils.Span;
 
 public record LoopControlTree(Type type, Span span) implements ControlTree {
     @Override

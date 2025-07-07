@@ -7,4 +7,9 @@ public final class EqNode extends CommutativeBinaryOperationNode {
     public EqNode(Block block, Node left, Node right) {
         super(block, left, right);
     }
+
+    @Override
+    public ValueType valueType() {
+        return ValueType.BOOL;
+    }
 }

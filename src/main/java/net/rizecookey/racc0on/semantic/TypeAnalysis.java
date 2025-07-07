@@ -53,8 +53,8 @@ import java.util.Optional;
 import java.util.Set;
 
 class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>> {
-    private Namespace<FunctionTree> functionNamespace = new Namespace<>();
-    private Namespace<StructDeclarationTree> structDeclarations = new Namespace<>();
+    Namespace<FunctionTree> functionNamespace = new Namespace<>();
+    Namespace<StructDeclarationTree> structDeclarations = new Namespace<>();
 
     static class FunctionInfo {
         @Nullable FunctionTree function;

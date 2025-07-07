@@ -32,4 +32,9 @@ public final class BuiltinCallNode extends Node {
     protected String info() {
         return "[" + type().keyword() + "]";
     }
+
+    @Override
+    public ValueType valueType() {
+        return ValueType.INT;
+    }
 }

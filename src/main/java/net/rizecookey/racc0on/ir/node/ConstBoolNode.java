@@ -30,4 +30,9 @@ public final class ConstBoolNode extends Node {
     protected String info() {
         return "[" + value() + "]";
     }
+
+    @Override
+    public ValueType valueType() {
+        return ValueType.BOOL;
+    }
 }

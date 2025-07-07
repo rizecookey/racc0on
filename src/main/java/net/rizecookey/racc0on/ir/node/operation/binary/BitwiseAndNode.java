@@ -7,4 +7,9 @@ public final class BitwiseAndNode extends CommutativeBinaryOperationNode {
     public BitwiseAndNode(Block block, Node left, Node right) {
         super(block, left, right);
     }
+
+    @Override
+    public ValueType valueType() {
+        return ValueType.INT;
+    }
 }

@@ -15,4 +15,9 @@ public final class ModNode extends BinaryOperationNode {
         // this is the most conservative approach
         return obj == this;
     }
+
+    @Override
+    public ValueType valueType() {
+        return ValueType.INT;
+    }
 }

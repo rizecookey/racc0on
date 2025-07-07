@@ -1,50 +1,53 @@
 package net.rizecookey.racc0on.ir;
 
 import net.rizecookey.racc0on.ir.node.Block;
-import net.rizecookey.racc0on.ir.node.Phi;
 import net.rizecookey.racc0on.ir.node.Node;
+import net.rizecookey.racc0on.ir.node.Phi;
 import net.rizecookey.racc0on.ir.optimize.Optimizer;
 import net.rizecookey.racc0on.ir.util.DebugInfo;
 import net.rizecookey.racc0on.ir.util.DebugInfoHelper;
 import net.rizecookey.racc0on.ir.util.NodeSupport;
 import net.rizecookey.racc0on.lexer.OperatorType;
+import net.rizecookey.racc0on.parser.DeclarationInfo;
+import net.rizecookey.racc0on.parser.ast.BlockTree;
 import net.rizecookey.racc0on.parser.ast.FieldDeclarationTree;
+import net.rizecookey.racc0on.parser.ast.FunctionTree;
+import net.rizecookey.racc0on.parser.ast.NameTree;
+import net.rizecookey.racc0on.parser.ast.ParameterTree;
+import net.rizecookey.racc0on.parser.ast.ProgramTree;
+import net.rizecookey.racc0on.parser.ast.StatementTree;
 import net.rizecookey.racc0on.parser.ast.StructDeclarationTree;
+import net.rizecookey.racc0on.parser.ast.Tree;
+import net.rizecookey.racc0on.parser.ast.TypeTree;
 import net.rizecookey.racc0on.parser.ast.call.AllocArrayCallTree;
 import net.rizecookey.racc0on.parser.ast.call.AllocCallTree;
-import net.rizecookey.racc0on.parser.ast.exp.ExpArrayAccessTree;
-import net.rizecookey.racc0on.parser.ast.exp.ExpDereferenceTree;
-import net.rizecookey.racc0on.parser.ast.exp.ExpFieldAccessTree;
-import net.rizecookey.racc0on.parser.ast.exp.PointerLiteralTree;
-import net.rizecookey.racc0on.parser.ast.lvalue.LValueArrayAccessTree;
-import net.rizecookey.racc0on.parser.ast.lvalue.LValueDereferenceTree;
-import net.rizecookey.racc0on.parser.ast.lvalue.LValueFieldAccessTree;
-import net.rizecookey.racc0on.parser.ast.simp.AssignmentTree;
-import net.rizecookey.racc0on.parser.ast.exp.BinaryOperationTree;
-import net.rizecookey.racc0on.parser.ast.BlockTree;
-import net.rizecookey.racc0on.parser.ast.exp.BoolLiteralTree;
 import net.rizecookey.racc0on.parser.ast.call.BuiltinCallTree;
-import net.rizecookey.racc0on.parser.ast.simp.DeclarationTree;
-import net.rizecookey.racc0on.parser.ast.FunctionTree;
-import net.rizecookey.racc0on.parser.ast.exp.IdentExpressionTree;
-import net.rizecookey.racc0on.parser.ast.lvalue.LValueIdentTree;
-import net.rizecookey.racc0on.parser.ast.exp.IntLiteralTree;
-import net.rizecookey.racc0on.parser.ast.ParameterTree;
 import net.rizecookey.racc0on.parser.ast.call.FunctionCallTree;
-import net.rizecookey.racc0on.parser.ast.simp.SimpleStatementTree;
-import net.rizecookey.racc0on.parser.ast.exp.TernaryExpressionTree;
 import net.rizecookey.racc0on.parser.ast.control.ForTree;
 import net.rizecookey.racc0on.parser.ast.control.IfElseTree;
 import net.rizecookey.racc0on.parser.ast.control.LoopControlTree;
-import net.rizecookey.racc0on.parser.ast.NameTree;
-import net.rizecookey.racc0on.parser.ast.exp.UnaryOperationTree;
-import net.rizecookey.racc0on.parser.ast.ProgramTree;
 import net.rizecookey.racc0on.parser.ast.control.ReturnTree;
-import net.rizecookey.racc0on.parser.ast.StatementTree;
-import net.rizecookey.racc0on.parser.ast.Tree;
-import net.rizecookey.racc0on.parser.ast.TypeTree;
 import net.rizecookey.racc0on.parser.ast.control.WhileTree;
+import net.rizecookey.racc0on.parser.ast.exp.BinaryOperationTree;
+import net.rizecookey.racc0on.parser.ast.exp.BoolLiteralTree;
+import net.rizecookey.racc0on.parser.ast.exp.ExpArrayAccessTree;
+import net.rizecookey.racc0on.parser.ast.exp.ExpDereferenceTree;
+import net.rizecookey.racc0on.parser.ast.exp.ExpFieldAccessTree;
+import net.rizecookey.racc0on.parser.ast.exp.IdentExpressionTree;
+import net.rizecookey.racc0on.parser.ast.exp.IntLiteralTree;
+import net.rizecookey.racc0on.parser.ast.exp.PointerLiteralTree;
+import net.rizecookey.racc0on.parser.ast.exp.TernaryExpressionTree;
+import net.rizecookey.racc0on.parser.ast.exp.UnaryOperationTree;
+import net.rizecookey.racc0on.parser.ast.lvalue.LValueArrayAccessTree;
+import net.rizecookey.racc0on.parser.ast.lvalue.LValueDereferenceTree;
+import net.rizecookey.racc0on.parser.ast.lvalue.LValueFieldAccessTree;
+import net.rizecookey.racc0on.parser.ast.lvalue.LValueIdentTree;
+import net.rizecookey.racc0on.parser.ast.simp.AssignmentTree;
+import net.rizecookey.racc0on.parser.ast.simp.DeclarationTree;
+import net.rizecookey.racc0on.parser.ast.simp.SimpleStatementTree;
 import net.rizecookey.racc0on.parser.symbol.Name;
+import net.rizecookey.racc0on.parser.type.SmallType;
+import net.rizecookey.racc0on.parser.type.Type;
 import net.rizecookey.racc0on.parser.visitor.NoOpVisitor;
 import net.rizecookey.racc0on.parser.visitor.Visitor;
 import org.jspecify.annotations.Nullable;
@@ -66,14 +69,16 @@ import java.util.stream.Stream;
 public class SsaTranslation {
     private final FunctionTree function;
     private final GraphConstructor constructor;
+    private final DeclarationInfo declarationInfo;
 
-    public SsaTranslation(FunctionTree function, Optimizer optimizer) {
+    public SsaTranslation(FunctionTree function, Optimizer optimizer, DeclarationInfo declarationInfo) {
         this.function = function;
         this.constructor = new GraphConstructor(optimizer, function.name().name().asString());
+        this.declarationInfo = declarationInfo;
     }
 
     public IrGraph translate() {
-        var visitor = new SsaTranslationVisitor();
+        var visitor = new SsaTranslationVisitor(declarationInfo);
         this.function.accept(visitor, this);
         return this.constructor.graph();
     }
@@ -99,6 +104,11 @@ public class SsaTranslation {
         private final Deque<LoopInfo> transformerStack = new ArrayDeque<>();
 
         private CancellationRange currentCancellation = CancellationRange.NONE;
+        private final DeclarationInfo declarationInfo;
+
+        private SsaTranslationVisitor(DeclarationInfo declarationInfo) {
+            this.declarationInfo = declarationInfo;
+        }
 
         private enum CancellationRange {
             NONE, LOOP, RETURN
@@ -484,7 +494,10 @@ public class SsaTranslation {
 
         @Override
         public Optional<Node> visit(ParameterTree parameterTree, SsaTranslation data) {
-            Node parameter = data.constructor.newParameter(parameterTree.index());
+            if (!(parameterTree.type().type() instanceof SmallType smallType)) {
+                throw new IllegalStateException("Parameter is not a small type");
+            }
+            Node parameter = data.constructor.newParameter(parameterTree.index(), smallType.toIrType());
             data.writeVariable(parameterTree.name().name(), data.currentBlock(), parameter);
             return Optional.of(parameter);
         }
@@ -494,9 +507,16 @@ public class SsaTranslation {
             Node[] args = functionCallTree.arguments().stream()
                     .map(arg -> arg.accept(this, data).orElseThrow())
                     .toArray(Node[]::new);
+            Name name = functionCallTree.name().name();
+            Type returnType = declarationInfo.functions().computeIfAbsent(name, _ -> {
+                throw new IllegalStateException("Unknown function");
+            }).returnType().type();
+            if (!(returnType instanceof SmallType smallType)) {
+                throw new IllegalStateException("return type not a small type");
+            }
             Node result = projResultSideEffectCause(
                     data,
-                    data.constructor.newCall(functionCallTree.name().name().asString(), args)
+                    data.constructor.newCall(functionCallTree.name().name().asString(), smallType.toIrType(), args)
             );
             return Optional.of(result);
         }

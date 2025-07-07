@@ -1,9 +1,9 @@
 package net.rizecookey.racc0on.ir.util;
 
-import net.rizecookey.racc0on.utils.Span;
 import net.rizecookey.racc0on.ir.IrGraph;
 import net.rizecookey.racc0on.ir.node.Block;
 import net.rizecookey.racc0on.ir.node.Node;
+import net.rizecookey.racc0on.utils.Span;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -29,4 +29,15 @@ public final class Phi extends Node {
             }
         }
     }
+
+    @Override
+    public ValueType valueType() {
+        for (Node operand : predecessors()) {
+            if (!(operand instanceof Phi)) {
+                return operand.valueType();
+            }
+        }
+
+        return super.valueType();
+    }
 }

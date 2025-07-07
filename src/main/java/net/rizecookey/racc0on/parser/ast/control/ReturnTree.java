@@ -1,9 +1,9 @@
 package net.rizecookey.racc0on.parser.ast.control;
 
-import net.rizecookey.racc0on.utils.Position;
-import net.rizecookey.racc0on.utils.Span;
 import net.rizecookey.racc0on.parser.ast.exp.ExpressionTree;
 import net.rizecookey.racc0on.parser.visitor.Visitor;
+import net.rizecookey.racc0on.utils.Position;
+import net.rizecookey.racc0on.utils.Span;
 
 public record ReturnTree(ExpressionTree expression, Position start) implements ControlTree {
     @Override

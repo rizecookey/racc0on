@@ -1,9 +1,9 @@
 package net.rizecookey.racc0on.ir.node;
 
+import net.rizecookey.racc0on.ir.IrGraph;
 import net.rizecookey.racc0on.ir.node.operation.binary.BinaryOperationNode;
 import net.rizecookey.racc0on.ir.node.operation.unary.UnaryOperationNode;
 import net.rizecookey.racc0on.ir.util.DebugInfo;
-import net.rizecookey.racc0on.ir.IrGraph;
 import net.rizecookey.racc0on.ir.util.DebugInfoHelper;
 
 import java.util.ArrayList;
@@ -84,5 +84,13 @@ public sealed abstract class Node permits Block, BuiltinCallNode, CallNode, Cons
 
     protected static int predecessorHash(Node node, int predecessor) {
         return System.identityHashCode(node.predecessor(predecessor));
+    }
+
+    public ValueType valueType() {
+        return ValueType.NONE;
+    }
+
+    public enum ValueType {
+        NONE, INT, BOOL, POINTER, ARRAY
     }
 }

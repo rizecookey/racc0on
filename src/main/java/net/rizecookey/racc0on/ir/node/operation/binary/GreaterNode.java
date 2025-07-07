@@ -7,4 +7,9 @@ public final class GreaterNode extends BinaryOperationNode {
     public GreaterNode(Block block, Node left, Node right) {
         super(block, left, right);
     }
+
+    @Override
+    public ValueType valueType() {
+        return ValueType.BOOL;
+    }
 }

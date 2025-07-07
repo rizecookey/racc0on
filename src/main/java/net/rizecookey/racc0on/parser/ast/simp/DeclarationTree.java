@@ -1,10 +1,10 @@
 package net.rizecookey.racc0on.parser.ast.simp;
 
-import net.rizecookey.racc0on.parser.ast.exp.ExpressionTree;
 import net.rizecookey.racc0on.parser.ast.NameTree;
 import net.rizecookey.racc0on.parser.ast.TypeTree;
-import net.rizecookey.racc0on.utils.Span;
+import net.rizecookey.racc0on.parser.ast.exp.ExpressionTree;
 import net.rizecookey.racc0on.parser.visitor.Visitor;
+import net.rizecookey.racc0on.utils.Span;
 import org.jspecify.annotations.Nullable;
 
 public record DeclarationTree(TypeTree type, NameTree name, @Nullable ExpressionTree initializer) implements SimpleStatementTree {

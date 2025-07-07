@@ -7,4 +7,9 @@ public final class BitwiseXorNode extends CommutativeBinaryOperationNode {
     public BitwiseXorNode(Block block, Node left, Node right) {
         super(block, left, right);
     }
+
+    @Override
+    public ValueType valueType() {
+        return ValueType.INT;
+    }
 }

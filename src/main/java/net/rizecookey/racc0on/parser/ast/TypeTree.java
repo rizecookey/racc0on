@@ -1,8 +1,8 @@
 package net.rizecookey.racc0on.parser.ast;
 
-import net.rizecookey.racc0on.utils.Span;
 import net.rizecookey.racc0on.parser.type.Type;
 import net.rizecookey.racc0on.parser.visitor.Visitor;
+import net.rizecookey.racc0on.utils.Span;
 
 public record TypeTree(Type type, Kind kind, Span span) implements Tree {
     public static final Base BASE = new Base();

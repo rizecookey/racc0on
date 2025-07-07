@@ -8,6 +8,7 @@ import net.rizecookey.racc0on.ir.optimize.LocalValueNumbering;
 import net.rizecookey.racc0on.ir.util.GraphVizPrinter;
 import net.rizecookey.racc0on.ir.util.YCompPrinter;
 import net.rizecookey.racc0on.lexer.Lexer;
+import net.rizecookey.racc0on.parser.DeclarationInfo;
 import net.rizecookey.racc0on.parser.ParseException;
 import net.rizecookey.racc0on.parser.Parser;
 import net.rizecookey.racc0on.parser.Printer;
@@ -51,13 +52,14 @@ public final class Racc0onCompilation {
         debug(consumer -> consumer.artifactInfo("parsed-program", "Parsed program",
                 debugFile(name -> name + ".parsed.l2"), Printer.print(program)));
 
+        DeclarationInfo declarationInfo;
         try {
-            runSemanticAnalysis(program);
+            declarationInfo = runSemanticAnalysis(program);
         } catch (SemanticException e) {
             throw new CompilerException(input, e);
         }
 
-        List<IrGraph> programInSsaForm = translateToSsa(program);
+        List<IrGraph> programInSsaForm = translateToSsa(program, declarationInfo);
         debug(consumer -> {
             for (IrGraph procedure : programInSsaForm) {
                 consumer.artifact("graphviz-graph-" + procedure.name(),
@@ -85,15 +87,15 @@ public final class Racc0onCompilation {
         return parser.parseProgram();
     }
 
-    private void runSemanticAnalysis(ProgramTree program) throws SemanticException {
-        new SemanticAnalysis(program).analyze();
+    private DeclarationInfo runSemanticAnalysis(ProgramTree program) throws SemanticException {
+        return new SemanticAnalysis(program).analyze();
     }
 
-    private List<IrGraph> translateToSsa(ProgramTree program) {
+    private List<IrGraph> translateToSsa(ProgramTree program, DeclarationInfo declarationInfo) {
         List<IrGraph> functions = new ArrayList<>();
 
         for (FunctionTree function : program.functions()) {
-            SsaTranslation translator = new SsaTranslation(function, new LocalValueNumbering());
+            SsaTranslation translator = new SsaTranslation(function, new LocalValueNumbering(), declarationInfo);
             functions.add(translator.translate());
         }
 

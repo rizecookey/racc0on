@@ -70,10 +70,10 @@ class GraphConstructor {
         return currentStartNode;
     }
 
-    public Node newParameter(int index) {
+    public Node newParameter(int index, Node.ValueType type) {
         Node startNode = currentStartNode();
         assert startNode != null : "no start node found";
-        return this.optimizer.transform(new ParameterNode(this.graph().startBlock(), index, startNode));
+        return this.optimizer.transform(new ParameterNode(this.graph().startBlock(), index, type, startNode));
     }
 
     @FunctionalInterface
@@ -234,8 +234,8 @@ class GraphConstructor {
         return jumpNode;
     }
 
-    public Node newCall(String target, Node... inputs) {
-        return new CallNode(currentBlock(), target, readCurrentSideEffect(), inputs);
+    public Node newCall(String target, Node.ValueType returnType, Node... inputs) {
+        return new CallNode(currentBlock(), target, returnType, readCurrentSideEffect(), inputs);
     }
 
     public Node newBuiltinCall(BuiltinFunctionsKeywordType type, Node... inputs) {

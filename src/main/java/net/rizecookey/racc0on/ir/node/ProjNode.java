@@ -25,4 +25,13 @@ public final class ProjNode extends Node {
     public enum SimpleProjectionInfo implements ProjectionInfo {
         RESULT, SIDE_EFFECT, IF_TRUE, IF_FALSE
     }
+
+    @Override
+    public ValueType valueType() {
+        if (!projectionInfo.equals(SimpleProjectionInfo.RESULT)) {
+            return super.valueType();
+        }
+
+        return predecessor(IN).valueType();
+    }
 }

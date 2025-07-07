@@ -7,10 +7,12 @@ public final class CallNode extends Node {
     public static final int SIDE_EFFECT = 0;
 
     private final String target;
+    private final ValueType returnType;
 
-    public CallNode(Block block, String target, Node sideEffect, Node... arguments) {
+    public CallNode(Block block, String target, ValueType returnType, Node sideEffect, Node... arguments) {
         super(block, Stream.concat(Stream.of(sideEffect), Stream.of(arguments)).toArray(Node[]::new));
         this.target = target;
+        this.returnType = returnType;
     }
 
     public String target() {
@@ -29,5 +31,10 @@ public final class CallNode extends Node {
     @Override
     protected String info() {
         return "[" + target() + "]";
+    }
+
+    @Override
+    public ValueType valueType() {
+        return returnType;
     }
 }

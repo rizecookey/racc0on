@@ -1,10 +1,10 @@
 package net.rizecookey.racc0on.parser.ast.simp;
 
+import net.rizecookey.racc0on.lexer.OperatorType;
 import net.rizecookey.racc0on.parser.ast.exp.ExpressionTree;
 import net.rizecookey.racc0on.parser.ast.lvalue.LValueTree;
-import net.rizecookey.racc0on.utils.Span;
-import net.rizecookey.racc0on.lexer.OperatorType;
 import net.rizecookey.racc0on.parser.visitor.Visitor;
+import net.rizecookey.racc0on.utils.Span;
 
 public record AssignmentTree(LValueTree lValue, ExpressionTree expression, OperatorType.Assignment type) implements SimpleStatementTree {
     @Override

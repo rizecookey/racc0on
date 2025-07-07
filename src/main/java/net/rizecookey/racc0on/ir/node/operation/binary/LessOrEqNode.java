@@ -7,4 +7,9 @@ public final class LessOrEqNode extends BinaryOperationNode {
     public LessOrEqNode(Block block, Node left, Node right) {
         super(block, left, right);
     }
+
+    @Override
+    public ValueType valueType() {
+        return ValueType.BOOL;
+    }
 }
