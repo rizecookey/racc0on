@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class SamplesTest {
     static int timeout = 1;
     static TimeUnit timeoutUnit = TimeUnit.MINUTES;
-    static String currentLab = "Lab 3";
+    static String currentLab = "Lab 4";
 
     static Stream<SampleInfo> samples() throws IOException {
         return SamplesProvider.provideTests(currentLab);
