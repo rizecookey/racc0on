@@ -90,7 +90,4 @@ public sealed abstract class Node permits Block, BuiltinCallNode, CallNode, Cons
         return ValueType.NONE;
     }
 
-    public enum ValueType {
-        NONE, INT, BOOL, POINTER, ARRAY
-    }
 }

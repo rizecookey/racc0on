@@ -1,6 +1,6 @@
 package net.rizecookey.racc0on.parser.type;
 
-import net.rizecookey.racc0on.ir.node.Node;
+import net.rizecookey.racc0on.ir.node.ValueType;
 
 public record PointerType<T extends Type>(T type) implements SmallType {
     @Override
@@ -17,7 +17,7 @@ public record PointerType<T extends Type>(T type) implements SmallType {
     }
 
     @Override
-    public Node.ValueType toIrType() {
-        return Node.ValueType.POINTER;
+    public ValueType toIrType() {
+        return ValueType.POINTER;
     }
 }

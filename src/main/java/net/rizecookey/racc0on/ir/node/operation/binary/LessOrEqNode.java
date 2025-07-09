@@ -2,6 +2,7 @@ package net.rizecookey.racc0on.ir.node.operation.binary;
 
 import net.rizecookey.racc0on.ir.node.Block;
 import net.rizecookey.racc0on.ir.node.Node;
+import net.rizecookey.racc0on.ir.node.ValueType;
 
 public final class LessOrEqNode extends BinaryOperationNode {
     public LessOrEqNode(Block block, Node left, Node right) {

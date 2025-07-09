@@ -13,6 +13,7 @@ import net.rizecookey.racc0on.ir.node.Phi;
 import net.rizecookey.racc0on.ir.node.ProjNode;
 import net.rizecookey.racc0on.ir.node.ReturnNode;
 import net.rizecookey.racc0on.ir.node.StartNode;
+import net.rizecookey.racc0on.ir.node.ValueType;
 import net.rizecookey.racc0on.ir.node.operation.binary.AddNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.BitwiseAndNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.BitwiseOrNode;
@@ -69,7 +70,7 @@ class GraphConstructor {
         return currentStartNode;
     }
 
-    public Node newParameter(int index, Node.ValueType type) {
+    public Node newParameter(int index, ValueType type) {
         Node startNode = currentStartNode();
         assert startNode != null : "no start node found";
         return this.optimizer.transform(new ParameterNode(this.graph().startBlock(), index, type, startNode));
@@ -233,7 +234,7 @@ class GraphConstructor {
         return jumpNode;
     }
 
-    public Node newCall(String target, Node.ValueType returnType, Node... inputs) {
+    public Node newCall(String target, ValueType returnType, Node... inputs) {
         return new CallNode(currentBlock(), target, returnType, readCurrentSideEffect(), inputs);
     }
 

@@ -1,6 +1,6 @@
 package net.rizecookey.racc0on.parser.type;
 
-import net.rizecookey.racc0on.ir.node.Node;
+import net.rizecookey.racc0on.ir.node.ValueType;
 
 import java.util.Locale;
 
@@ -22,10 +22,10 @@ public enum BasicType implements SmallType {
     }
 
     @Override
-    public Node.ValueType toIrType() {
+    public ValueType toIrType() {
         return switch (this) {
-            case INT -> Node.ValueType.INT;
-            case BOOL -> Node.ValueType.BOOL;
+            case INT -> ValueType.INT;
+            case BOOL -> ValueType.BOOL;
         };
     }
 }
