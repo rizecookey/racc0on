@@ -16,6 +16,8 @@ import net.rizecookey.racc0on.ir.node.ProjNode.SimpleProjectionInfo;
 import net.rizecookey.racc0on.ir.node.ReturnNode;
 import net.rizecookey.racc0on.ir.node.StartNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.BinaryOperationNode;
+import net.rizecookey.racc0on.ir.node.operation.memory.AllocArrayNode;
+import net.rizecookey.racc0on.ir.node.operation.memory.AllocNode;
 import net.rizecookey.racc0on.ir.node.operation.memory.ArrayMemberOffset;
 import net.rizecookey.racc0on.ir.node.operation.memory.LoadNode;
 import net.rizecookey.racc0on.ir.node.operation.memory.StoreNode;
@@ -279,6 +281,8 @@ public class YCompPrinter {
             case LoadNode _ -> VcgColor.MEMORY;
             case StoreNode _ -> VcgColor.MEMORY;
             case StructMemberOffset _ -> VcgColor.NORMAL;
+            case AllocArrayNode _ -> VcgColor.MEMORY;
+            case AllocNode _ -> VcgColor.MEMORY;
         };
     }
 

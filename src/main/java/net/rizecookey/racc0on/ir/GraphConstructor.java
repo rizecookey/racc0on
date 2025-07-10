@@ -31,6 +31,8 @@ import net.rizecookey.racc0on.ir.node.operation.binary.NotEqNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.ShiftLeftNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.ShiftRightNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.SubNode;
+import net.rizecookey.racc0on.ir.node.operation.memory.AllocArrayNode;
+import net.rizecookey.racc0on.ir.node.operation.memory.AllocNode;
 import net.rizecookey.racc0on.ir.node.operation.memory.ArrayMemberOffset;
 import net.rizecookey.racc0on.ir.node.operation.memory.LoadNode;
 import net.rizecookey.racc0on.ir.node.operation.memory.StoreNode;
@@ -261,6 +263,14 @@ class GraphConstructor {
 
     public Node newStore(Node value, Node address) {
         return new StoreNode(currentBlock(), value, address, readCurrentSideEffect());
+    }
+
+    public Node newAlloc(MemoryType type) {
+        return new AllocNode(currentBlock(), type, readCurrentSideEffect());
+    }
+
+    public Node newAllocArray(MemoryType type, Node size) {
+        return new AllocArrayNode(currentBlock(), type, size, readCurrentSideEffect());
     }
 
     public boolean hasUnconditionalExit() {

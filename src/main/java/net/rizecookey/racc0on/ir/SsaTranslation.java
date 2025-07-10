@@ -697,12 +697,22 @@ public class SsaTranslation {
 
         @Override
         public Optional<Node> visit(AllocCallTree allocCallTree, SsaTranslation data) {
-            throw new UnsupportedOperationException(); // TODO
+            pushSpan(allocCallTree);
+            Node result = projResultSideEffectCause(data, data.constructor.newAlloc(toMemoryType(allocCallTree.type().type(), data)));
+            popSpan();
+
+            return Optional.of(result);
         }
 
         @Override
         public Optional<Node> visit(AllocArrayCallTree allocArrayCallTree, SsaTranslation data) {
-            throw new UnsupportedOperationException(); // TODO
+            pushSpan(allocArrayCallTree);
+            Node size = allocArrayCallTree.elementCount().accept(this, data).orElseThrow();
+            MemoryType memoryType = toMemoryType(allocArrayCallTree.type().type(), data);
+            Node result = projResultSideEffectCause(data, data.constructor.newAllocArray(memoryType, size));
+            popSpan();
+
+            return Optional.of(result);
         }
 
         @Override

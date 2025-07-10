@@ -17,6 +17,8 @@ import net.rizecookey.racc0on.ir.node.ValueType;
 import net.rizecookey.racc0on.ir.node.operation.binary.BinaryOperationNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.DivNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.ModNode;
+import net.rizecookey.racc0on.ir.node.operation.memory.AllocArrayNode;
+import net.rizecookey.racc0on.ir.node.operation.memory.AllocNode;
 import net.rizecookey.racc0on.ir.node.operation.memory.ArrayMemberOffset;
 import net.rizecookey.racc0on.ir.node.operation.memory.LoadNode;
 import net.rizecookey.racc0on.ir.node.operation.memory.StoreNode;
@@ -64,7 +66,8 @@ public final class NodeSupport {
 
     public static boolean causesSideEffect(Node node) {
         return switch (node) {
-            case DivNode _, ModNode _, CallNode _, BuiltinCallNode _, LoadNode _, StoreNode _ -> true;
+            case DivNode _, ModNode _, CallNode _, BuiltinCallNode _, LoadNode _, StoreNode _, AllocNode _,
+                 AllocArrayNode _ -> true;
             case Block _, ConstBoolNode _, ConstIntNode _, IfNode _, JumpNode _, ParameterNode _, Phi _, ProjNode _,
                  ReturnNode _, StartNode _, BinaryOperationNode _, UnaryOperationNode _, ArrayMemberOffset _,
                  StructMemberOffset _ -> false;

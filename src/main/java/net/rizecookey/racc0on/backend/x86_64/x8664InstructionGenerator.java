@@ -39,6 +39,8 @@ import net.rizecookey.racc0on.ir.node.operation.binary.NotEqNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.ShiftLeftNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.ShiftRightNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.SubNode;
+import net.rizecookey.racc0on.ir.node.operation.memory.AllocArrayNode;
+import net.rizecookey.racc0on.ir.node.operation.memory.AllocNode;
 import net.rizecookey.racc0on.ir.node.operation.memory.ArrayMemberOffset;
 import net.rizecookey.racc0on.ir.node.operation.memory.LoadNode;
 import net.rizecookey.racc0on.ir.node.operation.memory.StoreNode;
@@ -309,6 +311,8 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
             case LoadNode loadNode -> throw new UnsupportedOperationException(); // TODO
             case StoreNode storeNode -> throw new UnsupportedOperationException(); // TODO
             case StructMemberOffset structMemberOffset -> throw new UnsupportedOperationException(); // TODO
+            case AllocArrayNode allocArrayNode -> throw new UnsupportedOperationException(); // TODO
+            case AllocNode allocNode -> throw new UnsupportedOperationException(); // TODO
         };
         operations.addAll(base.asOperations());
 
