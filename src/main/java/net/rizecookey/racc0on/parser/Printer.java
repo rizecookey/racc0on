@@ -242,13 +242,17 @@ public class Printer {
                 print("};");
             }
             case ExpArrayAccessTree expArrayAccessTree -> {
+                print("(");
                 printTree(expArrayAccessTree.array());
+                print(")");
                 print("[");
                 printTree(expArrayAccessTree.index());
                 print("]");
             }
             case LValueArrayAccessTree lValueArrayAccessTree -> {
+                print("(");
                 printTree(lValueArrayAccessTree.array());
+                print(")");
                 print("[");
                 printTree(lValueArrayAccessTree.index());
                 print("]");
@@ -262,12 +266,16 @@ public class Printer {
                 printTree(lValueDereferenceTree.pointer());
             }
             case ExpFieldAccessTree expFieldAccessTree -> {
+                print("(");
                 printTree(expFieldAccessTree.struct());
+                print(")");
                 print(".");
                 printTree(expFieldAccessTree.fieldName());
             }
             case LValueFieldAccessTree lValueFieldAccessTree -> {
+                print("(");
                 printTree(lValueFieldAccessTree.struct());
+                print(")");
                 print(".");
                 printTree(lValueFieldAccessTree.fieldName());
             }
