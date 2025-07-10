@@ -8,7 +8,6 @@ import net.rizecookey.racc0on.ir.util.DebugInfo;
 import net.rizecookey.racc0on.ir.util.DebugInfoHelper;
 import net.rizecookey.racc0on.ir.util.NodeSupport;
 import net.rizecookey.racc0on.lexer.OperatorType;
-import net.rizecookey.racc0on.parser.DeclarationInfo;
 import net.rizecookey.racc0on.parser.ast.BlockTree;
 import net.rizecookey.racc0on.parser.ast.FieldDeclarationTree;
 import net.rizecookey.racc0on.parser.ast.FunctionTree;
@@ -50,6 +49,7 @@ import net.rizecookey.racc0on.parser.type.SmallType;
 import net.rizecookey.racc0on.parser.type.Type;
 import net.rizecookey.racc0on.parser.visitor.NoOpVisitor;
 import net.rizecookey.racc0on.parser.visitor.Visitor;
+import net.rizecookey.racc0on.semantic.SemanticInformation;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayDeque;
@@ -69,16 +69,16 @@ import java.util.stream.Stream;
 public class SsaTranslation {
     private final FunctionTree function;
     private final GraphConstructor constructor;
-    private final DeclarationInfo declarationInfo;
+    private final SemanticInformation semanticInfo;
 
-    public SsaTranslation(FunctionTree function, Optimizer optimizer, DeclarationInfo declarationInfo) {
+    public SsaTranslation(FunctionTree function, Optimizer optimizer, SemanticInformation semanticInfo) {
         this.function = function;
         this.constructor = new GraphConstructor(optimizer, function.name().name().asString());
-        this.declarationInfo = declarationInfo;
+        this.semanticInfo = semanticInfo;
     }
 
     public IrGraph translate() {
-        var visitor = new SsaTranslationVisitor(declarationInfo);
+        var visitor = new SsaTranslationVisitor(semanticInfo);
         this.function.accept(visitor, this);
         return this.constructor.graph();
     }
@@ -104,10 +104,10 @@ public class SsaTranslation {
         private final Deque<LoopInfo> transformerStack = new ArrayDeque<>();
 
         private CancellationRange currentCancellation = CancellationRange.NONE;
-        private final DeclarationInfo declarationInfo;
+        private final SemanticInformation semanticInfo;
 
-        private SsaTranslationVisitor(DeclarationInfo declarationInfo) {
-            this.declarationInfo = declarationInfo;
+        private SsaTranslationVisitor(SemanticInformation semanticInfo) {
+            this.semanticInfo = semanticInfo;
         }
 
         private enum CancellationRange {
@@ -508,7 +508,7 @@ public class SsaTranslation {
                     .map(arg -> arg.accept(this, data).orElseThrow())
                     .toArray(Node[]::new);
             Name name = functionCallTree.name().name();
-            Type returnType = declarationInfo.functions().computeIfAbsent(name, _ -> {
+            Type returnType = semanticInfo.functions().computeIfAbsent(name, _ -> {
                 throw new IllegalStateException("Unknown function");
             }).returnType().type();
             if (!(returnType instanceof SmallType smallType)) {

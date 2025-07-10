@@ -53,8 +53,11 @@ import java.util.Optional;
 import java.util.Set;
 
 class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>> {
-    Namespace<FunctionTree> functionNamespace = new Namespace<>();
-    Namespace<StructDeclarationTree> structDeclarations = new Namespace<>();
+    private final SemanticInformation semanticInfo;
+
+    TypeAnalysis(SemanticInformation semanticInfo) {
+        this.semanticInfo = semanticInfo;
+    }
 
     static class FunctionInfo {
         @Nullable FunctionTree function;
@@ -166,16 +169,14 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
 
     @Override
     public Optional<Type> visit(ProgramTree programTree, FunctionInfo info) {
-        functionNamespace = new Namespace<>();
-        structDeclarations = new Namespace<>();
         boolean mainFound = false;
         for (StructDeclarationTree struct : programTree.structs()) {
-            if (structDeclarations.get(struct.name()) != null) {
+            if (semanticInfo.structs().get(struct.name().name()) != null) {
                 throw new SemanticException(struct.name().span(), "a struct with the name "
                         + struct.name().name().asString() + " already exists");
             }
 
-            structDeclarations.put(struct.name().name(), struct);
+            semanticInfo.structs().put(struct.name().name(), struct);
         }
         for (FunctionTree function : programTree.functions()) {
             if (function.name().name().asString().equals("main")) {
@@ -187,12 +188,12 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
                 mainFound = true;
             }
 
-            if (functionNamespace.get(function.name()) != null) {
+            if (semanticInfo.functions().get(function.name().name()) != null) {
                 throw new SemanticException(function.name().span(), "a function with the name "
                         + function.name().name().asString() + " already exists");
             }
 
-            functionNamespace.put(function.name().name(), function);
+            semanticInfo.functions().put(function.name().name(), function);
         }
 
         if (!mainFound) {
@@ -215,7 +216,7 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
 
     @Override
     public Optional<Type> visit(TypeTree typeTree, FunctionInfo info) {
-        if (typeTree.type() instanceof StructType(Name name) && structDeclarations.get(name) == null) {
+        if (typeTree.type() instanceof StructType(Name name) && semanticInfo.structs().get(name) == null) {
             throw new SemanticException(typeTree.span(), "unknown struct " + name.asString());
         }
         return Optional.of(typeTree.type());
@@ -271,7 +272,7 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
 
     @Override
     public Optional<Type> visit(FunctionCallTree functionCallTree, FunctionInfo info) {
-        FunctionTree functionTree = functionNamespace.get(functionCallTree.name());
+        FunctionTree functionTree = semanticInfo.functions().get(functionCallTree.name().name());
         if (functionTree == null) {
             throw new SemanticException(functionCallTree.name().span(), "unknown function " + functionCallTree.name().name().asString());
         }
@@ -429,7 +430,7 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
         if (!(type instanceof StructType(Name name))) {
             throw new SemanticException(struct.span(), "expected a struct type but got " + type.asString());
         }
-        StructDeclarationTree declarationTree = structDeclarations.get(name);
+        StructDeclarationTree declarationTree = semanticInfo.structs().get(name);
         if (declarationTree == null) {
             throw new SemanticException(struct.span(), "unknown struct type '" + name.asString() + "'");
         }

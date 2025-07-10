@@ -8,7 +8,6 @@ import net.rizecookey.racc0on.ir.optimize.LocalValueNumbering;
 import net.rizecookey.racc0on.ir.util.GraphVizPrinter;
 import net.rizecookey.racc0on.ir.util.YCompPrinter;
 import net.rizecookey.racc0on.lexer.Lexer;
-import net.rizecookey.racc0on.parser.DeclarationInfo;
 import net.rizecookey.racc0on.parser.ParseException;
 import net.rizecookey.racc0on.parser.Parser;
 import net.rizecookey.racc0on.parser.Printer;
@@ -17,6 +16,7 @@ import net.rizecookey.racc0on.parser.ast.FunctionTree;
 import net.rizecookey.racc0on.parser.ast.ProgramTree;
 import net.rizecookey.racc0on.semantic.SemanticAnalysis;
 import net.rizecookey.racc0on.semantic.SemanticException;
+import net.rizecookey.racc0on.semantic.SemanticInformation;
 import org.jspecify.annotations.Nullable;
 
 import java.nio.file.Path;
@@ -52,14 +52,14 @@ public final class Racc0onCompilation {
         debug(consumer -> consumer.artifactInfo("parsed-program", "Parsed program",
                 debugFile(name -> name + ".parsed.l2"), Printer.print(program)));
 
-        DeclarationInfo declarationInfo;
+        SemanticInformation information;
         try {
-            declarationInfo = runSemanticAnalysis(program);
+            information = runSemanticAnalysis(program);
         } catch (SemanticException e) {
             throw new CompilerException(input, e);
         }
 
-        List<IrGraph> programInSsaForm = translateToSsa(program, declarationInfo);
+        List<IrGraph> programInSsaForm = translateToSsa(program, information);
         debug(consumer -> {
             for (IrGraph procedure : programInSsaForm) {
                 consumer.artifact("graphviz-graph-" + procedure.name(),
@@ -87,15 +87,15 @@ public final class Racc0onCompilation {
         return parser.parseProgram();
     }
 
-    private DeclarationInfo runSemanticAnalysis(ProgramTree program) throws SemanticException {
+    private SemanticInformation runSemanticAnalysis(ProgramTree program) throws SemanticException {
         return new SemanticAnalysis(program).analyze();
     }
 
-    private List<IrGraph> translateToSsa(ProgramTree program, DeclarationInfo declarationInfo) {
+    private List<IrGraph> translateToSsa(ProgramTree program, SemanticInformation semanticInfo) {
         List<IrGraph> functions = new ArrayList<>();
 
         for (FunctionTree function : program.functions()) {
-            SsaTranslation translator = new SsaTranslation(function, new LocalValueNumbering(), declarationInfo);
+            SsaTranslation translator = new SsaTranslation(function, new LocalValueNumbering(), semanticInfo);
             functions.add(translator.translate());
         }
 
