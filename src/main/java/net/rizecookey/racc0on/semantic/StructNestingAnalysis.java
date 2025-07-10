@@ -21,12 +21,10 @@ class StructNestingAnalysis implements NoOpVisitor<Namespace<Unit>> {
 
     @Override
     public Unit visit(StructDeclarationTree structDeclarationTree, Namespace<Unit> data) {
+        data.openScope();
         data.put(structDeclarationTree.name().name(), Unit.INSTANCE);
-        structDeclarationTree.fields().forEach(t -> {
-            data.openScope();
-            t.accept(this, data);
-            data.closeScope();
-        });
+        structDeclarationTree.fields().forEach(t -> t.accept(this, data));
+        data.closeScope();
         return Unit.INSTANCE;
     }
 
