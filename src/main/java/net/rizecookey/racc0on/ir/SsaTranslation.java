@@ -615,7 +615,7 @@ public class SsaTranslation {
 
             int memberIndex;
             for (memberIndex = 0;
-                 declaration.fields().get(memberIndex).name().name().equals(fieldName);
+                 !declaration.fields().get(memberIndex).name().name().equals(fieldName);
                  memberIndex++);
             Node offset = data.constructor.newStructMemberOffset(structMemoryType, memberIndex);
             Node address = data.constructor.newAdd(struct, offset);
