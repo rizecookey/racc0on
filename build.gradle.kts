@@ -1,5 +1,6 @@
 plugins {
     id("java")
+    id("org.graalvm.buildtools.native") version "0.10.6"
     application
 }
 
