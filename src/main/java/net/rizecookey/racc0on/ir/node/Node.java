@@ -2,6 +2,10 @@ package net.rizecookey.racc0on.ir.node;
 
 import net.rizecookey.racc0on.ir.IrGraph;
 import net.rizecookey.racc0on.ir.node.operation.binary.BinaryOperationNode;
+import net.rizecookey.racc0on.ir.node.operation.memory.ArrayMemberOffset;
+import net.rizecookey.racc0on.ir.node.operation.memory.LoadNode;
+import net.rizecookey.racc0on.ir.node.operation.memory.StoreNode;
+import net.rizecookey.racc0on.ir.node.operation.memory.StructMemberOffset;
 import net.rizecookey.racc0on.ir.node.operation.unary.UnaryOperationNode;
 import net.rizecookey.racc0on.ir.util.DebugInfo;
 import net.rizecookey.racc0on.ir.util.DebugInfoHelper;
@@ -10,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /// The base class for all nodes.
-public sealed abstract class Node permits Block, BuiltinCallNode, CallNode, ConstBoolNode, ConstIntNode, IfNode, JumpNode, ParameterNode, Phi, ProjNode, ReturnNode, StartNode, BinaryOperationNode, UnaryOperationNode {
+public sealed abstract class Node permits Block, BuiltinCallNode, CallNode, ConstBoolNode, ConstIntNode, IfNode, JumpNode, ParameterNode, Phi, ProjNode, ReturnNode, StartNode, BinaryOperationNode, ArrayMemberOffset, LoadNode, StoreNode, StructMemberOffset, UnaryOperationNode {
     private final IrGraph graph;
     private final Block block;
     private final List<Node> predecessors = new ArrayList<>();

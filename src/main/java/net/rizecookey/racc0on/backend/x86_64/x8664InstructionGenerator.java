@@ -39,6 +39,10 @@ import net.rizecookey.racc0on.ir.node.operation.binary.NotEqNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.ShiftLeftNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.ShiftRightNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.SubNode;
+import net.rizecookey.racc0on.ir.node.operation.memory.ArrayMemberOffset;
+import net.rizecookey.racc0on.ir.node.operation.memory.LoadNode;
+import net.rizecookey.racc0on.ir.node.operation.memory.StoreNode;
+import net.rizecookey.racc0on.ir.node.operation.memory.StructMemberOffset;
 import net.rizecookey.racc0on.ir.node.operation.unary.NotNode;
 import net.rizecookey.racc0on.backend.instruction.InstructionBlock;
 import net.rizecookey.racc0on.backend.instruction.InstructionGenerator;
@@ -301,6 +305,10 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
             case CallNode callNode -> new x8664CallOp(callNode);
             case BuiltinCallNode builtinCallNode -> new x8664CallOp(builtinCallNode);
             case Phi _, Block _, ProjNode _ -> new x8664EmptyOpLike();
+            case ArrayMemberOffset arrayMemberOffset -> throw new UnsupportedOperationException(); // TODO
+            case LoadNode loadNode -> throw new UnsupportedOperationException(); // TODO
+            case StoreNode storeNode -> throw new UnsupportedOperationException(); // TODO
+            case StructMemberOffset structMemberOffset -> throw new UnsupportedOperationException(); // TODO
         };
         operations.addAll(base.asOperations());
 

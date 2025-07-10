@@ -1,5 +1,6 @@
 package net.rizecookey.racc0on.ir;
 
+import net.rizecookey.racc0on.ir.memory.MemoryType;
 import net.rizecookey.racc0on.ir.node.Block;
 import net.rizecookey.racc0on.ir.node.BuiltinCallNode;
 import net.rizecookey.racc0on.ir.node.CallNode;
@@ -30,6 +31,10 @@ import net.rizecookey.racc0on.ir.node.operation.binary.NotEqNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.ShiftLeftNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.ShiftRightNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.SubNode;
+import net.rizecookey.racc0on.ir.node.operation.memory.ArrayMemberOffset;
+import net.rizecookey.racc0on.ir.node.operation.memory.LoadNode;
+import net.rizecookey.racc0on.ir.node.operation.memory.StoreNode;
+import net.rizecookey.racc0on.ir.node.operation.memory.StructMemberOffset;
 import net.rizecookey.racc0on.ir.node.operation.unary.NotNode;
 import net.rizecookey.racc0on.ir.optimize.Optimizer;
 import net.rizecookey.racc0on.parser.symbol.Name;
@@ -240,6 +245,22 @@ class GraphConstructor {
 
     public Node newBuiltinCall(String builtinName, Node... inputs) {
         return new BuiltinCallNode(currentBlock(), builtinName, readCurrentSideEffect(), inputs);
+    }
+
+    public Node newArrayMemberOffset(MemoryType elementLayout, Node index) {
+        return this.optimizer.transform(new ArrayMemberOffset(currentBlock(), elementLayout, index));
+    }
+
+    public Node newStructMemberOffset(MemoryType.Compound layout, int memberIndex) {
+        return this.optimizer.transform(new StructMemberOffset(currentBlock(), layout, memberIndex));
+    }
+
+    public Node newLoad(Node address, ValueType type) {
+        return new LoadNode(currentBlock(), address, type, readCurrentSideEffect());
+    }
+
+    public Node newStore(Node value, Node address) {
+        return new StoreNode(currentBlock(), value, address, readCurrentSideEffect());
     }
 
     public boolean hasUnconditionalExit() {

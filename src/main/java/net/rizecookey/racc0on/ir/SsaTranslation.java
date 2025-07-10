@@ -1,8 +1,10 @@
 package net.rizecookey.racc0on.ir;
 
+import net.rizecookey.racc0on.ir.memory.MemoryType;
 import net.rizecookey.racc0on.ir.node.Block;
 import net.rizecookey.racc0on.ir.node.Node;
 import net.rizecookey.racc0on.ir.node.Phi;
+import net.rizecookey.racc0on.ir.node.ValueType;
 import net.rizecookey.racc0on.ir.optimize.Optimizer;
 import net.rizecookey.racc0on.ir.util.DebugInfo;
 import net.rizecookey.racc0on.ir.util.DebugInfoHelper;
@@ -45,7 +47,10 @@ import net.rizecookey.racc0on.parser.ast.simp.AssignmentTree;
 import net.rizecookey.racc0on.parser.ast.simp.DeclarationTree;
 import net.rizecookey.racc0on.parser.ast.simp.SimpleStatementTree;
 import net.rizecookey.racc0on.parser.symbol.Name;
+import net.rizecookey.racc0on.parser.type.ArrayType;
+import net.rizecookey.racc0on.parser.type.PointerType;
 import net.rizecookey.racc0on.parser.type.SmallType;
+import net.rizecookey.racc0on.parser.type.StructType;
 import net.rizecookey.racc0on.parser.type.Type;
 import net.rizecookey.racc0on.parser.visitor.NoOpVisitor;
 import net.rizecookey.racc0on.parser.visitor.Visitor;
@@ -108,6 +113,25 @@ public class SsaTranslation {
 
         private SsaTranslationVisitor(SemanticInformation semanticInfo) {
             this.semanticInfo = semanticInfo;
+        }
+
+        private MemoryType toMemoryType(Type type) {
+            return switch (type) {
+                case SmallType small -> new MemoryType.Value(small.toIrType());
+                case StructType struct -> {
+                    StructDeclarationTree declaration = semanticInfo.structs().get(struct.name());
+                    if (declaration == null) {
+                        throw new IllegalStateException("unknown struct " + struct.name().asString());
+                    }
+
+                    yield new MemoryType.Compound(declaration.fields().stream()
+                            .map(FieldDeclarationTree::type)
+                            .map(TypeTree::type)
+                            .map(this::toMemoryType)
+                            .toList());
+                }
+                case Type.Wildcard _ -> throw new IllegalStateException("Illegal type");
+            };
         }
 
         private enum CancellationRange {
@@ -535,42 +559,102 @@ public class SsaTranslation {
 
         @Override
         public Optional<Node> visit(StructDeclarationTree structDeclarationTree, SsaTranslation data) {
-            throw new UnsupportedOperationException(); // TODO
+            throw new UnsupportedOperationException();
         }
 
         @Override
         public Optional<Node> visit(FieldDeclarationTree fieldDeclarationTree, SsaTranslation data) {
-            throw new UnsupportedOperationException(); // TODO
+            throw new UnsupportedOperationException();
+        }
+
+        private Optional<Node> visitArrayAccess(Tree arrayTree, Tree indexTree, SsaTranslation data) {
+            Node array = arrayTree.accept(this, data).orElseThrow();
+            Type arrayType = semanticInfo.accessTypes().get(arrayTree);
+            if (!(arrayType instanceof ArrayType<? extends Type>(Type innerType))) {
+                throw new IllegalStateException("Illegal type for array access: " + arrayType.asString());
+            }
+            MemoryType arrayMemoryType = toMemoryType(arrayType);
+
+            Node index = indexTree.accept(this, data).orElseThrow();
+            Node offset = data.constructor.newArrayMemberOffset(arrayMemoryType, index);
+            Node address = data.constructor.newAdd(array, offset);
+            if (!(innerType instanceof SmallType smallType)) {
+                return Optional.of(address);
+            }
+
+            Node load = projResultSideEffectCause(data, data.constructor.newLoad(address, smallType.toIrType()));
+            return Optional.of(load);
+        }
+
+        private Optional<Node> visitDereference(Tree pointerTree, SsaTranslation data) {
+            Node pointer = pointerTree.accept(this, data).orElseThrow();
+            Type type = semanticInfo.accessTypes().get(pointerTree);
+            if (!(type instanceof PointerType<? extends Type>(Type innerType))) {
+                throw new IllegalStateException("Illegal type for pointer dereference: " + type.asString());
+            }
+
+            if (!(innerType instanceof SmallType smallType)) {
+                return Optional.of(pointer);
+            }
+
+            Node load = projResultSideEffectCause(data, data.constructor.newLoad(pointer, smallType.toIrType()));
+            return Optional.of(load);
+        }
+
+        private Optional<Node> visitFieldAccess(Tree structTree, Name fieldName, SsaTranslation data) {
+            Node struct = structTree.accept(this, data).orElseThrow();
+            Type structType = semanticInfo.accessTypes().get(structTree);
+            if (!(structType instanceof StructType(Name structName))) {
+                throw new IllegalStateException("Illegal type for struct member access: " + structType.asString());
+            }
+            MemoryType.Compound structMemoryType = (MemoryType.Compound) toMemoryType(structType);
+            StructDeclarationTree declaration = semanticInfo.structs().get(structName);
+            if (declaration == null) {
+                throw new IllegalStateException("Unknown struct " + structName.asString());
+            }
+
+            int memberIndex;
+            for (memberIndex = 0;
+                 declaration.fields().get(memberIndex).name().name().equals(fieldName);
+                 memberIndex++);
+            Node offset = data.constructor.newStructMemberOffset(structMemoryType, memberIndex);
+            Node address = data.constructor.newAdd(struct, offset);
+
+            if (!(structMemoryType.members().get(memberIndex) instanceof MemoryType.Value(ValueType valueType))) {
+                return Optional.of(address);
+            }
+
+            return Optional.of(projResultSideEffectCause(data, data.constructor.newLoad(address, valueType)));
         }
 
         @Override
         public Optional<Node> visit(ExpArrayAccessTree expArrayAccessTree, SsaTranslation data) {
-            throw new UnsupportedOperationException(); // TODO
+            return visitArrayAccess(expArrayAccessTree.array(), expArrayAccessTree.index(), data);
         }
 
         @Override
         public Optional<Node> visit(ExpDereferenceTree expDereferenceTree, SsaTranslation data) {
-            throw new UnsupportedOperationException(); // TODO
+            return visitDereference(expDereferenceTree.pointer(), data);
         }
 
         @Override
         public Optional<Node> visit(ExpFieldAccessTree expFieldAccessTree, SsaTranslation data) {
-            throw new UnsupportedOperationException(); // TODO
+            return visitFieldAccess(expFieldAccessTree.struct(), expFieldAccessTree.fieldName().name(), data);
         }
 
         @Override
         public Optional<Node> visit(LValueArrayAccessTree lValueArrayAccessTree, SsaTranslation data) {
-            throw new UnsupportedOperationException(); // TODO
+            return visitArrayAccess(lValueArrayAccessTree.array(), lValueArrayAccessTree.index(), data);
         }
 
         @Override
         public Optional<Node> visit(LValueDereferenceTree lValueDereferenceTree, SsaTranslation data) {
-            throw new UnsupportedOperationException(); // TODO
+            return visitDereference(lValueDereferenceTree.pointer(), data);
         }
 
         @Override
         public Optional<Node> visit(LValueFieldAccessTree lValueFieldAccessTree, SsaTranslation data) {
-            throw new UnsupportedOperationException(); // TODO
+            return visitFieldAccess(lValueFieldAccessTree.struct(), lValueFieldAccessTree.fieldName().name(), data);
         }
 
         @Override

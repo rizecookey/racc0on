@@ -13,9 +13,14 @@ import net.rizecookey.racc0on.ir.node.Phi;
 import net.rizecookey.racc0on.ir.node.ProjNode;
 import net.rizecookey.racc0on.ir.node.ReturnNode;
 import net.rizecookey.racc0on.ir.node.StartNode;
+import net.rizecookey.racc0on.ir.node.ValueType;
 import net.rizecookey.racc0on.ir.node.operation.binary.BinaryOperationNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.DivNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.ModNode;
+import net.rizecookey.racc0on.ir.node.operation.memory.ArrayMemberOffset;
+import net.rizecookey.racc0on.ir.node.operation.memory.LoadNode;
+import net.rizecookey.racc0on.ir.node.operation.memory.StoreNode;
+import net.rizecookey.racc0on.ir.node.operation.memory.StructMemberOffset;
 import net.rizecookey.racc0on.ir.node.operation.unary.UnaryOperationNode;
 
 import java.util.List;
@@ -26,11 +31,7 @@ public final class NodeSupport {
     }
 
     public static boolean providesValue(Node node) {
-        return switch (node) {
-            case StartNode _, Block _, ReturnNode _, IfNode _, ProjNode _, JumpNode _ -> false;
-            case ConstBoolNode _, ConstIntNode _, Phi _, BinaryOperationNode _, UnaryOperationNode _,
-                 CallNode _, BuiltinCallNode _, ParameterNode _ -> true;
-        };
+        return !node.valueType().equals(ValueType.NONE);
     }
 
     public static Node skipProj(Node node) {
@@ -63,9 +64,10 @@ public final class NodeSupport {
 
     public static boolean causesSideEffect(Node node) {
         return switch (node) {
-            case DivNode _, ModNode _, CallNode _, BuiltinCallNode _ -> true;
+            case DivNode _, ModNode _, CallNode _, BuiltinCallNode _, LoadNode _, StoreNode _ -> true;
             case Block _, ConstBoolNode _, ConstIntNode _, IfNode _, JumpNode _, ParameterNode _, Phi _, ProjNode _,
-                 ReturnNode _, StartNode _, BinaryOperationNode _, UnaryOperationNode _ -> false;
+                 ReturnNode _, StartNode _, BinaryOperationNode _, UnaryOperationNode _, ArrayMemberOffset _,
+                 StructMemberOffset _ -> false;
         };
     }
 

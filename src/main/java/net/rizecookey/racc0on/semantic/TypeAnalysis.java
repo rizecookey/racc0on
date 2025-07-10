@@ -334,32 +334,44 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
 
     @Override
     public Optional<Type> visit(ExpArrayAccessTree expArrayAccessTree, FunctionInfo data) {
-        return Optional.of(expectArrayAccess(data, expArrayAccessTree.array(), expArrayAccessTree.index()));
+        Type type = expectArrayAccess(data, expArrayAccessTree.array(), expArrayAccessTree.index());
+        semanticInfo.accessTypes().put(expArrayAccessTree, type);
+        return Optional.of(type);
     }
 
     @Override
     public Optional<Type> visit(ExpDereferenceTree expDereferenceTree, FunctionInfo data) {
-        return Optional.of(expectDereference(data, expDereferenceTree.pointer()));
+        Type type = expectDereference(data, expDereferenceTree.pointer());
+        semanticInfo.accessTypes().put(expDereferenceTree, type);
+        return Optional.of(type);
     }
 
     @Override
     public Optional<Type> visit(ExpFieldAccessTree expFieldAccessTree, FunctionInfo data) {
-        return Optional.of(expectFieldAccess(data, expFieldAccessTree.struct(), expFieldAccessTree.fieldName()));
+        Type type = expectFieldAccess(data, expFieldAccessTree.struct(), expFieldAccessTree.fieldName());
+        semanticInfo.accessTypes().put(expFieldAccessTree, type);
+        return Optional.of(type);
     }
 
     @Override
     public Optional<Type> visit(LValueArrayAccessTree lValueArrayAccessTree, FunctionInfo data) {
-        return Optional.of(expectArrayAccess(data, lValueArrayAccessTree.array(), lValueArrayAccessTree.index()));
+        Type type = expectArrayAccess(data, lValueArrayAccessTree.array(), lValueArrayAccessTree.index());
+        semanticInfo.accessTypes().put(lValueArrayAccessTree, type);
+        return Optional.of(type);
     }
 
     @Override
     public Optional<Type> visit(LValueDereferenceTree lValueDereferenceTree, FunctionInfo data) {
-        return Optional.of(expectDereference(data, lValueDereferenceTree.pointer()));
+        Type type = expectDereference(data, lValueDereferenceTree.pointer());
+        semanticInfo.accessTypes().put(lValueDereferenceTree, type);
+        return Optional.of(type);
     }
 
     @Override
     public Optional<Type> visit(LValueFieldAccessTree lValueFieldAccessTree, FunctionInfo data) {
-        return Optional.of(expectFieldAccess(data, lValueFieldAccessTree.struct(), lValueFieldAccessTree.fieldName()));
+        Type type = expectFieldAccess(data, lValueFieldAccessTree.struct(), lValueFieldAccessTree.fieldName());
+        semanticInfo.accessTypes().put(lValueFieldAccessTree, type);
+        return Optional.of(type);
     }
 
     @Override
