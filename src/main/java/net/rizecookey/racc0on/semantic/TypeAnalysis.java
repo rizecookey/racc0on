@@ -95,7 +95,10 @@ class TypeAnalysis implements Visitor<TypeAnalysis.FunctionInfo, Optional<Type>>
                 expectType(binaryOperationTree.span(), BasicType.BOOL, operandsType);
                 yield BasicType.BOOL;
             }
-            case EQUAL, NOT_EQUAL -> BasicType.BOOL;
+            case EQUAL, NOT_EQUAL -> {
+                expectSmall(binaryOperationTree.span(), operandsType);
+                yield BasicType.BOOL;
+            }
         };
         return Optional.of(resultType);
     }
