@@ -54,6 +54,37 @@ public class x8664CodeGenerator implements CodeGenerator {
             mov eax, 0
             leave
             ret
+            
+            $abort$:
+            call abort
+            leave
+            ret
+            
+            $alloc$:
+            push rbp
+            mov rbp, rsp
+            mov rsi, rdi
+            mov rdi, 1
+            cmp rsi, 0
+            jl $abort$
+            cmove rsi, rdi
+            call calloc
+            leave
+            ret
+            
+            $alloc_array$:
+            push rbp
+            mov rbp, rsp
+            cmp esi, 0
+            jl $abort$
+            mov r15d, esi
+            imul rdi, rsi
+            add rdi, 4
+            call $alloc$
+            mov [rax], r15d
+            add rax, 4
+            leave
+            ret
             """;
 
     private final StringBuilder builder = new StringBuilder();
