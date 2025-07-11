@@ -598,10 +598,8 @@ public class SsaTranslation {
         private Node createArrayAccessAddressCalculation(Tree arrayTree, ArrayType<? extends Type> arrayType, Tree indexTree, SsaTranslation data) {
             Node array = arrayTree.accept(this, data).orElseThrow();
             MemoryType arrayMemoryType = toMemoryType(arrayType, data);
-
             Node index = indexTree.accept(this, data).orElseThrow();
-            Node offset = data.constructor.newArrayMemberOffset(arrayMemoryType, index);
-            return data.constructor.newAdd(array, offset);
+            return data.constructor.newArrayMemberOffset(array, arrayMemoryType, index);
         }
 
         private Optional<Node> visitArrayAccess(Tree arrayTree, Tree indexTree, SsaTranslation data) {
@@ -644,9 +642,7 @@ public class SsaTranslation {
         private Node createFieldAccessAddressCalculation(Tree structTree, StructType structType, int memberIndex, SsaTranslation data) {
             Node struct = structTree.accept(this, data).orElseThrow();
             MemoryType.Compound memoryType = (MemoryType.Compound) toMemoryType(structType, data);
-
-            Node offset = data.constructor.newStructMemberOffset(memoryType, memberIndex);
-            return data.constructor.newAdd(struct, offset);
+            return data.constructor.newStructMemberOffset(struct, memoryType, memberIndex);
         }
 
         private Optional<Node> visitFieldAccess(Tree structTree, Name fieldName, SsaTranslation data) {

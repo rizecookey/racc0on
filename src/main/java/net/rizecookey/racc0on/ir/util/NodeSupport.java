@@ -19,10 +19,10 @@ import net.rizecookey.racc0on.ir.node.operation.binary.DivNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.ModNode;
 import net.rizecookey.racc0on.ir.node.operation.memory.AllocArrayNode;
 import net.rizecookey.racc0on.ir.node.operation.memory.AllocNode;
-import net.rizecookey.racc0on.ir.node.operation.memory.ArrayMemberOffset;
+import net.rizecookey.racc0on.ir.node.operation.memory.ArrayMemberNode;
 import net.rizecookey.racc0on.ir.node.operation.memory.LoadNode;
 import net.rizecookey.racc0on.ir.node.operation.memory.StoreNode;
-import net.rizecookey.racc0on.ir.node.operation.memory.StructMemberOffset;
+import net.rizecookey.racc0on.ir.node.operation.memory.StructMemberNode;
 import net.rizecookey.racc0on.ir.node.operation.unary.UnaryOperationNode;
 
 import java.util.List;
@@ -69,8 +69,8 @@ public final class NodeSupport {
             case DivNode _, ModNode _, CallNode _, BuiltinCallNode _, LoadNode _, StoreNode _, AllocNode _,
                  AllocArrayNode _ -> true;
             case Block _, ConstBoolNode _, ConstIntNode _, IfNode _, JumpNode _, ParameterNode _, Phi _, ProjNode _,
-                 ReturnNode _, StartNode _, BinaryOperationNode _, UnaryOperationNode _, ArrayMemberOffset _,
-                 StructMemberOffset _ -> false;
+                 ReturnNode _, StartNode _, BinaryOperationNode _, UnaryOperationNode _, ArrayMemberNode _,
+                 StructMemberNode _ -> false;
         };
     }
 

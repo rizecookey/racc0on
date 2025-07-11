@@ -5,19 +5,21 @@ import net.rizecookey.racc0on.ir.node.Block;
 import net.rizecookey.racc0on.ir.node.Node;
 import net.rizecookey.racc0on.ir.node.ValueType;
 
-public final class StructMemberOffset extends Node {
+public final class StructMemberNode extends Node {
+    public static final int STRUCT = 0;
+
     private final MemoryType.Compound layout;
     private final int memberIndex;
 
-    public StructMemberOffset(Block block, MemoryType.Compound layout, int memberIndex) {
-        super(block);
+    public StructMemberNode(Block block, Node struct, MemoryType.Compound layout, int memberIndex) {
+        super(block, struct);
         this.layout = layout;
         this.memberIndex = memberIndex;
     }
 
     @Override
     public ValueType valueType() {
-        return ValueType.INT;
+        return ValueType.POINTER;
     }
 
     public MemoryType.Compound structLayout() {

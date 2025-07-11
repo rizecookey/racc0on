@@ -33,10 +33,10 @@ import net.rizecookey.racc0on.ir.node.operation.binary.ShiftRightNode;
 import net.rizecookey.racc0on.ir.node.operation.binary.SubNode;
 import net.rizecookey.racc0on.ir.node.operation.memory.AllocArrayNode;
 import net.rizecookey.racc0on.ir.node.operation.memory.AllocNode;
-import net.rizecookey.racc0on.ir.node.operation.memory.ArrayMemberOffset;
+import net.rizecookey.racc0on.ir.node.operation.memory.ArrayMemberNode;
 import net.rizecookey.racc0on.ir.node.operation.memory.LoadNode;
 import net.rizecookey.racc0on.ir.node.operation.memory.StoreNode;
-import net.rizecookey.racc0on.ir.node.operation.memory.StructMemberOffset;
+import net.rizecookey.racc0on.ir.node.operation.memory.StructMemberNode;
 import net.rizecookey.racc0on.ir.node.operation.unary.NotNode;
 import net.rizecookey.racc0on.ir.optimize.Optimizer;
 import net.rizecookey.racc0on.parser.symbol.Name;
@@ -249,12 +249,12 @@ class GraphConstructor {
         return new BuiltinCallNode(currentBlock(), builtinName, readCurrentSideEffect(), inputs);
     }
 
-    public Node newArrayMemberOffset(MemoryType elementLayout, Node index) {
-        return this.optimizer.transform(new ArrayMemberOffset(currentBlock(), elementLayout, index));
+    public Node newArrayMemberOffset(Node array, MemoryType elementLayout, Node index) {
+        return this.optimizer.transform(new ArrayMemberNode(currentBlock(), array, elementLayout, index));
     }
 
-    public Node newStructMemberOffset(MemoryType.Compound layout, int memberIndex) {
-        return this.optimizer.transform(new StructMemberOffset(currentBlock(), layout, memberIndex));
+    public Node newStructMemberOffset(Node struct, MemoryType.Compound layout, int memberIndex) {
+        return this.optimizer.transform(new StructMemberNode(currentBlock(), struct, layout, memberIndex));
     }
 
     public Node newLoad(Node address, ValueType type) {
