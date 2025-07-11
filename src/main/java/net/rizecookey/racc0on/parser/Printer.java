@@ -167,15 +167,24 @@ public class Printer {
                 }
                 print(") ");
                 printTree(forTree.body());
+                if (forTree.body() instanceof SimpleStatementTree) {
+                    semicolon();
+                }
             }
             case IfElseTree ifElseTree -> {
                 print("if (");
                 printTree(ifElseTree.condition());
                 print(") ");
                 printTree(ifElseTree.thenBranch());
+                if (ifElseTree.thenBranch() instanceof SimpleStatementTree) {
+                    semicolon();
+                }
                 if (ifElseTree.elseBranch() != null) {
                     print(" else ");
                     printTree(ifElseTree.elseBranch());
+                    if (ifElseTree.elseBranch() instanceof SimpleStatementTree) {
+                        semicolon();
+                    }
                 }
             }
             case WhileTree whileTree -> {
@@ -183,6 +192,9 @@ public class Printer {
                 printTree(whileTree.condition());
                 print(") ");
                 printTree(whileTree.body());
+                if (whileTree.body() instanceof SimpleStatementTree) {
+                    semicolon();
+                }
             }
             case TernaryExpressionTree ternaryExpressionTree -> {
                 print("(");
