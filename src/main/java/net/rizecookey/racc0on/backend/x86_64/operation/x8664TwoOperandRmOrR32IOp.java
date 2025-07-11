@@ -43,6 +43,7 @@ public class x8664TwoOperandRmOrR32IOp implements x8664Op {
     @Override
     public void write(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {
         x8664Store outOp = storeSupplier.resolve(outRef).orElseThrow();
+        x8664Operand.Size size = x8664Operand.Size.fromValueType(out.valueType());
         x8664Store target;
 
         if (outOp instanceof x8664StackStore) {
@@ -58,10 +59,10 @@ public class x8664TwoOperandRmOrR32IOp implements x8664Op {
                 ? new x8664Immediate(constNode.value())
                 : storeSupplier.resolve(inRightRef).orElseThrow();
 
-        x8664TwoOperandRmMrOrMiOp.write(generator, type, target, inLeftOp, inRightOp);
+        x8664TwoOperandRmMrOrMiOp.write(generator, type, size, target, inLeftOp, inRightOp);
 
         if (!target.equals(outOp)) {
-            generator.move(outOp, target, x8664Operand.Size.DOUBLE_WORD);
+            generator.move(size, outOp, target);
         }
     }
 }

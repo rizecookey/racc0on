@@ -45,6 +45,6 @@ public class x8664LoadConstPhantomOp implements x8664Op {
             return;
         }
 
-        generator.move(outOp.get(), new x8664Immediate(value), x8664Operand.Size.DOUBLE_WORD);
+        generator.move(x8664Operand.Size.fromValueType(out.valueType()), outOp.get(), new x8664Immediate(value));
     }
 }

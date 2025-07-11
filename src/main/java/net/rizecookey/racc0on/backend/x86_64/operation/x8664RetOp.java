@@ -30,7 +30,7 @@ public class x8664RetOp implements x8664Op {
     public void write(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {
         x8664Store returnLocation = storeSupplier.resolve(inRef).orElseThrow();
         if (returnLocation != x8664Register.RAX) {
-            generator.move(x8664Register.RAX, returnLocation, x8664Operand.Size.QUAD_WORD);
+            generator.move(x8664Operand.Size.QUAD_WORD, x8664Register.RAX, returnLocation);
         }
 
         Set<x8664Store> writtenTo = generator.getWrittenTo();

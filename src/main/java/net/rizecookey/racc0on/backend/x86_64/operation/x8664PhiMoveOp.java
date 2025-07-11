@@ -30,6 +30,6 @@ public class x8664PhiMoveOp implements x8664Op {
     public void write(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {
         x8664Store in = storeSupplier.resolve(inRef).orElseThrow();
         x8664Store out = storeSupplier.resolve(outRef).orElseThrow();
-        generator.move(out, in, x8664Operand.Size.DOUBLE_WORD);
+        generator.move(x8664Operand.Size.fromValueType(value.valueType()), out, in);
     }
 }

@@ -59,11 +59,11 @@ public class x8664OneOperandDoubleWidthMOp implements x8664Op {
     }
 
     private void backupTainted(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier, x8664Store outStore) {
-        forEachTaintedBackupPair(generator, storeSupplier, outStore, (tainted, backup) -> generator.move(backup, tainted, x8664Operand.Size.QUAD_WORD));
+        forEachTaintedBackupPair(generator, storeSupplier, outStore, (tainted, backup) -> generator.move(x8664Operand.Size.QUAD_WORD, backup, tainted));
     }
 
     private void restoreTainted(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier, x8664Store outStore) {
-        forEachTaintedBackupPair(generator, storeSupplier, outStore, (tainted, backup) -> generator.move(tainted, backup, x8664Operand.Size.QUAD_WORD));
+        forEachTaintedBackupPair(generator, storeSupplier, outStore, (tainted, backup) -> generator.move(x8664Operand.Size.QUAD_WORD, tainted, backup));
     }
 
     @Override
@@ -83,6 +83,7 @@ public class x8664OneOperandDoubleWidthMOp implements x8664Op {
     @Override
     public void write(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {
         x8664Store outOp = storeSupplier.resolve(outRef).orElseThrow();
+        x8664Operand.Size size = x8664Operand.Size.fromValueType(out.valueType());
         x8664Store inLeftOp = storeSupplier.resolve(inLeftRef).orElseThrow();
         x8664Store inRightOp = storeSupplier.resolve(inRightRef).orElseThrow();
 
@@ -91,17 +92,17 @@ public class x8664OneOperandDoubleWidthMOp implements x8664Op {
         x8664Store realRight = inRightOp;
         if (realRight instanceof x8664Register inRightRegister && SELF_TAINTED.contains(inRightRegister)) {
             realRight = x8664Register.MEMORY_ACCESS_RESERVE;
-            generator.move(realRight, inRightOp, x8664Operand.Size.DOUBLE_WORD);
+            generator.move(size, realRight, inRightOp);
         }
 
         if (!inLeftOp.equals(inData)) {
-            generator.move(inData, inLeftOp, x8664Operand.Size.DOUBLE_WORD);
+            generator.move(size, inData, inLeftOp);
         }
 
         generator.write(x8664InstrType.CDQ);
-        generator.write(type, realRight);
+        generator.write(type, size, realRight);
         if (!outOp.equals(outData)) {
-            generator.move(outOp, outData, x8664Operand.Size.DOUBLE_WORD);
+            generator.move(size, outOp, outData);
         }
 
         restoreTainted(generator, storeSupplier, outOp);

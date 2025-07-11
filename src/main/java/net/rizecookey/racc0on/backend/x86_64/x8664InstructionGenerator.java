@@ -332,16 +332,12 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         instructions.add(new x8664Instr.NoOperand(type));
     }
 
-    public void write(x8664InstrType type, x8664Operand operand) {
-        write(type, x8664Operand.Size.DOUBLE_WORD, operand);
+    public void write(x8664InstrType type, x8664Label operand) {
+        instructions.add(new x8664Instr.Unary(type, operand));
     }
 
     public void write(x8664InstrType type, x8664Operand.Size size, x8664Operand operand) {
         instructions.add(new x8664Instr.Unary(type, operand, size));
-    }
-
-    public void write(x8664InstrType type, x8664Operand first, x8664Operand second) {
-        write(type, x8664Operand.Size.DOUBLE_WORD, first, second);
     }
 
     public void write(x8664InstrType type, x8664Operand.Size size, x8664Operand first, x8664Operand second) {
@@ -354,7 +350,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         instructions.add(new x8664Instr.Binary(type, first, second, firstSize, secondSize));
     }
 
-    public void move(x8664Store to, x8664Operand from, x8664Operand.Size size) {
+    public void move(x8664Operand.Size size, x8664Store to, x8664Operand from) {
         if (to.equals(from)) {
             return;
         }
@@ -370,7 +366,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
     public void test(x8664Store first, x8664Store second) {
         if (second instanceof x8664StackStore stackStore) {
             second = x8664Register.MEMORY_ACCESS_RESERVE;
-            move(second, stackStore, x8664Operand.Size.BYTE);
+            move(x8664Operand.Size.BYTE, second, stackStore);
         }
 
         write(x8664InstrType.TEST, x8664Operand.Size.BYTE, first, second);
@@ -399,7 +395,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
             backedUp.remove(result);
         }
         if (!result.equals(x8664Register.RAX)) {
-            move(result, x8664Register.RAX, x8664Operand.Size.QUAD_WORD);
+            move(x8664Operand.Size.QUAD_WORD, result, x8664Register.RAX);
         }
         restoreRegisters(backedUp, backupStores);
     }
@@ -436,7 +432,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
                     if (!backupStores.containsKey(argReg)) {
                         throw new IllegalStateException("No backup store found");
                     }
-                    move(backupStores.get(argReg), argReg, x8664Operand.Size.QUAD_WORD);
+                    move(x8664Operand.Size.QUAD_WORD, backupStores.get(argReg), argReg);
                     backedUp.add(argReg);
                 });
 
@@ -445,7 +441,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
 
     private void restoreRegisters(Set<x8664Register> registers, Map<x8664Register, x8664Store> backupStores) {
         for (x8664Register register : registers) {
-            move(register, backupStores.get(register), x8664Operand.Size.QUAD_WORD);
+            move(x8664Operand.Size.QUAD_WORD, register, backupStores.get(register));
         }
     }
 
@@ -468,10 +464,10 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
             }
 
             if (sourcesSet.contains(target) && writtenTo.add(target) && !backedUp.contains(target)) {
-                move(backupStores.get(target), target, x8664Operand.Size.QUAD_WORD);
+                move(x8664Operand.Size.QUAD_WORD, backupStores.get(target), target);
             }
 
-            move(target, source, x8664Operand.Size.QUAD_WORD);
+            move(x8664Operand.Size.QUAD_WORD, target, source);
         }
 
         for (int i = arguments.size() - 1; i >= registerArguments; i--) {

@@ -50,33 +50,34 @@ public class x8664ShiftOp implements x8664Op {
 
     @Override
     public void write(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {
-        x8664Store out = storeSupplier.resolve(outRef).orElseThrow();
-        x8664Operand shiftee = this.shiftee instanceof ConstIntNode c
+        x8664Store outStore = storeSupplier.resolve(outRef).orElseThrow();
+        x8664Operand.Size size = x8664Operand.Size.fromValueType(out.valueType());
+        x8664Operand shifteeStore = this.shiftee instanceof ConstIntNode c
                 ? new x8664Immediate(c.value())
                 : storeSupplier.resolve(shifteeRef).orElseThrow();
-        x8664Operand shiftCount = this.shiftCount instanceof ConstIntNode c
+        x8664Operand shiftCountStore = this.shiftCount instanceof ConstIntNode c
                 ? new x8664Immediate(c.value())
                 : storeSupplier.resolve(shiftCountRef).orElseThrow();
-        x8664Store backup = storeSupplier.resolve(backupRef).orElseThrow();
+        x8664Store backupStore = storeSupplier.resolve(backupRef).orElseThrow();
 
         boolean backupRcx = false;
-        if (!shiftCount.equals(x8664Register.RCX)) {
+        if (!shiftCountStore.equals(x8664Register.RCX)) {
             if (generator.getLiveStores().contains(x8664Register.RCX)) {
                 backupRcx = true;
-                generator.move(backup, x8664Register.RCX, x8664Operand.Size.QUAD_WORD);
+                generator.move(x8664Operand.Size.QUAD_WORD, backupStore, x8664Register.RCX);
             }
-            generator.move(x8664Register.RCX, shiftCount, x8664Operand.Size.DOUBLE_WORD);
+            generator.move(size, x8664Register.RCX, shiftCountStore);
         }
 
-        if (!shiftee.equals(out)) {
-            generator.move(out, shiftee, x8664Operand.Size.DOUBLE_WORD);
+        if (!shifteeStore.equals(outStore)) {
+            generator.move(size, outStore, shifteeStore);
         }
 
         generator.write(direction == Direction.LEFT ? x8664InstrType.SAL : x8664InstrType.SAR,
-                x8664Operand.Size.DOUBLE_WORD, x8664Operand.Size.BYTE, out, x8664Register.RCX);
+                size, x8664Operand.Size.BYTE, outStore, x8664Register.RCX);
 
         if (backupRcx) {
-            generator.move(x8664Register.RCX, backup, x8664Operand.Size.QUAD_WORD);
+            generator.move(x8664Operand.Size.QUAD_WORD, x8664Register.RCX, backupStore);
         }
     }
 

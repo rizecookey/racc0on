@@ -36,17 +36,18 @@ public abstract class x8664CmpOp implements x8664Op {
 
     @Override
     public void write(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {
-        x8664Store inLeft = storeSupplier.resolve(inLeftRef).orElseThrow();
-        x8664Store inRight = storeSupplier.resolve(inRightRef).orElseThrow();
-        x8664Store out = storeSupplier.resolve(outRef).orElseThrow();
+        x8664Store inLeftStore = storeSupplier.resolve(inLeftRef).orElseThrow();
+        x8664Store inRightStore = storeSupplier.resolve(inRightRef).orElseThrow();
+        x8664Store outStore = storeSupplier.resolve(outRef).orElseThrow();
+        x8664Operand.Size size = x8664Operand.Size.fromValueType(out.valueType());
 
-        x8664Store actualInRight = inRight;
-        if (inLeft instanceof x8664StackStore && inRight instanceof x8664StackStore) {
+        x8664Store actualInRight = inRightStore;
+        if (inLeftStore instanceof x8664StackStore && inRightStore instanceof x8664StackStore) {
             actualInRight = x8664Register.MEMORY_ACCESS_RESERVE;
-            generator.move(actualInRight, inRight, x8664Operand.Size.DOUBLE_WORD);
+            generator.move(size, actualInRight, inRightStore);
         }
 
-        generator.write(x8664InstrType.CMP, inLeft, actualInRight);
-        generator.write(setInstr, x8664Operand.Size.BYTE, out);
+        generator.write(x8664InstrType.CMP, size, inLeftStore, actualInRight);
+        generator.write(setInstr, x8664Operand.Size.BYTE, outStore);
     }
 }
