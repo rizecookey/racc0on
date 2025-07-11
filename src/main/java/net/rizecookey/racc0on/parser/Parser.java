@@ -340,7 +340,7 @@ public class Parser {
             }
             case Operator(OperatorType.Pointer type, _) when type.equals(OperatorType.Pointer.DEREFERENCE) -> {
                 this.tokenSource.consume();
-                LValueTree inner = parseBaseLValue(); // highest precedence!
+                LValueTree inner = parseLValue();
                 yield new LValueDereferenceTree(inner, token.span().merge(inner.span()));
             }
             default -> {
@@ -494,7 +494,7 @@ public class Parser {
             }
             case Operator(OperatorType.Pointer type, _) when type.equals(OperatorType.Pointer.DEREFERENCE) -> {
                 Span start = this.tokenSource.consume().span();
-                ExpressionTree baseFactor = parseBaseFactor(); // highest precedence!
+                ExpressionTree baseFactor = parseFactor();
                 yield new ExpDereferenceTree(baseFactor, start.merge(baseFactor.span()));
             }
             case Keyword(BuiltinFunctionsKeywordType type, _) -> {
