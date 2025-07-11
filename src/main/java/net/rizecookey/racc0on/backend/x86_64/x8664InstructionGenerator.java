@@ -11,6 +11,7 @@ import net.rizecookey.racc0on.backend.x86_64.optimization.x8664InstrOptimization
 import net.rizecookey.racc0on.backend.x86_64.optimization.x8664JumpOptimization;
 import net.rizecookey.racc0on.ir.node.BuiltinCallNode;
 import net.rizecookey.racc0on.ir.node.CallNode;
+import net.rizecookey.racc0on.ir.node.ConstAddressNode;
 import net.rizecookey.racc0on.ir.node.ConstBoolNode;
 import net.rizecookey.racc0on.ir.node.IfNode;
 import net.rizecookey.racc0on.ir.node.JumpNode;
@@ -313,6 +314,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
             case StructMemberNode structMemberOffset -> throw new UnsupportedOperationException(); // TODO
             case AllocArrayNode allocArrayNode -> throw new UnsupportedOperationException(); // TODO
             case AllocNode allocNode -> throw new UnsupportedOperationException(); // TODO
+            case ConstAddressNode constAddressNode -> throw new UnsupportedOperationException(); // TODO
         };
         operations.addAll(base.asOperations());
 

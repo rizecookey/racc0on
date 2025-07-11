@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /// The base class for all nodes.
-public sealed abstract class Node permits Block, BuiltinCallNode, CallNode, ConstBoolNode, ConstIntNode, IfNode, JumpNode, ParameterNode, Phi, ProjNode, ReturnNode, StartNode, BinaryOperationNode, AllocArrayNode, AllocNode, ArrayMemberNode, LoadNode, StoreNode, StructMemberNode, UnaryOperationNode {
+public sealed abstract class Node permits Block, BuiltinCallNode, CallNode, ConstAddressNode, ConstBoolNode, ConstIntNode, IfNode, JumpNode, ParameterNode, Phi, ProjNode, ReturnNode, StartNode, BinaryOperationNode, AllocArrayNode, AllocNode, ArrayMemberNode, LoadNode, StoreNode, StructMemberNode, UnaryOperationNode {
     private final IrGraph graph;
     private final Block block;
     private final List<Node> predecessors = new ArrayList<>();

@@ -4,6 +4,7 @@ import net.rizecookey.racc0on.ir.IrGraph;
 import net.rizecookey.racc0on.ir.node.Block;
 import net.rizecookey.racc0on.ir.node.BuiltinCallNode;
 import net.rizecookey.racc0on.ir.node.CallNode;
+import net.rizecookey.racc0on.ir.node.ConstAddressNode;
 import net.rizecookey.racc0on.ir.node.ConstBoolNode;
 import net.rizecookey.racc0on.ir.node.ConstIntNode;
 import net.rizecookey.racc0on.ir.node.IfNode;
@@ -283,6 +284,7 @@ public class YCompPrinter {
             case StructMemberNode _ -> VcgColor.NORMAL;
             case AllocArrayNode _ -> VcgColor.MEMORY;
             case AllocNode _ -> VcgColor.MEMORY;
+            case ConstAddressNode _ -> VcgColor.NORMAL;
         };
     }
 

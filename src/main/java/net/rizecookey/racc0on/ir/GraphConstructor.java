@@ -4,6 +4,7 @@ import net.rizecookey.racc0on.ir.memory.MemoryType;
 import net.rizecookey.racc0on.ir.node.Block;
 import net.rizecookey.racc0on.ir.node.BuiltinCallNode;
 import net.rizecookey.racc0on.ir.node.CallNode;
+import net.rizecookey.racc0on.ir.node.ConstAddressNode;
 import net.rizecookey.racc0on.ir.node.ConstBoolNode;
 import net.rizecookey.racc0on.ir.node.ConstIntNode;
 import net.rizecookey.racc0on.ir.node.IfNode;
@@ -187,6 +188,10 @@ class GraphConstructor {
 
     public Node newConstBool(boolean value) {
         return this.optimizer.transform(new ConstBoolNode(this.graph.startBlock(), value));
+    }
+
+    public Node newConstAddress(long address) {
+        return this.optimizer.transform(new ConstAddressNode(this.graph.startBlock(), address));
     }
 
     public Node newSideEffectProj(Node node) {

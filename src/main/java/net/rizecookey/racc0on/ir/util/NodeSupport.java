@@ -3,6 +3,7 @@ package net.rizecookey.racc0on.ir.util;
 import net.rizecookey.racc0on.ir.node.Block;
 import net.rizecookey.racc0on.ir.node.BuiltinCallNode;
 import net.rizecookey.racc0on.ir.node.CallNode;
+import net.rizecookey.racc0on.ir.node.ConstAddressNode;
 import net.rizecookey.racc0on.ir.node.ConstBoolNode;
 import net.rizecookey.racc0on.ir.node.ConstIntNode;
 import net.rizecookey.racc0on.ir.node.IfNode;
@@ -70,7 +71,7 @@ public final class NodeSupport {
                  AllocArrayNode _ -> true;
             case Block _, ConstBoolNode _, ConstIntNode _, IfNode _, JumpNode _, ParameterNode _, Phi _, ProjNode _,
                  ReturnNode _, StartNode _, BinaryOperationNode _, UnaryOperationNode _, ArrayMemberNode _,
-                 StructMemberNode _ -> false;
+                 StructMemberNode _, ConstAddressNode _ -> false;
         };
     }
 

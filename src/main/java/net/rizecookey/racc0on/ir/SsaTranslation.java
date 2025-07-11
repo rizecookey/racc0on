@@ -714,7 +714,7 @@ public class SsaTranslation {
         @Override
         public Optional<Node> visit(PointerLiteralTree pointerLiteralTree, SsaTranslation data) {
             pushSpan(pointerLiteralTree);
-            Node result = data.constructor.newConstInt(0);
+            Node result = data.constructor.newConstAddress(0);
             popSpan();
             return Optional.of(result);
         }
