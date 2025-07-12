@@ -60,6 +60,9 @@ public class x8664CodeGenerator implements CodeGenerator {
             leave
             ret
             
+            $segfault$:
+            mov rax, [0]
+            
             $alloc$:
             push rbp
             mov rbp, rsp

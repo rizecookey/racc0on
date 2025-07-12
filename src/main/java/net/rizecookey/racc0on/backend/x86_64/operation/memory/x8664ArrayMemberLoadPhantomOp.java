@@ -28,6 +28,8 @@ public class x8664ArrayMemberLoadPhantomOp implements x8664OpLike {
         MemoryLayout elementLayout = x8664MemoryUtils.createLayout(address.elementLayout());
 
         return List.of(
+                // TODO probably some optimization potential
+                new x8664AddressNullCheckOp(array),
                 new x8664ArrayBoundsCheckOp(array, index),
                 new x8664IMulOp(new Operands.Binary<>(address, index,
                         new ConstIntNode(address.block(), elementLayout.size()))),
