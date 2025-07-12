@@ -1,5 +1,7 @@
 package net.rizecookey.racc0on.backend.x86_64;
 
+import net.rizecookey.racc0on.backend.x86_64.operand.store.x8664MemoryStore;
+import net.rizecookey.racc0on.backend.x86_64.operand.store.x8664Store;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Label;
 import net.rizecookey.racc0on.backend.x86_64.operation.arithmetic.x8664ShiftOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.memory.x8664ArrayMemberLoadPhantomOp;
@@ -59,9 +61,8 @@ import net.rizecookey.racc0on.backend.store.StoreReference;
 import net.rizecookey.racc0on.backend.store.StoreRequests;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664Instr;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664InstrType;
-import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Register;
-import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664StackStore;
-import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Store;
+import net.rizecookey.racc0on.backend.x86_64.operand.store.variable.x8664Register;
+import net.rizecookey.racc0on.backend.x86_64.operand.store.variable.x8664VarStore;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Immediate;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
 import net.rizecookey.racc0on.backend.x86_64.operation.arithmetic.x8664AddOp;
@@ -108,14 +109,14 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
     private final SsaSchedule schedule;
     private final List<x8664Instr> instructions;
     private final x8664CodeGenerator codeGenerator;
-    private final Map<StoreReference<x8664Store>, x8664Store> locations;
-    private final SequencedSet<x8664Store> writtenTo;
+    private final Map<StoreReference<x8664VarStore>, x8664VarStore> locations;
+    private final SequencedSet<x8664VarStore> writtenTo;
     private final Map<Block, String> blockLabels;
     private int stackSize;
     /// rsp % 16
     private int stackMisalignment;
     private @Nullable x8664Op currentOp;
-    private LivenessMap<x8664Op, x8664Store> livenessMap;
+    private LivenessMap<x8664Op, x8664VarStore> livenessMap;
 
     public x8664InstructionGenerator(x8664CodeGenerator codeGenerator, SsaSchedule schedule) {
         this.schedule = schedule;
@@ -136,7 +137,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
     public List<InstructionBlock<x8664Instr>> generateInstructions() {
         labelBlocks();
 
-        StoreRequests<x8664Op, x8664Store> requestService = new StoreRequests<>();
+        StoreRequests<x8664Op, x8664VarStore> requestService = new StoreRequests<>();
         Map<String, List<x8664Op>> operations = generateOperations(requestService);
         OperationSchedule<x8664Op> opSchedule = createOperationSchedule(operations);
 
@@ -170,7 +171,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         }
     }
 
-    private Map<String, List<x8664Op>> generateOperations(StoreRequests<x8664Op, x8664Store> storeRequests) {
+    private Map<String, List<x8664Op>> generateOperations(StoreRequests<x8664Op, x8664VarStore> storeRequests) {
         Map<String, List<x8664Op>> operations = new HashMap<>();
         for (Block block : schedule.blockSchedule()) {
             String label = blockLabels.get(block);
@@ -222,14 +223,14 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         return new OperationSchedule<>(blocks, entry, Collections.unmodifiableSet(exits));
     }
 
-    public SequencedSet<StoreReference<x8664Store>> getLiveReferences() {
+    public SequencedSet<StoreReference<x8664VarStore>> getLiveReferences() {
         if (currentOp == null) {
             throw new IllegalStateException("Not currently writing an operation");
         }
         return livenessMap.getLiveAt(currentOp);
     }
 
-    public SequencedSet<x8664Store> getLiveStores() {
+    public SequencedSet<x8664VarStore> getLiveStores() {
         return getLiveReferences().stream()
                 .map(locations::get)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
@@ -258,7 +259,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         stackMisalignment = stackSize % 16;
     }
 
-    public SequencedSet<x8664Store> getWrittenTo() {
+    public SequencedSet<x8664VarStore> getWrittenTo() {
         return Collections.unmodifiableSequencedSet(writtenTo);
     }
 
@@ -361,7 +362,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
             return;
         }
         x8664Operand actualFrom = from;
-        if (to instanceof x8664StackStore && from instanceof x8664StackStore) {
+        if (to instanceof x8664MemoryStore && from instanceof x8664MemoryStore) {
             actualFrom = x8664Register.MEMORY_ACCESS_RESERVE;
             write(x8664InstrType.MOV, size, x8664Register.MEMORY_ACCESS_RESERVE, from);
         }
@@ -370,9 +371,9 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
     }
 
     public void test(x8664Store first, x8664Store second) {
-        if (second instanceof x8664StackStore stackStore) {
+        if (second instanceof x8664MemoryStore memoryStore) {
             second = x8664Register.MEMORY_ACCESS_RESERVE;
-            move(x8664Operand.Size.BYTE, second, stackStore);
+            move(x8664Operand.Size.BYTE, second, memoryStore);
         }
 
         write(x8664InstrType.TEST, x8664Operand.Size.BYTE, first, second);
@@ -388,7 +389,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         write(x8664InstrType.POP, x8664Operand.Size.QUAD_WORD, operand);
     }
 
-    public void call(String label, x8664Store result, List<x8664Operand> arguments, Map<x8664Register, x8664Store> backupStores) {
+    public void call(String label, x8664VarStore result, List<x8664Operand> arguments, Map<x8664Register, x8664VarStore> backupStores) {
         int callStackSize = prepareCallStack(arguments);
 
         Set<x8664Register> backedUp = backupCallerSavedRegisters(backupStores);
@@ -412,7 +413,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         int callStackSize = stackArgumentCount * 8;
         int misalignmentAfter = (stackMisalignment + stackArgumentCount * 8) % 16;
         if (misalignmentAfter != 0) {
-            write(x8664InstrType.SUB, x8664Store.Size.QUAD_WORD, x8664Register.RSP, new x8664Immediate(16 - misalignmentAfter));
+            write(x8664InstrType.SUB, x8664VarStore.Size.QUAD_WORD, x8664Register.RSP, new x8664Immediate(16 - misalignmentAfter));
         }
         callStackSize += misalignmentAfter;
 
@@ -421,14 +422,14 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
 
     private void tearDownCallStack(int size) {
         if (size > 0) {
-            write(x8664InstrType.ADD, x8664Store.Size.QUAD_WORD, x8664Register.RSP, new x8664Immediate(size));
+            write(x8664InstrType.ADD, x8664VarStore.Size.QUAD_WORD, x8664Register.RSP, new x8664Immediate(size));
         }
     }
 
     /** @return the registers that were backed up */
-    private Set<x8664Register> backupCallerSavedRegisters(Map<x8664Register, x8664Store> backupStores) {
+    private Set<x8664Register> backupCallerSavedRegisters(Map<x8664Register, x8664VarStore> backupStores) {
         Set<x8664Register> backedUp = new HashSet<>();
-        Set<x8664Store> live = getLiveStores();
+        Set<x8664VarStore> live = getLiveStores();
         x8664Register.getRegisterSet().stream()
                 .filter(x8664Register::isCallerSaved)
                 .forEach(argReg -> {
@@ -445,14 +446,14 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         return backedUp;
     }
 
-    private void restoreRegisters(Set<x8664Register> registers, Map<x8664Register, x8664Store> backupStores) {
+    private void restoreRegisters(Set<x8664Register> registers, Map<x8664Register, x8664VarStore> backupStores) {
         for (x8664Register register : registers) {
             move(x8664Operand.Size.QUAD_WORD, register, backupStores.get(register));
         }
     }
 
     private void moveArguments(List<x8664Operand> arguments, Set<x8664Register> backedUp,
-                               Map<x8664Register, x8664Store> backupStores) {
+                               Map<x8664Register, x8664VarStore> backupStores) {
         Set<x8664Register> writtenTo = new HashSet<>();
         Set<x8664Operand> sourcesSet = new HashSet<>(arguments);
 

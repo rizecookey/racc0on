@@ -1,4 +1,4 @@
-package net.rizecookey.racc0on.backend.operand.stored;
+package net.rizecookey.racc0on.backend.operand.store;
 
 import net.rizecookey.racc0on.backend.operand.Operand;
 

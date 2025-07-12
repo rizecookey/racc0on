@@ -7,8 +7,8 @@ import net.rizecookey.racc0on.backend.operand.Operands;
 import net.rizecookey.racc0on.backend.store.StoreReference;
 import net.rizecookey.racc0on.backend.store.StoreRequestService;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664InstrType;
-import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Register;
-import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Store;
+import net.rizecookey.racc0on.backend.x86_64.operand.store.variable.x8664Register;
+import net.rizecookey.racc0on.backend.x86_64.operand.store.variable.x8664VarStore;
 import net.rizecookey.racc0on.backend.x86_64.store.x8664StoreRefResolver;
 import net.rizecookey.racc0on.backend.x86_64.x8664InstructionGenerator;
 
@@ -26,8 +26,8 @@ public class x8664OneOperandDoubleWidthMOp implements x8664Op {
     private final x8664Register inData, outData;
     private final Node out, inLeft, inRight;
 
-    private StoreReference<x8664Store> outRef, inLeftRef, inRightRef;
-    private final List<StoreReference<x8664Store>> taintedRefs;
+    private StoreReference<x8664VarStore> outRef, inLeftRef, inRightRef;
+    private final List<StoreReference<x8664VarStore>> taintedRefs;
 
     public x8664OneOperandDoubleWidthMOp(x8664InstrType type, List<x8664Register> tainted,
                                          x8664Register inData, x8664Register outData,
@@ -45,34 +45,34 @@ public class x8664OneOperandDoubleWidthMOp implements x8664Op {
     }
 
     private void forEachTaintedBackupPair(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier,
-                                x8664Store outStore, BiConsumer<x8664Store, x8664Store> consumer) {
-        SequencedSet<x8664Store> live = generator.getLiveStores();
+                                          x8664VarStore outStore, BiConsumer<x8664VarStore, x8664VarStore> consumer) {
+        SequencedSet<x8664VarStore> live = generator.getLiveStores();
         for (int i = 0; i < tainted.size(); i++) {
             x8664Register taintedReg = tainted.get(i);
             if (!live.contains(taintedReg) || taintedReg.equals(outStore)) {
                 continue;
             }
 
-            x8664Store backup = storeSupplier.resolve(taintedRefs.get(i)).orElseThrow();
+            x8664VarStore backup = storeSupplier.resolve(taintedRefs.get(i)).orElseThrow();
             consumer.accept(taintedReg, backup);
         }
     }
 
-    private void backupTainted(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier, x8664Store outStore) {
+    private void backupTainted(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier, x8664VarStore outStore) {
         forEachTaintedBackupPair(generator, storeSupplier, outStore, (tainted, backup) -> generator.move(x8664Operand.Size.QUAD_WORD, backup, tainted));
     }
 
-    private void restoreTainted(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier, x8664Store outStore) {
+    private void restoreTainted(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier, x8664VarStore outStore) {
         forEachTaintedBackupPair(generator, storeSupplier, outStore, (tainted, backup) -> generator.move(x8664Operand.Size.QUAD_WORD, tainted, backup));
     }
 
     @Override
-    public void requestStores(StoreRequestService<x8664Op, x8664Store> service) {
+    public void requestStores(StoreRequestService<x8664Op, x8664VarStore> service) {
         outRef = service.requestOutputStore(this, out);
         inLeftRef = service.requestInputStore(this, inLeft);
         inRightRef = service.requestInputStore(this, inRight);
 
-        StoreConditions<x8664Store> backupConditions = StoreConditions.<x8664Store>builder()
+        StoreConditions<x8664VarStore> backupConditions = StoreConditions.<x8664VarStore>builder()
                 .collidesWith(tainted)
                 .build();
         for (x8664Register _: tainted) {
@@ -82,14 +82,14 @@ public class x8664OneOperandDoubleWidthMOp implements x8664Op {
 
     @Override
     public void write(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {
-        x8664Store outOp = storeSupplier.resolve(outRef).orElseThrow();
+        x8664VarStore outOp = storeSupplier.resolve(outRef).orElseThrow();
         x8664Operand.Size size = x8664Operand.Size.fromValueType(out.valueType());
-        x8664Store inLeftOp = storeSupplier.resolve(inLeftRef).orElseThrow();
-        x8664Store inRightOp = storeSupplier.resolve(inRightRef).orElseThrow();
+        x8664VarStore inLeftOp = storeSupplier.resolve(inLeftRef).orElseThrow();
+        x8664VarStore inRightOp = storeSupplier.resolve(inRightRef).orElseThrow();
 
         backupTainted(generator, storeSupplier, outOp);
 
-        x8664Store realRight = inRightOp;
+        x8664VarStore realRight = inRightOp;
         if (realRight instanceof x8664Register inRightRegister && SELF_TAINTED.contains(inRightRegister)) {
             realRight = x8664Register.MEMORY_ACCESS_RESERVE;
             generator.move(size, realRight, inRightOp);

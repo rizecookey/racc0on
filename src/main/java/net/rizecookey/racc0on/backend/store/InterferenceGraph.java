@@ -1,6 +1,6 @@
 package net.rizecookey.racc0on.backend.store;
 
-import net.rizecookey.racc0on.backend.operand.stored.VariableStore;
+import net.rizecookey.racc0on.backend.operand.store.VariableStore;
 import net.rizecookey.racc0on.backend.operation.Operation;
 import net.rizecookey.racc0on.backend.operation.OperationBlock;
 import net.rizecookey.racc0on.backend.operation.OperationSchedule;

@@ -1,8 +1,8 @@
-package net.rizecookey.racc0on.backend.x86_64.operand.stored;
+package net.rizecookey.racc0on.backend.x86_64.operand.store.variable;
 
 import java.util.List;
 
-public enum x8664Register implements x8664Store {
+public enum x8664Register implements x8664VarStore {
     R12(reg64("r12"), SaveType.CALLEE_SAVED),
     R13(reg64("r13"), SaveType.CALLEE_SAVED),
     R14(reg64("r14"), SaveType.CALLEE_SAVED),

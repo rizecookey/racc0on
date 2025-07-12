@@ -1,6 +1,6 @@
 package net.rizecookey.racc0on.backend.instruction;
 
-import net.rizecookey.racc0on.backend.operand.stored.VariableStore;
+import net.rizecookey.racc0on.backend.operand.store.VariableStore;
 
 import java.util.List;
 

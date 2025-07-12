@@ -5,8 +5,8 @@ import net.rizecookey.racc0on.backend.store.StoreConditions;
 import net.rizecookey.racc0on.backend.store.StoreReference;
 import net.rizecookey.racc0on.backend.store.StoreRequestService;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664InstrType;
-import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Register;
-import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Store;
+import net.rizecookey.racc0on.backend.x86_64.operand.store.variable.x8664Register;
+import net.rizecookey.racc0on.backend.x86_64.operand.store.variable.x8664VarStore;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Immediate;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664Op;
@@ -19,7 +19,7 @@ public class x8664ShiftOp implements x8664Op {
     private final Direction direction;
     private final Node shiftee, shiftCount, out;
 
-    private StoreReference<x8664Store> shifteeRef, shiftCountRef, outRef, backupRef;
+    private StoreReference<x8664VarStore> shifteeRef, shiftCountRef, outRef, backupRef;
 
     public x8664ShiftOp(Direction direction, Operands.Binary<Node> operands) {
         this.direction = direction;
@@ -31,8 +31,8 @@ public class x8664ShiftOp implements x8664Op {
     }
 
     @Override
-    public void requestStores(StoreRequestService<x8664Op, x8664Store> service) {
-        StoreConditions<x8664Store> collidesWithRcx = StoreConditions.<x8664Store>builder()
+    public void requestStores(StoreRequestService<x8664Op, x8664VarStore> service) {
+        StoreConditions<x8664VarStore> collidesWithRcx = StoreConditions.<x8664VarStore>builder()
                 .collidesWith(x8664Register.RCX)
                 .build();
         if (!(shiftee instanceof ConstIntNode)) {
@@ -50,7 +50,7 @@ public class x8664ShiftOp implements x8664Op {
 
     @Override
     public void write(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {
-        x8664Store outStore = storeSupplier.resolve(outRef).orElseThrow();
+        x8664VarStore outStore = storeSupplier.resolve(outRef).orElseThrow();
         x8664Operand.Size size = x8664Operand.Size.fromValueType(out.valueType());
         x8664Operand shifteeStore = this.shiftee instanceof ConstIntNode c
                 ? new x8664Immediate(c.value())
@@ -58,7 +58,7 @@ public class x8664ShiftOp implements x8664Op {
         x8664Operand shiftCountStore = this.shiftCount instanceof ConstIntNode c
                 ? new x8664Immediate(c.value())
                 : storeSupplier.resolve(shiftCountRef).orElseThrow();
-        x8664Store backupStore = storeSupplier.resolve(backupRef).orElseThrow();
+        x8664VarStore backupStore = storeSupplier.resolve(backupRef).orElseThrow();
 
         boolean backupRcx = false;
         if (!shiftCountStore.equals(x8664Register.RCX)) {

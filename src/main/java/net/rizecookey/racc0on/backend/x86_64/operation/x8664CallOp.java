@@ -4,8 +4,8 @@ import net.rizecookey.racc0on.backend.store.StoreConditions;
 import net.rizecookey.racc0on.backend.store.StoreReference;
 import net.rizecookey.racc0on.backend.store.StoreRequestService;
 import net.rizecookey.racc0on.backend.x86_64.memory.x8664MemoryUtils;
-import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Register;
-import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Store;
+import net.rizecookey.racc0on.backend.x86_64.operand.store.variable.x8664Register;
+import net.rizecookey.racc0on.backend.x86_64.operand.store.variable.x8664VarStore;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Immediate;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
 import net.rizecookey.racc0on.backend.x86_64.store.x8664StoreRefResolver;
@@ -31,9 +31,9 @@ public class x8664CallOp implements x8664Op {
     private final String target;
     private final List<Node> arguments;
     private final Node out;
-    private final List<StoreReference<x8664Store>> argRefs = new ArrayList<>();
-    private StoreReference<x8664Store> outRef = new StoreReference.Null<>();
-    private final Map<x8664Register, StoreReference<x8664Store>> backupRefs = new HashMap<>();
+    private final List<StoreReference<x8664VarStore>> argRefs = new ArrayList<>();
+    private StoreReference<x8664VarStore> outRef = new StoreReference.Null<>();
+    private final Map<x8664Register, StoreReference<x8664VarStore>> backupRefs = new HashMap<>();
 
     public x8664CallOp(CallNode callNode) {
         this.target = callNode.target();
@@ -57,7 +57,7 @@ public class x8664CallOp implements x8664Op {
     }
 
     @Override
-    public void requestStores(StoreRequestService<x8664Op, x8664Store> service) {
+    public void requestStores(StoreRequestService<x8664Op, x8664VarStore> service) {
         for (var arg : arguments) {
             Node argNode = NodeSupport.skipProj(arg);
             if (argNode instanceof ConstIntNode || argNode instanceof ConstBoolNode) {
@@ -70,7 +70,7 @@ public class x8664CallOp implements x8664Op {
 
         outRef = service.requestOutputStore(this, out);
 
-        StoreConditions<x8664Store> notCallerSaved = StoreConditions.<x8664Store>builder()
+        StoreConditions<x8664VarStore> notCallerSaved = StoreConditions.<x8664VarStore>builder()
                 .collidesWith(CALLER_SAVED_REGS)
                 .build();
         for (var reg : CALLER_SAVED_REGS) {
@@ -80,11 +80,11 @@ public class x8664CallOp implements x8664Op {
 
     @Override
     public void write(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {
-        x8664Store out = storeSupplier.resolve(outRef).orElseThrow();
+        x8664VarStore out = storeSupplier.resolve(outRef).orElseThrow();
 
-        Map<x8664Register, x8664Store> backupStores = new HashMap<>();
+        Map<x8664Register, x8664VarStore> backupStores = new HashMap<>();
         for (var register : CALLER_SAVED_REGS) {
-            x8664Store backupStore = storeSupplier.resolve(backupRefs.get(register)).orElseThrow();
+            x8664VarStore backupStore = storeSupplier.resolve(backupRefs.get(register)).orElseThrow();
             backupStores.put(register, backupStore);
         }
 
