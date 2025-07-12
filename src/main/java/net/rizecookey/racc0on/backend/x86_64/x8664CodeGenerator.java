@@ -77,11 +77,14 @@ public class x8664CodeGenerator implements CodeGenerator {
             mov rbp, rsp
             cmp esi, 0
             jl $abort$
-            mov r15d, esi
             imul rdi, rsi
             add rdi, 4
+            push rsi
+            sub rsp, 8
             call $alloc$
-            mov [rax], r15d
+            add rsp, 8
+            pop rsi
+            mov [rax], esi
             add rax, 4
             leave
             ret
