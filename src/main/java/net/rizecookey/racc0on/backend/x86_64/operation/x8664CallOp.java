@@ -16,6 +16,7 @@ import net.rizecookey.racc0on.ir.node.ConstBoolNode;
 import net.rizecookey.racc0on.ir.node.ConstIntNode;
 import net.rizecookey.racc0on.ir.node.Node;
 import net.rizecookey.racc0on.ir.node.operation.memory.AllocArrayNode;
+import net.rizecookey.racc0on.ir.node.operation.memory.AllocNode;
 import net.rizecookey.racc0on.ir.util.NodeSupport;
 
 import java.util.ArrayList;
@@ -45,6 +46,14 @@ public class x8664CallOp implements x8664Op {
         this.target = "$" + builtinCallNode.builtinName() + "$";
         this.arguments = List.copyOf(builtinCallNode.arguments());
         this.out = builtinCallNode;
+    }
+
+    public x8664CallOp(AllocNode allocNode) {
+        this.target = "$alloc$";
+        this.arguments = List.of(
+                new ConstIntNode(allocNode.block(), x8664MemoryUtils.createLayout(allocNode.type()).size())
+        );
+        this.out = allocNode;
     }
 
     public x8664CallOp(AllocArrayNode allocArrayNode) {

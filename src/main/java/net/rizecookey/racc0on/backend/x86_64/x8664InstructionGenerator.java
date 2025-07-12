@@ -320,7 +320,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
                     NodeSupport.predecessorSkipProj(storeNode, StoreNode.ADDRESS));
             case StructMemberNode structMemberOffset -> throw new UnsupportedOperationException(); // TODO
             case AllocArrayNode allocArrayNode -> new x8664CallOp(allocArrayNode);
-            case AllocNode allocNode -> throw new UnsupportedOperationException(); // TODO
+            case AllocNode allocNode -> new x8664CallOp(allocNode);
             case ConstAddressNode constAddressNode -> new x8664LoadConstPhantomOp(constAddressNode);
         };
         operations.addAll(base.asOperations());
