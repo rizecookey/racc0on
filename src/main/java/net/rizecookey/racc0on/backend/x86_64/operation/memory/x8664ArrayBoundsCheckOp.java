@@ -38,20 +38,21 @@ public class x8664ArrayBoundsCheckOp implements x8664Op {
     public void write(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {
         // TODO allow immediates for index
         x8664VarStore arrayStore = storeSupplier.resolve(arrayRef).orElseThrow();
-        x8664Operand.Size size = x8664Operand.Size.fromValueType(array.valueType());
+        x8664Operand.Size arrayTypeSize = x8664Operand.Size.fromValueType(array.valueType());
         x8664VarStore indexStore = storeSupplier.resolve(indexRef).orElseThrow();
+        x8664Operand.Size indexTypeSize = x8664Operand.Size.fromValueType(index.valueType());
 
         x8664Register actualArrayStore = switch (arrayStore) {
             case x8664StackStore _ -> {
-                generator.move(size, x8664Register.MEMORY_ACCESS_RESERVE, arrayStore);
+                generator.move(arrayTypeSize, x8664Register.MEMORY_ACCESS_RESERVE, arrayStore);
                 yield x8664Register.MEMORY_ACCESS_RESERVE;
             }
             case x8664Register register -> register;
         };
-        generator.move(size, x8664Register.MEMORY_ACCESS_RESERVE, new x8664MemoryStore(actualArrayStore, -4));
-        generator.write(x8664InstrType.CMP, size, indexStore, x8664Register.MEMORY_ACCESS_RESERVE);
+        generator.move(indexTypeSize, x8664Register.MEMORY_ACCESS_RESERVE, new x8664MemoryStore(actualArrayStore, -4));
+        generator.write(x8664InstrType.CMP, indexTypeSize, indexStore, x8664Register.MEMORY_ACCESS_RESERVE);
         generator.write(x8664InstrType.JGE, ABORT_LABEL);
-        generator.write(x8664InstrType.CMP, size, indexStore, new x8664Immediate(0));
+        generator.write(x8664InstrType.CMP, indexTypeSize, indexStore, new x8664Immediate(0));
         generator.write(x8664InstrType.JL, ABORT_LABEL);
     }
 }
