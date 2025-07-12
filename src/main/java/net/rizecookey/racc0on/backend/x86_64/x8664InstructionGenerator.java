@@ -5,6 +5,7 @@ import net.rizecookey.racc0on.backend.x86_64.operand.store.x8664Store;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Label;
 import net.rizecookey.racc0on.backend.x86_64.operation.arithmetic.x8664ShiftOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.memory.x8664ArrayMemberLoadPhantomOp;
+import net.rizecookey.racc0on.backend.x86_64.operation.memory.x8664StoreOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664CallOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664EmptyOpLike;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664IfElseOpLike;
@@ -315,7 +316,8 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
                     NodeSupport.predecessorSkipProj(arrayMemberOffset, ArrayMemberNode.ARRAY),
                     NodeSupport.predecessorSkipProj(arrayMemberOffset, ArrayMemberNode.INDEX));
             case LoadNode loadNode -> new x8664LoadOp(loadNode, NodeSupport.predecessorSkipProj(loadNode, LoadNode.ADDRESS));
-            case StoreNode storeNode -> throw new UnsupportedOperationException(); // TODO
+            case StoreNode storeNode -> new x8664StoreOp(NodeSupport.predecessorSkipProj(storeNode, StoreNode.VALUE),
+                    NodeSupport.predecessorSkipProj(storeNode, StoreNode.ADDRESS));
             case StructMemberNode structMemberOffset -> throw new UnsupportedOperationException(); // TODO
             case AllocArrayNode allocArrayNode -> new x8664CallOp(allocArrayNode);
             case AllocNode allocNode -> throw new UnsupportedOperationException(); // TODO
