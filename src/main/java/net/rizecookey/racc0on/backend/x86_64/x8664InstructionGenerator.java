@@ -2,9 +2,11 @@ package net.rizecookey.racc0on.backend.x86_64;
 
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Label;
 import net.rizecookey.racc0on.backend.x86_64.operation.arithmetic.x8664ShiftOp;
+import net.rizecookey.racc0on.backend.x86_64.operation.memory.x8664ArrayMemberPhantomOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664CallOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664EmptyOpLike;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664IfElseOpLike;
+import net.rizecookey.racc0on.backend.x86_64.operation.memory.x8664LoadOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664LoadParamPhantomOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664OpLike;
 import net.rizecookey.racc0on.backend.x86_64.optimization.x8664InstrOptimization;
@@ -308,11 +310,13 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
             case CallNode callNode -> new x8664CallOp(callNode);
             case BuiltinCallNode builtinCallNode -> new x8664CallOp(builtinCallNode);
             case Phi _, Block _, ProjNode _ -> new x8664EmptyOpLike();
-            case ArrayMemberNode arrayMemberOffset -> throw new UnsupportedOperationException(); // TODO
-            case LoadNode loadNode -> throw new UnsupportedOperationException(); // TODO
+            case ArrayMemberNode arrayMemberOffset -> new x8664ArrayMemberPhantomOp(arrayMemberOffset,
+                    NodeSupport.predecessorSkipProj(arrayMemberOffset, ArrayMemberNode.ARRAY),
+                    NodeSupport.predecessorSkipProj(arrayMemberOffset, ArrayMemberNode.INDEX));
+            case LoadNode loadNode -> new x8664LoadOp(loadNode, NodeSupport.predecessorSkipProj(loadNode, LoadNode.ADDRESS));
             case StoreNode storeNode -> throw new UnsupportedOperationException(); // TODO
             case StructMemberNode structMemberOffset -> throw new UnsupportedOperationException(); // TODO
-            case AllocArrayNode allocArrayNode -> throw new UnsupportedOperationException(); // TODO
+            case AllocArrayNode allocArrayNode -> new x8664CallOp(allocArrayNode);
             case AllocNode allocNode -> throw new UnsupportedOperationException(); // TODO
             case ConstAddressNode constAddressNode -> throw new UnsupportedOperationException(); // TODO
         };

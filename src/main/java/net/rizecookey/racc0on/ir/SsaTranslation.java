@@ -605,9 +605,9 @@ public class SsaTranslation {
 
         private Node createArrayAccessAddressCalculation(Tree arrayTree, ArrayType<? extends Type> arrayType, Tree indexTree, SsaTranslation data) {
             Node array = arrayTree.accept(this, data).orElseThrow();
-            MemoryType arrayMemoryType = toMemoryType(arrayType, data);
+            MemoryType arrayElementMemoryType = toMemoryType(arrayType.type(), data);
             Node index = indexTree.accept(this, data).orElseThrow();
-            return data.constructor.newArrayMemberOffset(array, arrayMemoryType, index);
+            return data.constructor.newArrayMemberOffset(array, arrayElementMemoryType, index);
         }
 
         private Optional<Node> visitArrayAccess(Tree arrayTree, Tree indexTree, SsaTranslation data) {

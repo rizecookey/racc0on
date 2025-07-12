@@ -3,6 +3,7 @@ package net.rizecookey.racc0on.backend.x86_64.operation;
 import net.rizecookey.racc0on.backend.store.StoreConditions;
 import net.rizecookey.racc0on.backend.store.StoreReference;
 import net.rizecookey.racc0on.backend.store.StoreRequestService;
+import net.rizecookey.racc0on.backend.x86_64.memory.x8664MemoryUtils;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Register;
 import net.rizecookey.racc0on.backend.x86_64.operand.stored.x8664Store;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Immediate;
@@ -14,6 +15,7 @@ import net.rizecookey.racc0on.ir.node.CallNode;
 import net.rizecookey.racc0on.ir.node.ConstBoolNode;
 import net.rizecookey.racc0on.ir.node.ConstIntNode;
 import net.rizecookey.racc0on.ir.node.Node;
+import net.rizecookey.racc0on.ir.node.operation.memory.AllocArrayNode;
 import net.rizecookey.racc0on.ir.util.NodeSupport;
 
 import java.util.ArrayList;
@@ -43,6 +45,15 @@ public class x8664CallOp implements x8664Op {
         this.target = "$" + builtinCallNode.builtinName() + "$";
         this.arguments = List.copyOf(builtinCallNode.arguments());
         this.out = builtinCallNode;
+    }
+
+    public x8664CallOp(AllocArrayNode allocArrayNode) {
+        this.target = "$alloc_array$";
+        this.arguments = List.of(
+                new ConstIntNode(allocArrayNode.block(), x8664MemoryUtils.createLayout(allocArrayNode.type()).size()),
+                allocArrayNode.predecessor(AllocArrayNode.SIZE)
+        );
+        this.out = allocArrayNode;
     }
 
     @Override

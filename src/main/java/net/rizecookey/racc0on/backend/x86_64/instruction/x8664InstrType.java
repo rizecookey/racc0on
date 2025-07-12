@@ -24,6 +24,8 @@ public enum x8664InstrType implements InstructionType<x8664Instr, x8664Store> {
     TEST("test"),
     JNZ("jnz"),
     JZ("jz"),
+    JGE("jge"),
+    JL("jl"),
     SETZ("setz", operand(0)),
     SETE("sete", operand(0)),
     SETNE("setne", operand(0)),
