@@ -13,11 +13,11 @@ import net.rizecookey.racc0on.ir.node.operation.memory.ArrayMemberNode;
 
 import java.util.List;
 
-public class x8664ArrayMemberPhantomOp implements x8664OpLike {
+public class x8664ArrayMemberLoadPhantomOp implements x8664OpLike {
     private final ArrayMemberNode address;
     private final Node array, index;
 
-    public x8664ArrayMemberPhantomOp(ArrayMemberNode address, Node array, Node index) {
+    public x8664ArrayMemberLoadPhantomOp(ArrayMemberNode address, Node array, Node index) {
         this.address = address;
         this.array = array;
         this.index = index;
