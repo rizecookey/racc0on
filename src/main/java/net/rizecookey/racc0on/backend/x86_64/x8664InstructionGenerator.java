@@ -321,7 +321,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
             case StructMemberNode structMemberOffset -> throw new UnsupportedOperationException(); // TODO
             case AllocArrayNode allocArrayNode -> new x8664CallOp(allocArrayNode);
             case AllocNode allocNode -> throw new UnsupportedOperationException(); // TODO
-            case ConstAddressNode constAddressNode -> throw new UnsupportedOperationException(); // TODO
+            case ConstAddressNode constAddressNode -> new x8664LoadConstPhantomOp(constAddressNode);
         };
         operations.addAll(base.asOperations());
 
