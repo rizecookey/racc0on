@@ -31,7 +31,7 @@ public class x8664NotOp implements x8664Op {
     public void write(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {
         x8664VarStore in = storeSupplier.resolve(inRef).orElseThrow();
         x8664VarStore out = storeSupplier.resolve(outRef).orElseThrow();
-        generator.test(in, in);
+        generator.test(x8664Operand.Size.BYTE, in, in);
         generator.write(x8664InstrType.SETZ, x8664Operand.Size.BYTE, out);
     }
 }

@@ -372,13 +372,13 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
         write(x8664InstrType.MOV, size, to, actualFrom);
     }
 
-    public void test(x8664Store first, x8664Store second) {
+    public void test(x8664Operand.Size size, x8664Store first, x8664Store second) {
         if (second instanceof x8664MemoryStore memoryStore) {
             second = x8664Register.MEMORY_ACCESS_RESERVE;
-            move(x8664Operand.Size.BYTE, second, memoryStore);
+            move(size, second, memoryStore);
         }
 
-        write(x8664InstrType.TEST, x8664Operand.Size.BYTE, first, second);
+        write(x8664InstrType.TEST, size, first, second);
     }
 
     public void push(x8664Operand operand) {
