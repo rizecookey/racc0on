@@ -58,6 +58,8 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
@@ -108,19 +110,25 @@ public class SsaTranslation {
         private final Deque<LoopInfo> transformerStack = new ArrayDeque<>();
 
         private CancellationRange currentCancellation = CancellationRange.NONE;
+        private final Map<Name, MemoryType.Compound> structMemoryTypeCache = new HashMap<>();
 
         private MemoryType toMemoryType(Type type, SsaTranslation data) {
             return switch (type) {
                 case SmallType small -> new MemoryType.Value(small.toIrType());
                 case StructType struct -> {
+                    if (structMemoryTypeCache.containsKey(struct.name())) {
+                        yield structMemoryTypeCache.get(struct.name());
+                    }
                     StructDeclarationTree declaration = data.semanticInfo.structs().get(struct.name());
                     if (declaration == null) {
                         throw new IllegalStateException("unknown struct " + struct.name().asString());
                     }
 
-                    yield new MemoryType.Compound(declaration.fields().stream()
+                    MemoryType.Compound memoryType = new MemoryType.Compound(declaration.fields().stream()
                             .map(field -> toMemoryType(field.type().type(), data))
                             .toList());
+                    structMemoryTypeCache.put(struct.name(), memoryType);
+                    yield memoryType;
                 }
                 case Type.Wildcard _ -> throw new IllegalStateException("Illegal type");
             };
