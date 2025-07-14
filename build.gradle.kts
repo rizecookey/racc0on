@@ -52,3 +52,7 @@ distributions {
         }
     }
 }
+
+tasks.withType<JavaExec>().configureEach {
+    doNotTrackState("Run tasks should always run")
+}
