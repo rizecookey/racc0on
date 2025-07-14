@@ -13,6 +13,7 @@ import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664Op;
 import net.rizecookey.racc0on.backend.x86_64.store.x8664StoreRefResolver;
 import net.rizecookey.racc0on.backend.x86_64.x8664InstructionGenerator;
+import net.rizecookey.racc0on.ir.node.ConstIntNode;
 import net.rizecookey.racc0on.ir.node.Node;
 
 public class x8664ArrayBoundsCheckOp implements x8664Op {
@@ -31,15 +32,28 @@ public class x8664ArrayBoundsCheckOp implements x8664Op {
     @Override
     public void requestStores(StoreRequestService<x8664Op, x8664VarStore> service) {
         arrayRef = service.requestInputStore(this, array);
-        indexRef = service.requestInputStore(this, index);
+        if (!(index instanceof ConstIntNode)) {
+            indexRef = service.requestInputStore(this, index);
+        }
     }
 
     @Override
     public void write(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {
-        // TODO allow immediates for index
+        Integer indexConstant = index instanceof ConstIntNode constIntNode ? constIntNode.value() : null;
+
+        x8664Operand indexOperand;
+        if (indexConstant != null) {
+            if (indexConstant < 0) {
+                generator.write(x8664InstrType.JMP, ABORT_LABEL);
+                return;
+            }
+            indexOperand = new x8664Immediate(indexConstant);
+        } else {
+            indexOperand = storeSupplier.resolve(indexRef).orElseThrow();
+        }
+
         x8664VarStore arrayStore = storeSupplier.resolve(arrayRef).orElseThrow();
         x8664Operand.Size arrayTypeSize = x8664Operand.Size.fromValueType(array.valueType());
-        x8664VarStore indexStore = storeSupplier.resolve(indexRef).orElseThrow();
         x8664Operand.Size indexTypeSize = x8664Operand.Size.fromValueType(index.valueType());
 
         x8664Register actualArrayStore = switch (arrayStore) {
@@ -50,9 +64,12 @@ public class x8664ArrayBoundsCheckOp implements x8664Op {
             case x8664Register register -> register;
         };
         generator.move(indexTypeSize, x8664Register.MEMORY_ACCESS_RESERVE, new x8664MemoryStore(actualArrayStore, -4));
-        generator.write(x8664InstrType.CMP, indexTypeSize, indexStore, x8664Register.MEMORY_ACCESS_RESERVE);
-        generator.write(x8664InstrType.JGE, ABORT_LABEL);
-        generator.write(x8664InstrType.CMP, indexTypeSize, indexStore, new x8664Immediate(0));
-        generator.write(x8664InstrType.JL, ABORT_LABEL);
+        generator.write(x8664InstrType.CMP, indexTypeSize, x8664Register.MEMORY_ACCESS_RESERVE, indexOperand);
+        generator.write(x8664InstrType.JLE, ABORT_LABEL);
+
+        if (indexConstant == null) {
+            generator.write(x8664InstrType.CMP, indexTypeSize, indexOperand, new x8664Immediate(0));
+            generator.write(x8664InstrType.JL, ABORT_LABEL);
+        }
     }
 }
