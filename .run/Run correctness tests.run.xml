@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run correctness tests" type="JUnit" factoryName="JUnit">
+    <module name="racc0on.test" />
+    <option name="ALTERNATIVE_JRE_PATH" value="temurin-24" />
+    <option name="PACKAGE_NAME" value="net.rizecookey.racc0on.test" />
+    <option name="MAIN_CLASS_NAME" value="net.rizecookey.racc0on.test.SamplesTest" />
+    <option name="METHOD_NAME" value="assertCompilationResultCorrect" />
+    <option name="TEST_OBJECT" value="method" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
