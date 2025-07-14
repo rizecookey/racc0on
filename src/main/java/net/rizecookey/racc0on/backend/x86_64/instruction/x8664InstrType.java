@@ -17,6 +17,8 @@ public enum x8664InstrType implements InstructionType<x8664Instr, x8664VarStore>
     POP("pop", specific(x8664Register.RSP), operand(0)),
     CDQ("cdq", specific(x8664Register.RAX), specific(x8664Register.RDX)),
     MOV("mov", operand(0)),
+    MOVSX("movsx", operand(0)),
+    MOVSXD("movsxd", operand(0)),
     RET("ret"),
     ENTER("enter", specific(x8664Register.RSP), specific(x8664Register.RBP)),
     LEAVE("leave", specific(x8664Register.RSP), specific(x8664Register.RBP)),
