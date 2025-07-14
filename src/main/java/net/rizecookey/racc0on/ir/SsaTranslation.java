@@ -221,13 +221,11 @@ public class SsaTranslation {
             BinaryOperator<Node> desugar = desugarer(data, assignmentTree.type());
 
             Node rhs = assignmentTree.expression().accept(this, data).orElseThrow();
+            if (desugar != null) {
+                rhs = desugar.apply(assignmentTree.lValue().accept(this, data).orElseThrow(), rhs);
+            }
             switch (assignmentTree.lValue()) {
-                case LValueIdentTree(var name) -> {
-                    if (desugar != null) {
-                        rhs = desugar.apply(data.readVariable(name.name(), data.currentBlock()), rhs);
-                    }
-                    data.writeVariable(name.name(), data.currentBlock(), rhs);
-                }
+                case LValueIdentTree(var name) -> data.writeVariable(name.name(), data.currentBlock(), rhs);
                 case LValueArrayAccessTree arrayAccess -> {
                     ArrayType<?> type = (ArrayType<?>) data.semanticInfo.accessTypes().get(arrayAccess.array());
                     Node address = createArrayAccessAddressCalculation(arrayAccess.array(), type, arrayAccess.index(), data);
