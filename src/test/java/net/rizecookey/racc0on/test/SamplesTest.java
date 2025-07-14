@@ -29,8 +29,7 @@ class SamplesTest {
     @BeforeAll
     static void buildCompiler() throws IOException, InterruptedException {
         ExecutionResult result = execute(new String[] {
-                "./gradlew",
-                "installDist"
+                "./build.sh"
         }, 5, TimeUnit.MINUTES);
         assertEquals(0, result.exitCode(), "building compiler failed");
     }
