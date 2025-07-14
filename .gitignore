@@ -5,3 +5,4 @@
 /tests/local
 /sample/bin
 /.graalvm
+/.gdb_history
