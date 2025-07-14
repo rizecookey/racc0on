@@ -6,10 +6,12 @@ import net.rizecookey.racc0on.backend.x86_64.operand.store.variable.x8664Registe
 import net.rizecookey.racc0on.backend.x86_64.operand.store.variable.x8664StackStore;
 import net.rizecookey.racc0on.backend.x86_64.operand.store.variable.x8664VarStore;
 import net.rizecookey.racc0on.backend.x86_64.operand.store.x8664MemoryStore;
+import net.rizecookey.racc0on.backend.x86_64.operand.x8664Immediate;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664Op;
 import net.rizecookey.racc0on.backend.x86_64.store.x8664StoreRefResolver;
 import net.rizecookey.racc0on.backend.x86_64.x8664InstructionGenerator;
+import net.rizecookey.racc0on.ir.node.ConstIntNode;
 import net.rizecookey.racc0on.ir.node.Node;
 
 public class x8664StoreOp implements x8664Op {
@@ -26,14 +28,17 @@ public class x8664StoreOp implements x8664Op {
 
     @Override
     public void requestStores(StoreRequestService<x8664Op, x8664VarStore> service) {
-        valueRef = service.requestInputStore(this, value);
+        if (!(value instanceof ConstIntNode)) {
+            valueRef = service.requestInputStore(this, value);
+        }
         addressRef = service.requestInputStore(this, address);
     }
 
     @Override
     public void write(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {
-        // TODO allow immediates for values
-        x8664VarStore valueStore = storeSupplier.resolve(valueRef).orElseThrow();
+        x8664Operand valueOperand = value instanceof ConstIntNode constIntNode
+                ? new x8664Immediate(constIntNode.value())
+                : storeSupplier.resolve(valueRef).orElseThrow();
         x8664VarStore addressStore = storeSupplier.resolve(addressRef).orElseThrow();
 
         x8664Register actualAddressStore = switch (addressStore) {
@@ -44,6 +49,6 @@ public class x8664StoreOp implements x8664Op {
             case x8664Register register -> register;
         };
 
-        generator.move(x8664Operand.Size.fromValueType(value.valueType()), new x8664MemoryStore(actualAddressStore), valueStore);
+        generator.move(x8664Operand.Size.fromValueType(value.valueType()), new x8664MemoryStore(actualAddressStore), valueOperand);
     }
 }
