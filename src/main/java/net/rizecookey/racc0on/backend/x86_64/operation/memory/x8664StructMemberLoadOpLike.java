@@ -19,7 +19,6 @@ public class x8664StructMemberLoadOpLike implements x8664OpLike {
     @Override
     public List<x8664Op> asOperations() {
         return List.of(
-                // TODO probably some optimization potential
                 new x8664AddressNullCheckOp(struct),
                 new x8664AddrOffsetCalcOp(address, struct)
         );

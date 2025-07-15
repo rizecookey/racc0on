@@ -20,7 +20,6 @@ public class x8664ArrayMemberLoadOpLike implements x8664OpLike {
     @Override
     public List<x8664Op> asOperations() {
         return List.of(
-                // TODO probably some optimization potential
                 new x8664AddressNullCheckOp(array),
                 new x8664ArrayBoundsCheckOp(array, index),
                 new x8664AddrOffsetCalcOp(address, array, index)
