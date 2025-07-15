@@ -1,7 +1,16 @@
-package net.rizecookey.racc0on.ir.node.operation.binary;
+package net.rizecookey.racc0on.ir.node.operation;
 
 import net.rizecookey.racc0on.ir.node.Block;
 import net.rizecookey.racc0on.ir.node.Node;
+import net.rizecookey.racc0on.ir.node.operation.arithmetic.DivNode;
+import net.rizecookey.racc0on.ir.node.operation.arithmetic.ModNode;
+import net.rizecookey.racc0on.ir.node.operation.arithmetic.ShiftLeftNode;
+import net.rizecookey.racc0on.ir.node.operation.arithmetic.ShiftRightNode;
+import net.rizecookey.racc0on.ir.node.operation.arithmetic.SubNode;
+import net.rizecookey.racc0on.ir.node.operation.compare.GreaterNode;
+import net.rizecookey.racc0on.ir.node.operation.compare.GreaterOrEqNode;
+import net.rizecookey.racc0on.ir.node.operation.compare.LessNode;
+import net.rizecookey.racc0on.ir.node.operation.compare.LessOrEqNode;
 
 public sealed abstract class BinaryOperationNode extends Node permits CommutativeBinaryOperationNode, DivNode, GreaterNode, GreaterOrEqNode, LessNode, LessOrEqNode, ModNode, ShiftLeftNode, ShiftRightNode, SubNode {
     public static final int LEFT = 0;

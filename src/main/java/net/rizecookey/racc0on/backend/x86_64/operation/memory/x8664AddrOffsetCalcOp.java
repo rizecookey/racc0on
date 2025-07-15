@@ -14,7 +14,7 @@ import net.rizecookey.racc0on.backend.x86_64.operand.x8664ValOperand;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664Op;
 import net.rizecookey.racc0on.backend.x86_64.store.x8664StoreRefResolver;
 import net.rizecookey.racc0on.backend.x86_64.x8664InstructionGenerator;
-import net.rizecookey.racc0on.ir.node.ConstIntNode;
+import net.rizecookey.racc0on.ir.node.constant.ConstIntNode;
 import net.rizecookey.racc0on.ir.node.Node;
 import net.rizecookey.racc0on.ir.node.operation.memory.ArrayMemberNode;
 import net.rizecookey.racc0on.ir.node.operation.memory.StructMemberNode;

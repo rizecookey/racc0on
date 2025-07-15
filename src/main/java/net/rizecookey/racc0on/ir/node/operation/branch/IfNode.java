@@ -1,4 +1,8 @@
-package net.rizecookey.racc0on.ir.node;
+package net.rizecookey.racc0on.ir.node.operation.branch;
+
+import net.rizecookey.racc0on.ir.node.Block;
+import net.rizecookey.racc0on.ir.node.Node;
+import net.rizecookey.racc0on.ir.node.ProjNode;
 
 import java.util.Map;
 import java.util.stream.Collectors;

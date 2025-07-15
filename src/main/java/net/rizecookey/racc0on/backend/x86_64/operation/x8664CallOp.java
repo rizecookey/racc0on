@@ -7,14 +7,17 @@ import net.rizecookey.racc0on.backend.x86_64.memory.x8664MemoryUtils;
 import net.rizecookey.racc0on.backend.x86_64.operand.store.variable.x8664Register;
 import net.rizecookey.racc0on.backend.x86_64.operand.store.variable.x8664VarStore;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Immediate;
+import net.rizecookey.racc0on.backend.x86_64.operand.x8664Immediate64;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
 import net.rizecookey.racc0on.backend.x86_64.store.x8664StoreRefResolver;
 import net.rizecookey.racc0on.backend.x86_64.x8664InstructionGenerator;
 import net.rizecookey.racc0on.ir.node.BuiltinCallNode;
 import net.rizecookey.racc0on.ir.node.CallNode;
-import net.rizecookey.racc0on.ir.node.ConstBoolNode;
-import net.rizecookey.racc0on.ir.node.ConstIntNode;
+import net.rizecookey.racc0on.ir.node.constant.ConstAddressNode;
+import net.rizecookey.racc0on.ir.node.constant.ConstBoolNode;
+import net.rizecookey.racc0on.ir.node.constant.ConstIntNode;
 import net.rizecookey.racc0on.ir.node.Node;
+import net.rizecookey.racc0on.ir.node.constant.ConstNode;
 import net.rizecookey.racc0on.ir.node.operation.memory.AllocArrayNode;
 import net.rizecookey.racc0on.ir.node.operation.memory.AllocNode;
 import net.rizecookey.racc0on.ir.util.NodeSupport;
@@ -102,12 +105,19 @@ public class x8664CallOp implements x8664Op {
             x8664Operand operand = storeSupplier.resolve(argRefs.get(i)).orElse(null);
             if (operand == null) {
                 Node argumentNode = arguments.get(i);
-                int immediate = switch (argumentNode) {
-                    case ConstBoolNode constBoolNode -> constBoolNode.value() ? 1 : 0;
-                    case ConstIntNode constIntNode -> constIntNode.value();
-                    default -> throw new IllegalStateException("No value for reference " + argRefs.get(i) + " found");
+                if (!(argumentNode instanceof ConstNode constNode)) {
+                    throw new IllegalStateException("No register for non-constant argument");
+                }
+                operand = switch (constNode) {
+                    case ConstBoolNode constBoolNode -> new x8664Immediate(constBoolNode.value() ? 1 : 0);
+                    case ConstIntNode constIntNode -> new x8664Immediate(constIntNode.value());
+                    case ConstAddressNode constAddressNode -> {
+                        if (constAddressNode.address() >= Integer.MIN_VALUE && constAddressNode.address() <= Integer.MAX_VALUE) {
+                            yield new x8664Immediate((int) constAddressNode.address());
+                        }
+                        yield new x8664Immediate64(constAddressNode.address());
+                    }
                 };
-                operand = new x8664Immediate(immediate);
             }
             argumentOperands.add(operand);
         }

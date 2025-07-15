@@ -1,8 +1,8 @@
 package net.rizecookey.racc0on.ir.schedule;
 
 import net.rizecookey.racc0on.ir.IrGraphTraverser;
-import net.rizecookey.racc0on.ir.node.IfNode;
-import net.rizecookey.racc0on.ir.node.JumpNode;
+import net.rizecookey.racc0on.ir.node.operation.branch.IfNode;
+import net.rizecookey.racc0on.ir.node.operation.branch.JumpNode;
 import net.rizecookey.racc0on.ir.node.Node;
 import net.rizecookey.racc0on.ir.node.ProjNode;
 import net.rizecookey.racc0on.ir.node.StartNode;

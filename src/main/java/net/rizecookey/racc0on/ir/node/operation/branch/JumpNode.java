@@ -1,4 +1,7 @@
-package net.rizecookey.racc0on.ir.node;
+package net.rizecookey.racc0on.ir.node.operation.branch;
+
+import net.rizecookey.racc0on.ir.node.Block;
+import net.rizecookey.racc0on.ir.node.Node;
 
 import java.util.List;
 

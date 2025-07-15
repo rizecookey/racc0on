@@ -1,8 +1,9 @@
-package net.rizecookey.racc0on.ir.node.operation.binary;
+package net.rizecookey.racc0on.ir.node.operation.arithmetic;
 
 import net.rizecookey.racc0on.ir.node.Block;
 import net.rizecookey.racc0on.ir.node.Node;
 import net.rizecookey.racc0on.ir.node.ValueType;
+import net.rizecookey.racc0on.ir.node.operation.BinaryOperationNode;
 
 public final class DivNode extends BinaryOperationNode {
     public static final int SIDE_EFFECT = 2;

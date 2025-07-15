@@ -1,7 +1,14 @@
-package net.rizecookey.racc0on.ir.node.operation.binary;
+package net.rizecookey.racc0on.ir.node.operation;
 
 import net.rizecookey.racc0on.ir.node.Block;
 import net.rizecookey.racc0on.ir.node.Node;
+import net.rizecookey.racc0on.ir.node.operation.arithmetic.AddNode;
+import net.rizecookey.racc0on.ir.node.operation.arithmetic.MulNode;
+import net.rizecookey.racc0on.ir.node.operation.compare.EqNode;
+import net.rizecookey.racc0on.ir.node.operation.compare.NotEqNode;
+import net.rizecookey.racc0on.ir.node.operation.logic.BitwiseAndNode;
+import net.rizecookey.racc0on.ir.node.operation.logic.BitwiseOrNode;
+import net.rizecookey.racc0on.ir.node.operation.logic.BitwiseXorNode;
 
 public sealed abstract class CommutativeBinaryOperationNode extends BinaryOperationNode permits AddNode, BitwiseAndNode, BitwiseOrNode, BitwiseXorNode, EqNode, MulNode, NotEqNode {
     protected CommutativeBinaryOperationNode(Block block, Node left, Node right) {

@@ -1,14 +1,19 @@
 package net.rizecookey.racc0on.ir.node;
 
 import net.rizecookey.racc0on.ir.IrGraph;
-import net.rizecookey.racc0on.ir.node.operation.binary.BinaryOperationNode;
+import net.rizecookey.racc0on.ir.node.constant.ConstAddressNode;
+import net.rizecookey.racc0on.ir.node.constant.ConstBoolNode;
+import net.rizecookey.racc0on.ir.node.constant.ConstIntNode;
+import net.rizecookey.racc0on.ir.node.operation.BinaryOperationNode;
+import net.rizecookey.racc0on.ir.node.operation.branch.IfNode;
+import net.rizecookey.racc0on.ir.node.operation.branch.JumpNode;
 import net.rizecookey.racc0on.ir.node.operation.memory.AllocArrayNode;
 import net.rizecookey.racc0on.ir.node.operation.memory.AllocNode;
 import net.rizecookey.racc0on.ir.node.operation.memory.ArrayMemberNode;
 import net.rizecookey.racc0on.ir.node.operation.memory.LoadNode;
 import net.rizecookey.racc0on.ir.node.operation.memory.StoreNode;
 import net.rizecookey.racc0on.ir.node.operation.memory.StructMemberNode;
-import net.rizecookey.racc0on.ir.node.operation.unary.UnaryOperationNode;
+import net.rizecookey.racc0on.ir.node.operation.UnaryOperationNode;
 import net.rizecookey.racc0on.ir.util.DebugInfo;
 import net.rizecookey.racc0on.ir.util.DebugInfoHelper;
 
