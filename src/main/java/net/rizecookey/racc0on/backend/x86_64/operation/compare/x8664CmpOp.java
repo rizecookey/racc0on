@@ -1,6 +1,7 @@
 package net.rizecookey.racc0on.backend.x86_64.operation.compare;
 
 import net.rizecookey.racc0on.backend.operand.Operands;
+import net.rizecookey.racc0on.backend.store.StoreConditions;
 import net.rizecookey.racc0on.backend.store.StoreReference;
 import net.rizecookey.racc0on.backend.store.StoreRequestService;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664InstrType;
@@ -31,14 +32,15 @@ public abstract class x8664CmpOp implements x8664Op {
     public void requestStores(StoreRequestService<x8664Op, x8664VarStore> service) {
         inLeftRef = service.requestInputStore(this, inLeft);
         inRightRef = service.requestInputStore(this, inRight);
-        outRef = service.requestOutputStore(this, out);
+        /* do not allocate a store if this comparison is only used for a conditional jump */
+        outRef = service.requestOutputStore(this, out, StoreConditions.noAllocation());
     }
 
     @Override
     public void write(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {
         x8664VarStore inLeftStore = storeSupplier.resolve(inLeftRef).orElseThrow();
         x8664VarStore inRightStore = storeSupplier.resolve(inRightRef).orElseThrow();
-        x8664VarStore outStore = storeSupplier.resolve(outRef).orElseThrow();
+        x8664VarStore outStore = storeSupplier.resolve(outRef).orElse(null);
         x8664Operand.Size size = x8664Operand.Size.fromValueType(out.valueType());
 
         x8664VarStore actualInRight = inRightStore;
@@ -48,6 +50,8 @@ public abstract class x8664CmpOp implements x8664Op {
         }
 
         generator.write(x8664InstrType.CMP, size, inLeftStore, actualInRight);
-        generator.write(setInstr, x8664Operand.Size.BYTE, outStore);
+        if (outStore != null) {
+            generator.write(setInstr, x8664Operand.Size.BYTE, outStore);
+        }
     }
 }
