@@ -7,11 +7,11 @@ import net.rizecookey.racc0on.ir.node.operation.memory.StructMemberNode;
 
 import java.util.List;
 
-public class x8664StructMemberLoadPhantomOp implements x8664OpLike {
+public class x8664StructMemberLoadOpLike implements x8664OpLike {
     private final StructMemberNode address;
     private final Node struct;
 
-    public x8664StructMemberLoadPhantomOp(StructMemberNode address, Node struct) {
+    public x8664StructMemberLoadOpLike(StructMemberNode address, Node struct) {
         this.address = address;
         this.struct = struct;
     }
