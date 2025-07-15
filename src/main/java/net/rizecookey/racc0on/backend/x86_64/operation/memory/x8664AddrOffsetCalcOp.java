@@ -10,6 +10,7 @@ import net.rizecookey.racc0on.backend.x86_64.operand.store.variable.x8664VarStor
 import net.rizecookey.racc0on.backend.x86_64.operand.store.x8664MemoryStore;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Immediate;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
+import net.rizecookey.racc0on.backend.x86_64.operand.x8664ValOperand;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664Op;
 import net.rizecookey.racc0on.backend.x86_64.store.x8664StoreRefResolver;
 import net.rizecookey.racc0on.backend.x86_64.x8664InstructionGenerator;
@@ -61,7 +62,7 @@ public class x8664AddrOffsetCalcOp implements x8664Op {
         x8664VarStore resultStore = storeSupplier.resolve(resultRef).orElseThrow();
         x8664VarStore baseStore = storeSupplier.resolve(baseRef).orElseThrow();
         Integer offsetConstant = offset instanceof ConstIntNode constIntNode ? constIntNode.value() : null;
-        x8664Operand offsetOperand = offsetConstant != null
+        x8664ValOperand offsetOperand = offsetConstant != null
                 ? new x8664Immediate(offsetConstant)
                 : storeSupplier.resolve(offsetRef).orElseThrow();
 

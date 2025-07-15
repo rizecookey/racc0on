@@ -2,6 +2,7 @@ package net.rizecookey.racc0on.backend.x86_64;
 
 import net.rizecookey.racc0on.backend.x86_64.operand.store.x8664MemoryStore;
 import net.rizecookey.racc0on.backend.x86_64.operand.store.x8664Store;
+import net.rizecookey.racc0on.backend.x86_64.operand.x8664Immediate64;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Label;
 import net.rizecookey.racc0on.backend.x86_64.operation.arithmetic.x8664ShiftOp;
 import net.rizecookey.racc0on.backend.x86_64.operation.memory.x8664ArrayMemberLoadPhantomOp;
@@ -366,7 +367,7 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
             return;
         }
         x8664Operand actualFrom = from;
-        if (to instanceof x8664MemoryStore && from instanceof x8664MemoryStore) {
+        if (to instanceof x8664MemoryStore && (from instanceof x8664MemoryStore || from instanceof x8664Immediate64)) {
             actualFrom = x8664Register.MEMORY_ACCESS_RESERVE;
             write(x8664InstrType.MOV, size, x8664Register.MEMORY_ACCESS_RESERVE, from);
         }
@@ -385,10 +386,15 @@ public class x8664InstructionGenerator implements InstructionGenerator<x8664Inst
 
     public void push(x8664Operand operand) {
         stackMisalignment = (stackMisalignment + 8) % 16;
+        if (operand instanceof x8664Immediate64) {
+            write(x8664InstrType.SUB, x8664Operand.Size.QUAD_WORD,x8664Register.RSP, new x8664Immediate(8));
+            move(x8664Operand.Size.QUAD_WORD, new x8664MemoryStore(x8664Register.RSP), operand);
+            return;
+        }
         write(x8664InstrType.PUSH, x8664Operand.Size.QUAD_WORD, operand);
     }
 
-    public void pop(x8664Operand operand) {
+    public void pop(x8664Store operand) {
         stackMisalignment = Math.abs(stackMisalignment - 8) % 16;
         write(x8664InstrType.POP, x8664Operand.Size.QUAD_WORD, operand);
     }

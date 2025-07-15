@@ -9,6 +9,7 @@ import net.rizecookey.racc0on.backend.x86_64.operand.store.variable.x8664Registe
 import net.rizecookey.racc0on.backend.x86_64.operand.store.variable.x8664VarStore;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Immediate;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
+import net.rizecookey.racc0on.backend.x86_64.operand.x8664ValOperand;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664Op;
 import net.rizecookey.racc0on.backend.x86_64.store.x8664StoreRefResolver;
 import net.rizecookey.racc0on.backend.x86_64.x8664InstructionGenerator;
@@ -52,10 +53,10 @@ public class x8664ShiftOp implements x8664Op {
     public void write(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {
         x8664VarStore outStore = storeSupplier.resolve(outRef).orElseThrow();
         x8664Operand.Size size = x8664Operand.Size.fromValueType(out.valueType());
-        x8664Operand shifteeStore = this.shiftee instanceof ConstIntNode c
+        x8664ValOperand shifteeStore = this.shiftee instanceof ConstIntNode c
                 ? new x8664Immediate(c.value())
                 : storeSupplier.resolve(shifteeRef).orElseThrow();
-        x8664Operand shiftCountStore = this.shiftCount instanceof ConstIntNode c
+        x8664ValOperand shiftCountStore = this.shiftCount instanceof ConstIntNode c
                 ? new x8664Immediate(c.value())
                 : storeSupplier.resolve(shiftCountRef).orElseThrow();
         x8664VarStore backupStore = storeSupplier.resolve(backupRef).orElseThrow();

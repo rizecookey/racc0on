@@ -1,10 +1,9 @@
 package net.rizecookey.racc0on.backend.x86_64.operand;
 
 import net.rizecookey.racc0on.backend.operand.Operand;
-import net.rizecookey.racc0on.backend.x86_64.operand.store.x8664Store;
 import net.rizecookey.racc0on.ir.node.ValueType;
 
-public sealed interface x8664Operand extends Operand permits x8664Store, x8664Immediate, x8664Label {
+public sealed interface x8664Operand extends Operand permits x8664Immediate64, x8664Label, x8664ValOperand {
     Id getId();
 
     record Id(String qwordName, String dwordName, String wordName, String byteName) {

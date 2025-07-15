@@ -1,7 +1,5 @@
 package net.rizecookey.racc0on.backend.x86_64.operation;
 
-import net.rizecookey.racc0on.ir.node.ConstIntNode;
-import net.rizecookey.racc0on.ir.node.Node;
 import net.rizecookey.racc0on.backend.operand.Operands;
 import net.rizecookey.racc0on.backend.store.StoreReference;
 import net.rizecookey.racc0on.backend.store.StoreRequestService;
@@ -11,8 +9,11 @@ import net.rizecookey.racc0on.backend.x86_64.operand.store.variable.x8664StackSt
 import net.rizecookey.racc0on.backend.x86_64.operand.store.variable.x8664VarStore;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Immediate;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
+import net.rizecookey.racc0on.backend.x86_64.operand.x8664ValOperand;
 import net.rizecookey.racc0on.backend.x86_64.store.x8664StoreRefResolver;
 import net.rizecookey.racc0on.backend.x86_64.x8664InstructionGenerator;
+import net.rizecookey.racc0on.ir.node.ConstIntNode;
+import net.rizecookey.racc0on.ir.node.Node;
 
 public abstract class x8664TwoOperandRmMrOrMiOp implements x8664Op {
     private final x8664InstrType type;
@@ -42,10 +43,10 @@ public abstract class x8664TwoOperandRmMrOrMiOp implements x8664Op {
     @Override
     public void write(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {
         x8664VarStore outOp = storeSupplier.resolve(outRef).orElseThrow();
-        x8664Operand inLeftOp = inLeft instanceof ConstIntNode constNode
+        x8664ValOperand inLeftOp = inLeft instanceof ConstIntNode constNode
                 ? new x8664Immediate(constNode.value())
                 : storeSupplier.resolve(inLeftRef).orElseThrow();
-        x8664Operand inRightOp = inRight instanceof ConstIntNode constNode
+        x8664ValOperand inRightOp = inRight instanceof ConstIntNode constNode
                 ? new x8664Immediate(constNode.value())
                 : storeSupplier.resolve(inRightRef).orElseThrow();
 
@@ -53,13 +54,13 @@ public abstract class x8664TwoOperandRmMrOrMiOp implements x8664Op {
     }
 
     public static void write(x8664InstructionGenerator generator, x8664InstrType type, x8664Operand.Size size,
-                             x8664VarStore outOp, x8664Operand inLeftOp, x8664Operand inRightOp) {
+                             x8664VarStore outOp, x8664ValOperand inLeftOp, x8664ValOperand inRightOp) {
         if (outOp instanceof x8664StackStore && (inLeftOp instanceof x8664StackStore || inRightOp instanceof x8664StackStore)) {
             generator.move(size, x8664Register.MEMORY_ACCESS_RESERVE, inLeftOp);
             generator.write(type, size, x8664Register.MEMORY_ACCESS_RESERVE, inRightOp);
             generator.move(size, outOp, x8664Register.MEMORY_ACCESS_RESERVE);
         } else {
-            x8664Operand actualRight = inRightOp;
+            x8664ValOperand actualRight = inRightOp;
             if (!outOp.equals(inLeftOp)) {
                 if (outOp.equals(inRightOp)) {
                     actualRight = x8664Register.MEMORY_ACCESS_RESERVE;

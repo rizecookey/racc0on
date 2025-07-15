@@ -8,6 +8,7 @@ import net.rizecookey.racc0on.backend.x86_64.operand.store.variable.x8664VarStor
 import net.rizecookey.racc0on.backend.x86_64.operand.store.x8664MemoryStore;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Immediate;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Operand;
+import net.rizecookey.racc0on.backend.x86_64.operand.x8664ValOperand;
 import net.rizecookey.racc0on.backend.x86_64.operation.x8664Op;
 import net.rizecookey.racc0on.backend.x86_64.store.x8664StoreRefResolver;
 import net.rizecookey.racc0on.backend.x86_64.x8664InstructionGenerator;
@@ -36,7 +37,7 @@ public class x8664StoreOp implements x8664Op {
 
     @Override
     public void write(x8664InstructionGenerator generator, x8664StoreRefResolver storeSupplier) {
-        x8664Operand valueOperand = value instanceof ConstIntNode constIntNode
+        x8664ValOperand valueOperand = value instanceof ConstIntNode constIntNode
                 ? new x8664Immediate(constIntNode.value())
                 : storeSupplier.resolve(valueRef).orElseThrow();
         x8664VarStore addressStore = storeSupplier.resolve(addressRef).orElseThrow();
