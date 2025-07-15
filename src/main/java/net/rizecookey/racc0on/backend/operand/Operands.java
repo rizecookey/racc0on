@@ -9,12 +9,12 @@ public interface Operands<T> {
     record Binary<T>(T out, T inLeft, T inRight) implements Operands<T> {
         @Override
         public List<T> inputs() {
-            return List.of(out);
+            return List.of(inLeft(), inRight());
         }
 
         @Override
         public List<T> outputs() {
-            return List.of(inLeft, inRight);
+            return List.of(out());
         }
     }
 }
