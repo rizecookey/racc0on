@@ -18,7 +18,7 @@ import java.util.SequencedSet;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
-public class x8664OneOperandDoubleWidthMOp implements x8664Op {
+public abstract class x8664OneOperandDoubleWidthMOp implements x8664Op {
     private static final Set<x8664Register> SELF_TAINTED = Set.of(x8664Register.RDX, x8664Register.RAX);
 
     private final x8664InstrType type;

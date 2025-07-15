@@ -1,5 +1,7 @@
-package net.rizecookey.racc0on.backend.x86_64.operation;
+package net.rizecookey.racc0on.backend.x86_64.operation.branch;
 
+import net.rizecookey.racc0on.backend.x86_64.operation.x8664Op;
+import net.rizecookey.racc0on.backend.x86_64.operation.x8664OpLike;
 import net.rizecookey.racc0on.ir.node.Node;
 
 import java.util.List;
