@@ -1,6 +1,5 @@
 package net.rizecookey.racc0on.backend.x86_64.operation.memory;
 
-import net.rizecookey.racc0on.backend.memory.MemoryLayout;
 import net.rizecookey.racc0on.backend.store.StoreReference;
 import net.rizecookey.racc0on.backend.store.StoreRequestService;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664InstrType;
@@ -18,7 +17,6 @@ import net.rizecookey.racc0on.backend.x86_64.x8664InstructionGenerator;
 import net.rizecookey.racc0on.ir.node.constant.ConstIntNode;
 import net.rizecookey.racc0on.ir.node.Node;
 import net.rizecookey.racc0on.ir.node.operation.memory.ArrayMemberNode;
-import net.rizecookey.racc0on.ir.node.operation.memory.StructMemberNode;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
@@ -33,14 +31,8 @@ public class x8664AddrOffsetCalcOp implements x8664Op {
         this(result, base, offset, x8664MemoryUtils.createLayout(result.elementLayout()).size());
     }
 
-    public x8664AddrOffsetCalcOp(StructMemberNode result, Node base) {
-        this(result, base, new ConstIntNode(result.block(), structMemberOffset(result)), 1);
-    }
-
-    private static int structMemberOffset(StructMemberNode struct) {
-        MemoryLayout.Compound layout = (MemoryLayout.Compound) x8664MemoryUtils.createLayout(struct.structLayout());
-
-        return layout.members().get(struct.memberIndex()).start();
+    public x8664AddrOffsetCalcOp(Node result, Node base, int offset) {
+        this(result, base, new ConstIntNode(result.block(), offset), 1);
     }
 
     private x8664AddrOffsetCalcOp(Node result, Node base, Node offset, int offsetFactor) {
