@@ -48,6 +48,7 @@ public enum x8664InstrType implements InstructionType<x8664Instr, x8664VarStore>
     SAR("sar"),
     SAL("sal"),
     CALL("call"),
+    LEA("lea"),
     ;
 
     private final String name;

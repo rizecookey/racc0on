@@ -6,6 +6,7 @@ import net.rizecookey.racc0on.backend.store.StoreRequestService;
 import net.rizecookey.racc0on.backend.x86_64.instruction.x8664InstrType;
 import net.rizecookey.racc0on.backend.x86_64.memory.x8664MemoryUtils;
 import net.rizecookey.racc0on.backend.x86_64.operand.store.variable.x8664Register;
+import net.rizecookey.racc0on.backend.x86_64.operand.store.variable.x8664StackStore;
 import net.rizecookey.racc0on.backend.x86_64.operand.store.variable.x8664VarStore;
 import net.rizecookey.racc0on.backend.x86_64.operand.store.x8664MemoryStore;
 import net.rizecookey.racc0on.backend.x86_64.operand.x8664Immediate;
@@ -18,6 +19,9 @@ import net.rizecookey.racc0on.ir.node.constant.ConstIntNode;
 import net.rizecookey.racc0on.ir.node.Node;
 import net.rizecookey.racc0on.ir.node.operation.memory.ArrayMemberNode;
 import net.rizecookey.racc0on.ir.node.operation.memory.StructMemberNode;
+import org.jspecify.annotations.Nullable;
+
+import java.util.Objects;
 
 public class x8664AddrOffsetCalcOp implements x8664Op {
     private final int offsetFactor;
@@ -66,33 +70,50 @@ public class x8664AddrOffsetCalcOp implements x8664Op {
                 ? new x8664Immediate(offsetConstant)
                 : storeSupplier.resolve(offsetRef).orElseThrow();
 
-        x8664VarStore tempResultStore = resultStore;
-        if (resultStore instanceof x8664MemoryStore || resultStore.equals(baseStore)) {
-            tempResultStore = x8664Register.MEMORY_ACCESS_RESERVE;
-        }
+        x8664Register tempResultStore = switch (resultStore) {
+            case x8664Register register -> register;
+            case x8664StackStore _ -> x8664Register.MEMORY_ACCESS_RESERVE;
+        };
 
-        x8664Operand.Size offsetSize = x8664Operand.Size.fromValueType(offset.valueType());
         x8664Operand.Size pointerSize = x8664Operand.Size.fromValueType(result.valueType());
-        generator.move(offsetSize, tempResultStore, offsetOperand);
+        x8664Operand.Size offsetSize = x8664Operand.Size.fromValueType(offset.valueType());
 
-        if (!offsetSize.equals(pointerSize)) {
-            x8664InstrType signExtendInstr = switch (offsetSize) {
-                case BYTE, WORD -> x8664InstrType.MOVSX;
-                case DOUBLE_WORD -> x8664InstrType.MOVSXD;
-                case QUAD_WORD -> throw new IllegalArgumentException("Cannot extend max size");
-            };
-
-            generator.write(signExtendInstr, pointerSize, offsetSize, tempResultStore, tempResultStore);
+        x8664Register leaBase = baseStore instanceof x8664Register register ? register : null;
+        x8664Operand.Size leaScalar = sizeFromInt(offsetFactor);
+        x8664Register leaIndex = leaScalar != null && offsetOperand instanceof x8664Register register ? register : null;
+        int leaOffset = offsetConstant != null ? offsetConstant * offsetFactor : 0;
+        if (leaIndex == null && offsetConstant == null) {
+            // offset is not in a register
+            if (tempResultStore.equals(baseStore)) {
+                tempResultStore = x8664Register.MEMORY_ACCESS_RESERVE;
+            }
+            generator.move(offsetSize, tempResultStore, offsetOperand);
+            if (leaScalar == null) {
+                generator.write(x8664InstrType.IMUL, pointerSize, tempResultStore, new x8664Immediate(offsetFactor));
+                leaScalar = x8664Operand.Size.BYTE;
+            }
+            leaIndex = tempResultStore;
         }
-
-        if (offsetFactor != 1 && (offsetConstant == null || offsetConstant != 0)) {
-            generator.write(x8664InstrType.IMUL, pointerSize, tempResultStore, new x8664Immediate(offsetFactor));
+        if (leaBase != null || leaIndex != null || leaOffset != 0) {
+            generator.write(x8664InstrType.LEA, pointerSize, tempResultStore,
+                    new x8664MemoryStore(leaBase, leaIndex, Objects.requireNonNullElse(leaScalar, x8664Operand.Size.DOUBLE_WORD), leaOffset));
         }
-
-        generator.write(x8664InstrType.ADD, pointerSize, tempResultStore, baseStore);
+        if (leaBase == null) {
+            generator.write(x8664InstrType.ADD, pointerSize, tempResultStore, baseStore);
+        }
 
         if (!tempResultStore.equals(resultStore)) {
             generator.move(pointerSize, resultStore, tempResultStore);
         }
+    }
+
+    private static x8664Operand.@Nullable Size sizeFromInt(int value) {
+        return switch (value) {
+            case 1 -> x8664Operand.Size.BYTE;
+            case 2 -> x8664Operand.Size.WORD;
+            case 4 -> x8664Operand.Size.DOUBLE_WORD;
+            case 8 -> x8664Operand.Size.QUAD_WORD;
+            default -> null;
+        };
     }
 }
