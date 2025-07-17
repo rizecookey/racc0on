@@ -1,6 +1,6 @@
 package net.rizecookey.racc0on.ir.node.operation.arithmetic;
 
-import net.rizecookey.racc0on.ir.node.Node;
+import net.rizecookey.racc0on.ir.node.operation.BinaryOperationNode;
 
-public sealed interface ArithmeticNode extends Node permits AddNode, DivNode, ModNode, MulNode, ShiftLeftNode, ShiftRightNode, SubNode {
+public sealed interface ArithmeticNode extends BinaryOperationNode permits AddNode, DivNode, ModNode, MulNode, ShiftLeftNode, ShiftRightNode, SubNode {
 }

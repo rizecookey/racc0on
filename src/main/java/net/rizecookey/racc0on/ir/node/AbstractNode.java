@@ -4,8 +4,8 @@ import net.rizecookey.racc0on.ir.IrGraph;
 import net.rizecookey.racc0on.ir.node.constant.ConstAddressNode;
 import net.rizecookey.racc0on.ir.node.constant.ConstBoolNode;
 import net.rizecookey.racc0on.ir.node.constant.ConstIntNode;
-import net.rizecookey.racc0on.ir.node.operation.BinaryOperationNode;
-import net.rizecookey.racc0on.ir.node.operation.UnaryOperationNode;
+import net.rizecookey.racc0on.ir.node.operation.AbstractBinaryOperationNode;
+import net.rizecookey.racc0on.ir.node.operation.AbstractUnaryOperationNode;
 import net.rizecookey.racc0on.ir.node.operation.branch.IfNode;
 import net.rizecookey.racc0on.ir.node.operation.branch.JumpNode;
 import net.rizecookey.racc0on.ir.node.operation.memory.AllocArrayNode;
@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /// The base class for all nodes, implementing the Node interface.
-public sealed abstract class AbstractNode implements Node permits Block, BuiltinCallNode, CallNode, ConstAddressNode, ConstBoolNode, ConstIntNode, IfNode, JumpNode, ParameterNode, Phi, ProjNode, ReturnNode, StartNode, BinaryOperationNode, AllocArrayNode, AllocNode, ArrayMemberNode, LoadNode, StoreNode, StructMemberNode, UnaryOperationNode {
+public sealed abstract class AbstractNode implements Node permits Block, BuiltinCallNode, CallNode, ParameterNode, Phi, ProjNode, ReturnNode, StartNode, ConstAddressNode, ConstBoolNode, ConstIntNode, AbstractBinaryOperationNode, AbstractUnaryOperationNode, IfNode, JumpNode, AllocArrayNode, AllocNode, ArrayMemberNode, LoadNode, StoreNode, StructMemberNode {
     private final IrGraph graph;
     private final Block block;
     private final List<Node> predecessors = new ArrayList<>();

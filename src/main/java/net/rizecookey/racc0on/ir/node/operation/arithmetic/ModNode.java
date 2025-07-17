@@ -3,9 +3,9 @@ package net.rizecookey.racc0on.ir.node.operation.arithmetic;
 import net.rizecookey.racc0on.ir.node.Block;
 import net.rizecookey.racc0on.ir.node.Node;
 import net.rizecookey.racc0on.ir.node.ValueType;
-import net.rizecookey.racc0on.ir.node.operation.BinaryOperationNode;
+import net.rizecookey.racc0on.ir.node.operation.AbstractBinaryOperationNode;
 
-public final class ModNode extends BinaryOperationNode implements ArithmeticNode {
+public final class ModNode extends AbstractBinaryOperationNode implements ArithmeticNode {
     public static final int SIDE_EFFECT = 2;
     public ModNode(Block block, Node left, Node right, Node sideEffect) {
         super(block, left, right, sideEffect);
