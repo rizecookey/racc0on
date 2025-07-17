@@ -4,7 +4,7 @@ import net.rizecookey.racc0on.backend.x86_64.x8664CodeGenerator;
 import net.rizecookey.racc0on.debug.DebugConsumer;
 import net.rizecookey.racc0on.ir.IrGraph;
 import net.rizecookey.racc0on.ir.SsaTranslation;
-import net.rizecookey.racc0on.ir.optimize.LocalValueNumbering;
+import net.rizecookey.racc0on.ir.optimize.NodeOptimizations;
 import net.rizecookey.racc0on.ir.util.GraphVizPrinter;
 import net.rizecookey.racc0on.ir.util.YCompPrinter;
 import net.rizecookey.racc0on.lexer.Lexer;
@@ -95,7 +95,7 @@ public final class Racc0onCompilation {
         List<IrGraph> functions = new ArrayList<>();
 
         for (FunctionTree function : program.functions()) {
-            SsaTranslation translator = new SsaTranslation(function, new LocalValueNumbering(), semanticInfo);
+            SsaTranslation translator = new SsaTranslation(function, new NodeOptimizations(), semanticInfo);
             functions.add(translator.translate());
         }
 
