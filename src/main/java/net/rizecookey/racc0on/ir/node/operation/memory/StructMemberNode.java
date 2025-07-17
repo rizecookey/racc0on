@@ -18,6 +18,21 @@ public final class StructMemberNode extends Node {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof StructMemberNode s)) {
+            return false;
+        }
+        return block() == s.block() && predecessor(STRUCT) == s.predecessor(STRUCT) && memberIndex() == s.memberIndex();
+    }
+
+    @Override
+    public int hashCode() {
+        int h = block().hashCode() * 31;
+        h += (predecessorHash(this, STRUCT) * 31 + memberIndex()) ^ this.getClass().hashCode();
+        return h;
+    }
+
+    @Override
     public ValueType valueType() {
         return ValueType.POINTER;
     }

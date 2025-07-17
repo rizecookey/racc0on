@@ -12,6 +12,19 @@ public final class ConstAddressNode extends Node implements ConstNode {
         this.address = address;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof ConstAddressNode c) {
+            return this.block() == c.block() && c.address() == this.address();
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return (int) this.address();
+    }
+
     public long address() {
         return address;
     }

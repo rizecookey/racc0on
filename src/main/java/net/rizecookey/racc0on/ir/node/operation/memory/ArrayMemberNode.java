@@ -17,6 +17,21 @@ public final class ArrayMemberNode extends Node {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof ArrayMemberNode a)) {
+            return false;
+        }
+        return block() == a.block() && predecessor(ARRAY) == a.predecessor(ARRAY) && predecessor(INDEX) == a.predecessor(INDEX);
+    }
+
+    @Override
+    public int hashCode() {
+        int h = block().hashCode() * 31;
+        h += (predecessorHash(this, ARRAY) * 31 + predecessorHash(this, INDEX)) ^ this.getClass().hashCode();
+        return h;
+    }
+
+    @Override
     public ValueType valueType() {
         return ValueType.POINTER;
     }
