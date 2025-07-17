@@ -41,7 +41,7 @@ public class x8664StructMemberLoadOpLike implements x8664OpLike {
         while (!hierarchy.isEmpty()) {
             int index = hierarchy.pop();
             layout = ((MemoryLayout.Compound) layout).members().get(index);
-            start += layout.start();
+            start = layout.start();
         }
 
         return List.of(
