@@ -5,7 +5,7 @@ import net.rizecookey.racc0on.ir.node.Node;
 import net.rizecookey.racc0on.ir.node.ValueType;
 import net.rizecookey.racc0on.ir.node.operation.BinaryOperationNode;
 
-public final class ShiftLeftNode extends BinaryOperationNode {
+public final class ShiftLeftNode extends BinaryOperationNode implements ArithmeticNode {
     public ShiftLeftNode(Block block, Node left, Node right) {
         super(block, left, right);
     }

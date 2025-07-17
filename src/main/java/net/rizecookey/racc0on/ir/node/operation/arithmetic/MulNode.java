@@ -5,7 +5,7 @@ import net.rizecookey.racc0on.ir.node.Node;
 import net.rizecookey.racc0on.ir.node.ValueType;
 import net.rizecookey.racc0on.ir.node.operation.CommutativeBinaryOperationNode;
 
-public final class MulNode extends CommutativeBinaryOperationNode {
+public final class MulNode extends CommutativeBinaryOperationNode implements ArithmeticNode {
     public MulNode(Block block, Node left, Node right) {
         super(block, left, right);
     }
