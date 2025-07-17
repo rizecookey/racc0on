@@ -1,11 +1,12 @@
 package net.rizecookey.racc0on.ir.node.operation.memory;
 
 import net.rizecookey.racc0on.ir.memory.MemoryType;
+import net.rizecookey.racc0on.ir.node.AbstractNode;
 import net.rizecookey.racc0on.ir.node.Block;
 import net.rizecookey.racc0on.ir.node.Node;
 import net.rizecookey.racc0on.ir.node.ValueType;
 
-public final class ArrayMemberNode extends Node {
+public final class ArrayMemberNode extends AbstractNode {
     public static final int ARRAY = 0;
     public static final int INDEX = 1;
 

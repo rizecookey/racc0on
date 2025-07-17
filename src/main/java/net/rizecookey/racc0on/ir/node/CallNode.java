@@ -3,7 +3,7 @@ package net.rizecookey.racc0on.ir.node;
 import java.util.List;
 import java.util.stream.Stream;
 
-public final class CallNode extends Node {
+public final class CallNode extends AbstractNode {
     public static final int SIDE_EFFECT = 0;
 
     private final String target;

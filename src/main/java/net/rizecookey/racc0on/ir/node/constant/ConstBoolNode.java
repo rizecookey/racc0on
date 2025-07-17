@@ -1,10 +1,10 @@
 package net.rizecookey.racc0on.ir.node.constant;
 
+import net.rizecookey.racc0on.ir.node.AbstractNode;
 import net.rizecookey.racc0on.ir.node.Block;
-import net.rizecookey.racc0on.ir.node.Node;
 import net.rizecookey.racc0on.ir.node.ValueType;
 
-public final class ConstBoolNode extends Node implements ConstNode {
+public final class ConstBoolNode extends AbstractNode implements ConstNode {
     private final boolean value;
 
     public ConstBoolNode(Block block, boolean value) {

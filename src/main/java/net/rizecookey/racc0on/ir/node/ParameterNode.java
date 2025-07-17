@@ -1,6 +1,6 @@
 package net.rizecookey.racc0on.ir.node;
 
-public final class ParameterNode extends Node {
+public final class ParameterNode extends AbstractNode {
     private final int index;
     private final ValueType valueType;
 

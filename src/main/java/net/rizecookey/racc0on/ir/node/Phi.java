@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public final class Phi extends Node {
+public final class Phi extends AbstractNode {
     private final Memoized<ValueType> valueType;
 
     public Phi(Block block) {

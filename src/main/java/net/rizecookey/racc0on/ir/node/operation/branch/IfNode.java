@@ -1,5 +1,6 @@
 package net.rizecookey.racc0on.ir.node.operation.branch;
 
+import net.rizecookey.racc0on.ir.node.AbstractNode;
 import net.rizecookey.racc0on.ir.node.Block;
 import net.rizecookey.racc0on.ir.node.Node;
 import net.rizecookey.racc0on.ir.node.ProjNode;
@@ -7,7 +8,7 @@ import net.rizecookey.racc0on.ir.node.ProjNode;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public final class IfNode extends Node {
+public final class IfNode extends AbstractNode {
     public static final int CONDITION = 0;
 
     public IfNode(Block block, Node condition) {

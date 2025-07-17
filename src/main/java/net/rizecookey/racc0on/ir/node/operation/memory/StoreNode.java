@@ -1,9 +1,10 @@
 package net.rizecookey.racc0on.ir.node.operation.memory;
 
+import net.rizecookey.racc0on.ir.node.AbstractNode;
 import net.rizecookey.racc0on.ir.node.Block;
 import net.rizecookey.racc0on.ir.node.Node;
 
-public final class StoreNode extends Node {
+public final class StoreNode extends AbstractNode {
     public static final int VALUE = 0;
     public static final int ADDRESS = 1;
     public static final int SIDE_EFFECT = 2;

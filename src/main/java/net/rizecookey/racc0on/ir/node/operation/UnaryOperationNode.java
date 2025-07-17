@@ -1,10 +1,11 @@
 package net.rizecookey.racc0on.ir.node.operation;
 
+import net.rizecookey.racc0on.ir.node.AbstractNode;
 import net.rizecookey.racc0on.ir.node.Block;
 import net.rizecookey.racc0on.ir.node.Node;
 import net.rizecookey.racc0on.ir.node.operation.logic.NotNode;
 
-public sealed abstract class UnaryOperationNode extends Node permits NotNode {
+public sealed abstract class UnaryOperationNode extends AbstractNode permits NotNode {
     public static final int IN = 0;
 
     protected UnaryOperationNode(Block block, Node in) {

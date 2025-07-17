@@ -1,10 +1,10 @@
 package net.rizecookey.racc0on.ir.node.constant;
 
+import net.rizecookey.racc0on.ir.node.AbstractNode;
 import net.rizecookey.racc0on.ir.node.Block;
-import net.rizecookey.racc0on.ir.node.Node;
 import net.rizecookey.racc0on.ir.node.ValueType;
 
-public final class ConstAddressNode extends Node implements ConstNode {
+public final class ConstAddressNode extends AbstractNode implements ConstNode {
     private final long address;
 
     public ConstAddressNode(Block block, long address) {

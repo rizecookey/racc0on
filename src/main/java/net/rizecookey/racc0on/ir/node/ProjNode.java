@@ -1,6 +1,6 @@
 package net.rizecookey.racc0on.ir.node;
 
-public final class ProjNode extends Node {
+public final class ProjNode extends AbstractNode {
     public static final int IN = 0;
     private final ProjectionInfo projectionInfo;
 

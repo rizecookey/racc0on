@@ -1,11 +1,12 @@
 package net.rizecookey.racc0on.ir.node.operation.branch;
 
+import net.rizecookey.racc0on.ir.node.AbstractNode;
 import net.rizecookey.racc0on.ir.node.Block;
 import net.rizecookey.racc0on.ir.node.Node;
 
 import java.util.List;
 
-public final class JumpNode extends Node {
+public final class JumpNode extends AbstractNode {
     public JumpNode(Block block) {
         super(block);
     }

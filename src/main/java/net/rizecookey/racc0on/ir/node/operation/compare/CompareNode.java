@@ -1,4 +1,6 @@
 package net.rizecookey.racc0on.ir.node.operation.compare;
 
-public sealed interface CompareNode permits EqNode, GreaterNode, GreaterOrEqNode, LessNode, LessOrEqNode, NotEqNode {
+import net.rizecookey.racc0on.ir.node.Node;
+
+public sealed interface CompareNode extends Node permits EqNode, GreaterNode, GreaterOrEqNode, LessNode, LessOrEqNode, NotEqNode {
 }
